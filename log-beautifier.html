@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>TypeORM SQL Log Beautifier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --ink: #0f172a;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --btn: #111827;
+      --btn-hover: #1f2937;
+      --btn-ink: #fff;
+      --btn2: #4b5563;
+      --btn2-hover: #374151;
+      --card: #1f2937;
+      --card-ink: #e5e7eb;
+      --kw: #66d9ef;
+      --str: #e6db74;
+      --num: #ae81ff;
+      --entity: #93c5fd;
+    }
+
+    * {
+      box-sizing: border-box
+    }
+
+    html,
+    body {
+      height: 100%
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font: 14px/1.6 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    }
+
+    .container {
+      max-width: 2200px;
+      margin: 28px auto;
+      padding: 0 16px;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .logo {
+      display: inline-flex;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      background: #fff;
+      border: 1px solid var(--border);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, .05);
+      font-size: 18px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 18px;
+      letter-spacing: .2px;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 8px 0 12px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      appearance: none;
+      border: 1px solid transparent;
+      cursor: pointer;
+      padding: 9px 14px;
+      border-radius: 10px;
+      font-weight: 700;
+      letter-spacing: .2px;
+      background: var(--btn);
+      color: var(--btn-ink);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, .06) inset, 0 2px 4px rgba(0, 0, 0, .06);
+      transition: transform .05s ease, background .15s ease;
+    }
+
+    .btn:hover {
+      background: var(--btn-hover)
+    }
+
+    .btn:active {
+      transform: translateY(1px)
+    }
+
+    .btn.secondary {
+      background: var(--btn2)
+    }
+
+    .btn.secondary:hover {
+      background: var(--btn2-hover)
+    }
+
+    .pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #111827;
+      font-size: 12px;
+    }
+
+    .pill input {
+      margin: 0
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 220px;
+      resize: vertical;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #111827;
+      outline: none;
+      font: 13px/1.45 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      white-space: pre-wrap;
+      word-break: break-word;
+      overflow-wrap: anywhere;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
+
+    textarea:focus {
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, .15)
+    }
+
+    .output {
+      margin-top: 14px;
+    }
+
+    .query-block {
+      position: relative;
+      background: var(--card);
+      color: var(--card-ink);
+      border-radius: 14px;
+      padding: 16px 14px 14px;
+      margin: 16px 0;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, .08), inset 0 1px 0 rgba(255, 255, 255, .04);
+      border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: #374151;
+      color: #e5e7eb;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background: #2b3441
+    }
+
+    .meta {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-bottom: 8px;
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .keyword {
+      color: var(--kw);
+      font-weight: 700
+    }
+
+    .string {
+      color: var(--str)
+    }
+
+    .number {
+      color: var(--num)
+    }
+
+    .entity {
+      color: var(--entity);
+      font-weight: 600;
+    }
+
+    .ident {
+      color: #cbd5e1;
+      font-weight: 600;
+    }
+
+    .groups {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 6px;
+      align-items: start;
+    }
+
+    .col-left,
+    .col-right {
+      display: grid;
+      gap: 10px
+    }
+
+    @media (min-width:900px) {
+      .groups {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .group {
+      border: 1px solid rgba(255, 255, 255, .08);
+      border-radius: 10px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, .02);
+    }
+
+    .group summary {
+      cursor: pointer;
+      list-style: none;
+      padding: 8px 12px;
+      color: #9ca3af;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+
+    .group[open] summary {
+      color: #e5e7eb
+    }
+
+    .group summary::-webkit-details-marker {
+      display: none
+    }
+
+    .group pre {
+      margin: 0;
+      padding: 10px 12px;
+    }
+
+    /* Insert inspector */
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+
+    .table th,
+    .table td {
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      padding: 6px 8px;
+      vertical-align: top;
+      white-space: normal;
+      /* cho phép xuống dòng */
+      word-break: break-word;
+      /* wrap nếu quá dài */
+    }
+
+    .table th {
+      color: #9ca3af;
+      font-weight: 600;
+      text-transform: none;
+    }
+
+    .mono {
+      font-family: inherit;
+      white-space: pre-wrap
+    }
+
+    .subtle {
+      color: #9ca3af;
+      font-size: 12px
+    }
+
+    .undef {
+      color: #fca5a5;
+      font-weight: 700;
+    }
+
+    .defaultv {
+      color: #6ddd2c;
+      font-weight: 700;
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .tab-btn {
+      padding: 6px 12px;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 13px;
+      background: #374151;
+      color: #e5e7eb;
+      border: 1px solid rgba(255, 255, 255, .1);
+    }
+
+    .tab-btn.active {
+      background: #2563eb;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Table alias tooltip */
+    .alias-cell {
+      white-space: normal;
+      /* Cho phép xuống dòng */
+      word-break: break-all;
+      /* Cắt từ bất kỳ chỗ nào nếu quá dài */
+      font-family: inherit;
+    }
+
+    /* Where tree */
+    ul.where-tree {
+      list-style: none;
+      padding-left: 14px;
+    }
+
+    ul.where-tree li {
+      margin: 2px 0;
+    }
+
+    .and {
+      color: #34d399;
+      font-weight: bold;
+    }
+
+    .or {
+      color: #fbbf24;
+      font-weight: bold;
+    }
+
+    /* Alias hiển thị đầy đủ */
+    .alias-cell {
+      white-space: normal;
+      word-break: break-all;
+      font-family: inherit;
+    }
+
+    /* Sticky header trong bảng */
+    .table thead th {
+      position: sticky;
+      top: 0;
+      background: #2d3748;
+      z-index: 1;
+    }
+
+    /* Toolbar cho expand/collapse */
+    .block-toolbar {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .mini-btn {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, .15);
+      background: #374151;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+
+    .mini-btn:hover {
+      background: #4b5563;
+    }
+
+    .table thead {
+      display: none;
+    }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .modal {
+      background: var(--card);
+      color: var(--card-ink);
+      border-radius: 12px;
+      padding: 20px;
+      width: 1800px;
+      max-width: 95vw;
+      max-width: 90%;
+      max-height: 85%;
+      overflow: auto;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .modal-copy {
+      position: absolute;
+      right: 10px;
+      top: 10px;
+      padding: 7px 12px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, .08);
+      background: #374151;
+      color: #e5e7eb;
+      font-weight: 700;
+      cursor: pointer;
+      position: relative;
+      z-index: 2;
+    }
+
+    .modal-copy:hover {
+      background: #2b3441;
+    }
+
+    .modal-header h3 {
+      margin: 0;
+      font-size: 16px;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      font-size: 18px;
+      color: #ccc;
+      cursor: pointer;
+    }
+
+    .subquery-row {
+      cursor: pointer;
+    }
+
+    .subquery-cell {
+      padding: 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, .08);
+      color: #93c5fd;
+      /* màu xanh entity */
+      font-weight: 600;
+    }
+
+    .subquery-cell:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <span class="logo">🛠️</span>
+        <h1>TypeORM SQL Log Beautifier</h1>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button class="btn secondary" onclick="saveJson()">💾 Save JSON</button>
+    </div>
+
+    <textarea id="input" placeholder="Paste TypeORM SQL logs here..." spellcheck="false"></textarea>
+    <div id="output" class="output"></div>
+  </div>
+
+  <script>
+    /* ---------- helpers ---------- */
+    const escapeHtml = (s) => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+    function splitByCommaOutsideParens(text) {
+      const out = []; let buf = ''; let depth = 0; let inStr = false;
+      for (let i = 0; i < text.length; i++) {
+        const c = text[i], n = text[i + 1];
+        if (inStr) { buf += c; if (c === "'" && n == "'") { buf += n; i++; } else if (c === "'") { inStr = false; } continue; }
+        if (c === "'") { inStr = true; buf += c; continue; }
+        if (c === '(') { depth++; buf += c; continue; }
+        if (c === ')') { depth = Math.max(0, depth - 1); buf += c; continue; }
+        if (c === ',' && depth === 0) { out.push(buf.trim()); buf = ''; continue; }
+        buf += c;
+      }
+      if (buf.trim()) out.push(buf.trim());
+      return out;
+    }
+
+    function readBalanced(src, i) {
+      let depth = 0, inStr = false, j = i;
+      for (; j < src.length; j++) {
+        const c = src[j], n = src[j + 1];
+        if (inStr) {
+          if (c === "'" && n === "'") { j++; continue; } // escape ''
+          if (c === "'") { inStr = false; continue; }
+          continue;
+        }
+        if (c === "'") { inStr = true; continue; }
+        if (c === "(") depth++;
+        else if (c === ")") {
+          depth--;
+          if (depth === 0) { j++; break; }
+        }
+      }
+      return { text: src.slice(i, j), end: j };
+    }
+
+    function readQuoted(src, i) {
+      // đọc "identifier", có xử lý "" escape
+      let j = i + 1;
+      while (j < src.length) {
+        if (src[j] === '"' && src[j + 1] === '"') { j += 2; continue; }
+        if (src[j] === '"') { j++; break; }
+        j++;
+      }
+      return { text: src.slice(i, j), end: j };
+    }
+
+    /* ================== HIGHLIGHT (giữ nguyên hoa/thường) ================== */
+    function highlightSQL(sql) {
+      let work = sql;
+
+      // Bảo vệ "ident"
+      const dq = [];
+      work = work.replace(/"([^"]*)"/g, (m, id, offset, src) => {
+        let i = offset - 1; while (i >= 0 && /[\s,()]/.test(src[i])) i--;
+        let j = i; while (j >= 0 && /[A-Za-z_]/.test(src[j])) j--;
+        const prev = src.slice(j + 1, i + 1);
+        const afterAS = /^AS$/i.test(prev);
+        const beforeTableCtx = /^(FROM|JOIN|INTO|UPDATE|DELETE)$/i.test(prev);
+
+        // có alias "SomethingEntity" ngay sau?
+        let k = offset + m.length; while (k < src.length && /\s/.test(src[k])) k++;
+        let beforeEntityAlias = false;
+        if (src[k] === '"') { let e = k + 1; while (e < src.length && src[e] !== '"') e++; const nextId = src.slice(k + 1, e); beforeEntityAlias = /Entity/i.test(nextId); }
+
+        const idx = dq.length; dq.push({ id, afterAS, beforeTableCtx, beforeEntityAlias });
+        return `__DQ${idx}__`;
+      });
+
+      // Bảo vệ strings
+      const sq = []; work = work.replace(/'(?:''|[^'])*'/g, (m) => { const idx = sq.length; sq.push(m); return `__SQ${idx}__`; });
+
+      // Highlight phần còn lại
+      let text = escapeHtml(work);
+      text = text.replace(/\b(SELECT|FROM|WHERE|AND|OR|JOIN|LEFT|RIGHT|INNER|FULL|CROSS|ON|IN|AS|IS|TRUE|FALSE|NOT|NULL|UPDATE|SET|INSERT|INTO|VALUES|DELETE|RETURNING|GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET)\b/gi,
+        m => `<span class="keyword">${m}</span>`);
+      text = text.replace(/\b\d+(\.\d+)?\b/g, m => `<span class="number">${m}</span>`);
+      text = text.replace(/\bundefined\b/gi, m => `<span class="undef">${m}</span>`);
+      text = text.replace(/\bDEFAULT\b/gi, m => `<span class="defaultv">${m}</span>`);
+
+      dq.forEach(({ id, afterAS, beforeTableCtx, beforeEntityAlias }, i) => {
+        const full = `"${id}"`;
+        const isEntityLike = /entity/i.test(id) || /__/.test(id) || beforeEntityAlias || beforeTableCtx;
+        const cls = (isEntityLike && !afterAS) ? 'entity' : 'ident';
+        text = text.replace(`__DQ${i}__`, `<span class="${cls}">${escapeHtml(full)}</span>`);
+      });
+      sq.forEach((s, i) => { text = text.replace(`__SQ${i}__`, `<span class="string">${escapeHtml(s)}</span>`); });
+      return text;
+    }
+
+    /* ================== FORMATTER ================== */
+    function beautifySQL(sql) {
+      let s = sql;
+
+      // SELECT → xuống dòng sau SELECT
+      s = s.replace(/\bSELECT\b/i, 'SELECT\n  ');
+
+      // FROM, WHERE, GROUP BY, ORDER BY, HAVING, LIMIT, OFFSET → mỗi cái xuống dòng riêng
+      s = s.replace(/\sFROM\s/ig, '\nFROM\n  ');
+      s = s.replace(/(\s|\))WHERE\s/ig, '\nWHERE\n  ');
+      s = s.replace(/\sGROUP BY\s/ig, '\nGROUP BY\n  ');
+      s = s.replace(/\sHAVING\s/ig, '\nHAVING\n  ');
+      s = s.replace(/\sORDER BY\s/ig, '\nORDER BY\n  ');
+      s = s.replace(/\sLIMIT\s/ig, '\nLIMIT ');
+      s = s.replace(/\sOFFSET\s/ig, '\nOFFSET ');
+
+      // JOIN → mỗi JOIN xuống dòng
+      s = s.replace(/\s(LEFT|RIGHT|INNER|FULL|CROSS)?\s*JOIN\s/ig, m => `\n${m.trim()} `);
+
+      // AND/OR trong WHERE → indent thêm
+      s = s.replace(/\sAND\s/ig, '\n  AND ');
+      s = s.replace(/\sOR\s/ig, '\n  OR ');
+
+      // INSERT: đưa "(" & ")" tách dòng
+      s = s.replace(/(INSERT\s+INTO[\s\S]*?)\(\s*/i, (_, p1) => `${p1}\n(\n  `);
+      s = s.replace(/(\n\(\n[\s\S]*?)\)/, (all, grp) => grp.replace(/\s*$/, '\n)'));
+      s = s.replace(/(\bVALUES\b)\s*\(\s*/i, (_, kw) => `${kw}\n(\n  `);
+      s = s.replace(/(\bVALUES\b\s*\n\(\n[\s\S]*?)\)/i, (all, grp) => grp.replace(/\s*$/, '\n)'));
+      s = s.replace(/\)\s*(VALUES)\b/ig, (_, kw) => `)\n${kw}`);
+      s = s.replace(/\)\s*(RETURNING)\b/ig, (_, kw) => `\n)\n${kw}`);
+      return s;
+    }
+
+    function createSelectTable(cols) {
+      const table = document.createElement('table');
+      table.className = 'table mono';
+      table.innerHTML = `
+    <thead>
+      <tr><th>Column</th><th>Alias</th></tr>
+    </thead>
+    <tbody></tbody>
+  `;
+      const tbody = table.querySelector('tbody');
+      cols.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${highlightSQL(c.expr)}</td><td>${highlightSQL(c.alias)}</td>`;
+        tbody.appendChild(tr);
+      });
+      return table;
+    }
+
+    function createFromTable(tables) {
+      const table = document.createElement('table');
+      table.className = 'table mono';
+      table.innerHTML = `<thead><tr><th>Type</th><th>Table</th><th>Alias</th></tr></thead><tbody></tbody>`;
+      const tbody = table.querySelector('tbody');
+
+      tables.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+      <td>${t.type}</td>
+      <td>${highlightSQL(t.table)}</td>
+      <td>${highlightSQL(t.alias)}</td>
+    `;
+        tbody.appendChild(tr);
+      });
+
+      return table;
+    }
+
+    function createWhereTable(conds) {
+      const table = document.createElement('table');
+      table.className = 'table mono';
+      table.innerHTML = `<thead><tr><th>Condition</th></tr></thead><tbody></tbody>`;
+      const tbody = table.querySelector('tbody');
+      conds.forEach(c => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${highlightSQL(c)}</td>`;
+        tbody.appendChild(tr);
+      });
+      return table;
+    }
+
+    function parseSelect(sql) {
+      const distinct = /\bSELECT\s+DISTINCT\b/i.test(sql);  // có DISTINCT không
+      const m = /SELECT\s+(?:DISTINCT\s+)?([\s\S]*?)FROM/i.exec(sql);
+      if (!m) return { distinct: false, cols: [] };
+
+      const cols = splitByCommaOutsideParens(m[1]);
+      const result = cols.map(c => {
+        const asMatch = /\s+AS\s+/i.exec(c);
+        if (asMatch) {
+          const [expr, alias] = c.split(/\s+AS\s+/i);
+          return { expr: expr.trim(), alias: alias.trim() };
+        }
+        return { expr: c.trim(), alias: '' };
+      });
+
+      return { distinct, cols: result };
+    }
+
+    function stripOuterParensSafe(sql) {
+      sql = sql.trim();
+      let changed = true;
+
+      while (changed) {
+        changed = false;
+        if (sql.startsWith("(") && sql.endsWith(")")) {
+          let depth = 0;
+          let valid = true;
+          for (let i = 0; i < sql.length; i++) {
+            if (sql[i] === "(") depth++;
+            else if (sql[i] === ")") {
+              depth--;
+              if (depth === 0 && i < sql.length - 1) {
+                // gặp ngoặc đóng trước cuối ⇒ không phải ngoặc ngoài cùng
+                valid = false;
+                break;
+              }
+            }
+          }
+          if (valid && depth === 0) {
+            sql = sql.slice(1, -1).trim();
+            changed = true; // thử lại, để gọt thêm nếu còn nhiều lớp
+          }
+        }
+      }
+
+      return sql;
+    }
+
+    // function parseFrom(sql) {
+    //   const tables = [];
+    //   const kw = /\b(FROM|(?:LEFT|RIGHT|INNER|FULL|CROSS)\s+JOIN|JOIN)\b/ig;
+    //   let m;
+    //   while ((m = kw.exec(sql)) !== null) {
+    //     const type = m[1];
+    //     let pos = m.index + m[0].length;
+
+    //     // skip spaces
+    //     while (pos < sql.length && /\s/.test(sql[pos])) pos++;
+
+    //     // parse table expr
+    //     let tableExpr = '';
+    //     let isSubquery = false;
+
+    //     if (sql[pos] === '(') {
+    //       isSubquery = true;
+    //       const { text, end } = readBalanced(sql, pos);
+    //       tableExpr = text;
+    //       pos = end;
+    //     } else if (sql[pos] === '"') {
+    //       const { text, end } = readQuoted(sql, pos);
+    //       tableExpr = text;
+    //       pos = end;
+    //     } else {
+    //       const start = pos;
+    //       while (pos < sql.length && !/\s/.test(sql[pos])) pos++;
+    //       tableExpr = sql.slice(start, pos);
+    //     }
+
+    //     // optional alias
+    //     const aliasStart = pos;
+    //     while (pos < sql.length && /\s/.test(sql[pos])) pos++;
+    //     let alias = '';
+    //     if (sql[pos] === '"') {
+    //       const { text, end } = readQuoted(sql, pos);
+    //       alias = text;
+    //       pos = end;
+    //     } else {
+    //       const aStart = pos;
+    //       while (pos < sql.length && /[A-Za-z0-9_.]/.test(sql[pos])) pos++;
+    //       alias = sql.slice(aStart, pos).trim();
+    //     }
+    //     // nếu alias trông như bắt đầu của ON => không có alias
+    //     if (/^ON$/i.test(alias)) { alias = ''; pos = aliasStart; }
+
+    //     if (isSubquery) {
+    //       tables.push({
+    //         type,
+    //         table: '(subquery)',
+    //         alias,
+    //         isSubquery: true,
+    //         innerSQL: stripOuterParensSafe(tableExpr)
+    //       });
+    //     } else {
+    //       tables.push({
+    //         type,
+    //         table: tableExpr,
+    //         alias,
+    //         isSubquery: false,
+    //         innerSQL: null
+    //       });
+    //     }
+    //   }
+    //   return tables;
+    // }
+
+    function parseFrom(sql) {
+      const tables = [];
+      const kw = /\b(FROM|(?:LEFT|RIGHT|INNER|FULL|CROSS)\s+JOIN|JOIN)\b/ig;
+
+      let m;
+      while ((m = kw.exec(sql)) !== null) {
+        // ---- 1) Bỏ qua các match nằm trong subquery (depth > 0)
+        let depth = 0, inStr = false;
+        for (let i = 0; i < m.index; i++) {
+          const c = sql[i], n = sql[i + 1];
+          if (inStr) { if (c === "'" && n === "'") { i++; continue; } if (c === "'") inStr = false; continue; }
+          if (c === "'") { inStr = true; continue; }
+          if (c === "(") depth++;
+          else if (c === ")") depth = Math.max(0, depth - 1);
+        }
+        if (depth > 0) continue;
+
+        // ---- 2) Loại JOIN/FROM
+        const type = m[1];
+        let pos = m.index + m[0].length;
+        while (pos < sql.length && /\s/.test(sql[pos])) pos++;
+
+        // ---- 3) Table expr
+        let tableExpr = '', isSubquery = false;
+        if (sql[pos] === '(') {
+          isSubquery = true;
+          const { text, end } = readBalanced(sql, pos);
+          tableExpr = text;
+          pos = end;
+        } else if (sql[pos] === '"') {
+          const { text, end } = readQuoted(sql, pos);
+          tableExpr = text;
+          pos = end;
+        } else {
+          const start = pos;
+          while (pos < sql.length && !/\s/.test(sql[pos])) pos++;
+          tableExpr = sql.slice(start, pos);
+        }
+
+        // ---- 4) Alias (nếu lỡ ăn nhầm "ON" thì trả về aliasStart)
+        const aliasStart = pos;
+        while (pos < sql.length && /\s/.test(sql[pos])) pos++;
+        let alias = '';
+        if (sql[pos] === '"') {
+          const { text, end } = readQuoted(sql, pos);
+          alias = text;
+          pos = end;
+        } else {
+          const aStart = pos;
+          while (pos < sql.length && /[A-Za-z0-9_.]/.test(sql[pos])) pos++;
+          alias = sql.slice(aStart, pos).trim();
+        }
+        if (/^ON$/i.test(alias)) { alias = ''; pos = aliasStart; }
+
+        // ---- 5) ON/USING CHỈ khi là JOIN, và PHẢI đứng ngay sau alias
+        let on = '';
+        if (/JOIN/i.test(type)) {
+          const rest = sql.slice(pos);
+          const head = rest.match(/^\s+(ON|USING)\b/i); // chỉ chấp nhận nếu ngay sau alias
+          if (head) {
+            let j = pos + head[0].length; // sau " ON"/" USING"
+            let d2 = 0, inStr2 = false;
+            for (; j < sql.length; j++) {
+              const c = sql[j], n = sql[j + 1];
+              if (inStr2) { if (c === "'" && n === "'") { j++; continue; } if (c === "'") inStr2 = false; continue; }
+              if (c === "'") { inStr2 = true; continue; }
+              if (c === '(') d2++;
+              else if (c === ')') d2 = Math.max(0, d2 - 1);
+
+              if (d2 === 0) {
+                const rest2 = sql.slice(j);
+                // dừng khi tới clause ngoài cùng kế tiếp (so từ đầu vị trí hiện tại)
+                if (/^(?:\s+)?(?:(?:LEFT|RIGHT|INNER|FULL|CROSS)\s+JOIN|JOIN|WHERE|GROUP\s+BY|HAVING|ORDER\s+BY|LIMIT|OFFSET|RETURNING|UNION(?:\s+ALL)?|EXCEPT|INTERSECT)\b/i.test(rest2)) {
+                  break;
+                }
+              }
+            }
+            on = sql.slice(pos + head[0].length, j).trim();
+          }
+        }
+
+        // ---- 6) Push
+        tables.push({
+          type,
+          table: isSubquery ? '(subquery)' : tableExpr,
+          alias,
+          isSubquery,
+          innerSQL: isSubquery ? stripOuterParensSafe(tableExpr) : null,
+          on
+        });
+      }
+      return tables;
+    }
+
+    function parseWhere(sql) {
+      const lines = sql.split("\n");
+      const out = [];
+      let inWhere = false;
+      let depth = 0;
+
+      for (let line of lines) {
+        for (let c of line) {
+          if (c === "(") depth++;
+          else if (c === ")") depth = Math.max(0, depth - 1);
+        }
+
+        const trimmed = line.trim();
+
+        // chỉ bắt WHERE khi depth = 0 (tức là WHERE ở ngoài cùng)
+        if (/^\(?\s*WHERE\b/i.test(trimmed) && depth === 0) {
+          inWhere = true;
+          continue;
+        }
+
+        if (inWhere) {
+          // dừng nếu gặp các section khác ở level 0
+          if (/^(GROUP BY|ORDER BY|LIMIT|OFFSET|RETURNING)\b/i.test(trimmed) && depth === 0) {
+            break;
+          }
+          if (trimmed) out.push(trimmed);
+        }
+      }
+
+      if (out.length) {
+        return out.join(" ").split(/\bAND\b|\bOR\b/i).map(s => s.trim()).filter(Boolean);
+      }
+      return [];
+    }
+
+    function parseOrderBy(sql) {
+      const m = /ORDER BY([\s\S]*?)(LIMIT|OFFSET|$)/i.exec(sql);
+      if (!m) return [];
+      return splitByCommaOutsideParens(m[1].trim()).map(c => c.trim());
+    }
+
+    function parseLimit(sql) {
+      const m = /\bLIMIT\s+(\d+)/i.exec(sql);
+      return m ? m[1] : '';
+    }
+
+    function createOrderByTable(orders) {
+      const table = document.createElement('table');
+      table.className = 'table mono';
+      const tbody = document.createElement('tbody');
+
+      orders.forEach(o => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${highlightSQL(o)}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      table.appendChild(tbody);
+      return table;
+    }
+
+
+    function createLimitGroup(limit) {
+      if (!limit) return null;
+      const det = document.createElement('details');
+      det.className = 'group'; det.open = true;
+      const sum = document.createElement('summary');
+      sum.textContent = 'Limit';
+      const pre = document.createElement('pre');
+      pre.innerHTML = highlightSQL('LIMIT ' + limit);
+      det.appendChild(sum); det.appendChild(pre);
+      return det;
+    }
+
+
+    /* ================== INSERT PARSER (cho inspector) ================== */
+    function extractInsertInfo(sql) {
+      const mValues = /VALUES\b/i.exec(sql);
+      if (!/^\s*INSERT\b/i.test(sql) || !mValues) return null;
+
+      const head = sql.slice(0, mValues.index);
+      const mHead = /INSERT\s+INTO\s+([\s\S]*?)\(\s*([\s\S]*?)\s*\)\s*$/i.exec(head);
+      if (!mHead) return null;
+      const table = mHead[1].trim();
+      const cols = splitByCommaOutsideParens(mHead[2].trim());
+
+      // phần sau VALUES
+      let rest = sql.slice(mValues.index + mValues[0].length);
+      let returning = '';
+      const retPos = rest.search(/\bRETURNING\b/i);
+      if (retPos >= 0) { returning = rest.slice(retPos + 'RETURNING'.length).trim(); rest = rest.slice(0, retPos); }
+
+      // tách các value tuple: ( ... ), ( ... )
+      const rows = []; let i = 0;
+      while (i < rest.length) {
+        while (i < rest.length && /[\s,]/.test(rest[i])) i++;
+        if (i >= rest.length) break;
+        if (rest[i] !== '(') break;
+        i++; let depth = 1, inStr = false, buf = '';
+        for (; i < rest.length; i++) {
+          const c = rest[i], n = rest[i + 1];
+          if (inStr) { buf += c; if (c === "'" && n == "'") { buf += n; i++; } else if (c === "'") { inStr = false; } continue; }
+          if (c === "'") { inStr = true; buf += c; continue; }
+          if (c === '(') { depth++; buf += c; continue; }
+          if (c === ')') { depth--; if (depth === 0) { rows.push(buf.trim()); i++; break; } buf += c; continue; }
+          buf += c;
+        }
+      }
+      const valueRows = rows.map(r => splitByCommaOutsideParens(r));
+      return { table, columns: cols, rows: valueRows, returning };
+    }
+
+    /* ================== GROUPING (cho non-INSERT) ================== */
+    function splitSqlSections(formattedSql) {
+      const lines = formattedSql.split('\n');
+      const reJoin = /^(?:LEFT|RIGHT|INNER|FULL|CROSS)?\s*JOIN\b/i;
+      const reOther = /^(GROUP BY|HAVING|ORDER BY|LIMIT|OFFSET|RETURNING)\b/i;
+      const reValues = /^VALUES\b/i, reReturning = /^RETURNING\b/i;
+
+      let section = 'select';
+      const buckets = { select: [], from: [], where: [], other: [] };
+      for (const raw of lines) {
+        const line = raw.trimStart();
+        if (/^SELECT\b|^INSERT\b|^UPDATE\b|^DELETE\b/i.test(line)) { section = 'select'; buckets.select.push(raw); continue; }
+        if (/^FROM\b/i.test(line) || reJoin.test(line)) { section = 'from'; buckets.from.push(raw); continue; }
+        if (/^WHERE\b/i.test(line)) { section = 'where'; buckets.where.push(raw); continue; }
+        if (reValues.test(line) || reReturning.test(line) || reOther.test(line)) { section = 'other'; buckets.other.push(raw); continue; }
+        buckets[section].push(raw);
+      }
+      const join = a => a && a.length ? a.join('\n') : '';
+      return { select: join(buckets.select), from: join(buckets.from), where: join(buckets.where), other: join(buckets.other) };
+    }
+
+    function createGroup(title, text, openByDefault = true) {
+      if (!text || !text.trim()) return null;
+      const det = document.createElement('details'); det.className = 'group'; det.open = openByDefault;
+      const sum = document.createElement('summary'); sum.innerHTML = `${title}`;
+      const pre = document.createElement('pre'); pre.innerHTML = highlightSQL(text);
+      det.appendChild(sum); det.appendChild(pre); return det;
+    }
+
+    /* ========== GROUP Returning (cột phải) ========== */
+    function createReturningGroup(retText) {
+      if (!retText || !retText.trim()) return null;
+      const det = document.createElement('details');
+      det.className = 'group';
+      det.open = true;
+      const sum = document.createElement('summary');
+      sum.textContent = 'Returning';
+      const pre = document.createElement('pre');
+      pre.innerHTML = highlightSQL('RETURNING ' + retText.trim());
+      det.appendChild(sum); det.appendChild(pre);
+      return det;
+    }
+
+    /* ========== Insert Inspector (cột trái) ========== */
+    function createInsertInspector(info) {
+      const det = document.createElement('details');
+      det.className = 'group';
+      det.open = true;
+
+      const sum = document.createElement('summary');
+      sum.textContent = 'Query';
+      det.appendChild(sum);
+
+      // Header bar – thay cho "Row #1", hiển thị INSERT INTO ... (canh trái)
+      const bar = document.createElement('div');
+      bar.className = 'subtle';
+      bar.style.padding = '8px 12px';
+      bar.style.display = 'flex';
+      bar.style.alignItems = 'center';
+      bar.style.justifyContent = 'flex-start';
+      bar.innerHTML = highlightSQL(`INSERT INTO ${info.table}`);
+      det.appendChild(bar);
+
+      // Bảng 2 cột: Column / Value
+      const table = document.createElement('table');
+      table.className = 'table mono';
+      table.innerHTML = `
+        <thead>
+          <tr><th style="width:40%">Column</th><th>Value</th></tr>
+        </thead>
+        <tbody></tbody>`;
+      const tbody = table.querySelector('tbody');
+
+      // Cột trong INSERT (bỏ "AS ..." và quote ngoài)
+      const insertCols = info.columns.map(c =>
+        c.replace(/\s+AS\s+.*$/i, '').trim()
+          .replace(/^"+|"+$/g, '')   // bỏ quote
+          .replace(/\)+$/, '')       // nếu vẫn còn ')' rơi rớt ở cuối thì bỏ
+      );
+
+      // Render từng hàng values; nếu không có VALUES (INSERT ... SELECT) thì vẫn render danh sách cột
+      const rows = info.rows.length ? info.rows : [Array.from({ length: insertCols.length }, () => '')];
+
+      rows.forEach(row => {
+        insertCols.forEach((colName, idx) => {
+          const tr = document.createElement('tr');
+          const td1 = document.createElement('td');
+          const td2 = document.createElement('td');
+
+          td1.innerHTML = highlightSQL(`"${colName}"`);
+          td2.innerHTML = highlightSQL((row[idx] ?? '').trim());
+
+          tr.appendChild(td1); tr.appendChild(td2);
+          tbody.appendChild(tr);
+        });
+      });
+
+      det.appendChild(table);
+      return det;
+    }
+
+    /* ================== PARSE & RENDER ================== */
+    function parseLog() {
+      const raw = document.getElementById('input').value
+        .replace(/^\s*query:\s*START\s+TRANSACTION.*$/gmi, '')
+        .replace(/^\s*query:\s*(COMMIT|ROLLBACK).*$/gmi, '');
+
+      const results = []; const blocks = []; let m;
+      const reSameLine = /(?:query:\s*)?([\s\S]*?)--\s*PARAMETERS:\s*([^\n]*)/gi;
+      while ((m = reSameLine.exec(raw)) !== null) blocks.push({ sql: m[1].trim(), paramsText: m[2].trim() });
+
+      for (const b of blocks) {
+        const sqlRaw = (b.sql || '').trim();
+        if (!sqlRaw) continue;
+
+        if (!/\b(SELECT|INSERT|UPDATE|DELETE|WITH)\b/i.test(sqlRaw)) continue;
+        let params = [];
+        // Tự động cân bằng dấu đóng cho paramsText
+        function fixParamText(str) {
+          let openArr = 0, closeArr = 0, openObj = 0, closeObj = 0;
+          for (let c of str) {
+            if (c === '[') openArr++;
+            if (c === ']') closeArr++;
+            if (c === '{') openObj++;
+            if (c === '}') closeObj++;
+          }
+          while (closeObj < openObj) {
+            if (str.endsWith(']')) str = str.slice(0, -1) + '}' + ']';
+            else str += '}';
+            closeObj++;
+          }
+          while (closeArr < openArr) {
+            str += ']';
+            closeArr++;
+          }
+          return str;
+        }
+        let paramTextFixed = fixParamText(b.paramsText.trim());
+        try {
+          params = JSON.parse(paramTextFixed);
+        } catch {
+          params = paramTextFixed;
+        }
+
+        let i = 0;
+        let q = b.sql;
+        if (/\$(\d+)/.test(q)) {
+          q = q.replace(/\$(\d+)/g, (_, n) => {
+            const v = params[Number(n) - 1];
+            if (v === null || v === undefined) return 'null';
+            if (typeof v === 'object') {
+              let json = JSON.stringify(v);
+              json = json.replace(/"/g, "'");
+              return `'${json}'`;
+            }
+            if (typeof v === 'number') return String(v);
+            return `'${String(v)}'`;
+          });
+        } else if (/\?/.test(q)) {
+          q = q.replace(/\?/g, () => {
+            const v = params[i++];
+            if (v === null || v === undefined) return 'null';
+            if (typeof v === 'object') {
+              let json = JSON.stringify(v);
+              json = json.replace(/"/g, "'");
+              return `'${json}'`;
+            }
+            if (typeof v === 'number') return String(v);
+            return `'${String(v)}'`;
+          });
+        }
+        q = q.replace(/^\s*query:\s*/i, '');
+        q = q.replace(/\s*--\s*PARAMETERS:\s*\[[\s\S]*?\]\s*$/i, '');
+        if (/^\s*START\s+TRANSACTION\b/i.test(q)) continue;
+        if (!q.trim()) continue;
+
+        const formatted = beautifySQL(q);
+        const insertInfo = extractInsertInfo(q);
+        results.push({ formatted, insertInfo });
+      }
+      render(results);
+      window._lastParsed = results.map(r => r.formatted);
+    }
+
+    function render(results) {
+      const outputDiv = document.getElementById('output');
+      outputDiv.innerHTML = '';
+
+      results.forEach((r, idx) => {
+        const block = document.createElement('div');
+        block.className = 'query-block';
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.textContent = `#${idx + 1} • Formatted`;
+        block.appendChild(meta);
+
+        const copy = document.createElement('button');
+        copy.className = 'copy-btn';
+        copy.innerText = '📋 Copy';
+        copy.onclick = () => copyToClipboard(r.formatted);
+        block.appendChild(copy);
+
+        const groupsWrap = document.createElement('div');
+        groupsWrap.className = 'groups';
+        const left = document.createElement('div');
+        left.className = 'col-left';
+        const right = document.createElement('div');
+        right.className = 'col-right';
+
+        if (/^\s*SELECT\b/i.test(r.formatted)) {
+          // destructure ra 2 biến
+          const { distinct, cols } = parseSelect(r.formatted);
+          const tables = parseFrom(r.formatted).map(t => {
+            if (t.isSubquery) {
+              return {
+                type: t.type,
+                alias: t.alias,
+                isSubquery: true,
+                innerSQL: t.innerSQL,
+                table: '(subquery)' // không bung FROM bên trong
+              };
+            }
+            return t;
+          });
+          const conds = parseWhere(r.formatted);
+          const orderBy = parseOrderBy(r.formatted);
+          const limit = parseLimit(r.formatted);
+
+          if (cols && cols.length) {
+            const det = document.createElement('details');
+            det.className = 'group';
+            det.open = true;
+
+            const sum = document.createElement('summary');
+            sum.textContent = distinct ? 'Select Distinct Columns' : 'Select Columns';
+            det.appendChild(sum);
+
+            det.appendChild(createSelectTable(cols));
+            left.appendChild(det);
+          }
+
+          // Cột phải: From / Joins
+          if (tables.length) {
+            const det = document.createElement('details');
+            det.className = 'group'; det.open = true;
+            const sum = document.createElement('summary');
+            sum.textContent = 'From / Joins';
+            det.appendChild(sum);
+
+            // render từng table
+            det.appendChild(createFromTableImproved(tables));
+            right.appendChild(det);
+          }
+
+          if (conds.length) {
+            const det = document.createElement('details');
+            det.className = 'group'; det.open = true;
+            const sum = document.createElement('summary');
+            sum.textContent = 'Where';
+            det.appendChild(sum);
+            det.appendChild(createWhereBlock(conds));
+            right.appendChild(det);
+          }
+
+          if (orderBy.length) {
+            const det = document.createElement('details');
+            det.className = 'group'; det.open = true;
+            const sum = document.createElement('summary');
+            sum.textContent = 'Order By';
+            det.appendChild(sum);
+            det.appendChild(createOrderByTable(orderBy));
+            right.appendChild(det);
+          }
+
+          if (limit) {
+            right.appendChild(createLimitGroup(limit));
+          }
+        } else if (/^\s*INSERT\b/i.test(r.formatted) && r.insertInfo) {
+          // Inspector bên trái
+          left.appendChild(createInsertInspector(r.insertInfo));
+
+          // Nếu có RETURNING thì show bên phải
+          if (r.insertInfo.returning) {
+            right.appendChild(createReturningGroup(r.insertInfo.returning));
+          }
+        }
+        groupsWrap.appendChild(left);
+        groupsWrap.appendChild(right);
+        block.appendChild(groupsWrap);
+        outputDiv.appendChild(block);
+      });
+    }
+
+    function createWhereBlock(conds) {
+      const pre = document.createElement('pre');
+      pre.innerHTML = highlightSQL(conds.join('\nAND '));
+      return pre;
+    }
+
+    // Auto-parse khi gõ
+    document.getElementById('input').addEventListener('input', parseLog);
+    parseLog();
+
+
+    async function copyToClipboard(text) {
+      try {
+        if (navigator.clipboard && window.isSecureContext) await navigator.clipboard.writeText(text);
+        else { const el = document.createElement('textarea'); el.value = text; document.body.appendChild(el); el.select(); document.execCommand('copy'); el.remove(); }
+        showTemporaryAlert('✅ Copied to clipboard!', 3000);
+      } catch (e) {
+        showTemporaryAlert('⚠️ Copy failed: ' + e.message, 3000);
+      }
+    }
+
+    function showTemporaryAlert(message, duration = 3000) {
+      // Tạo alert tự động biến mất
+      const alertDiv = document.createElement('div');
+      alertDiv.textContent = message;
+      alertDiv.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #1f2937;
+        color: #e5e7eb;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        z-index: 10000;
+        font-family: inherit;
+        font-size: 14px;
+        border: 1px solid #374151;
+        animation: slideIn 0.3s ease-out;
+      `;
+
+      // Thêm CSS animation
+      if (!document.querySelector('#temp-alert-styles')) {
+        const style = document.createElement('style');
+        style.id = 'temp-alert-styles';
+        style.textContent = `
+          @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+          }
+          @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+          }
+        `;
+        document.head.appendChild(style);
+      }
+
+      document.body.appendChild(alertDiv);
+
+      // Tự động xóa sau duration
+      setTimeout(() => {
+        alertDiv.style.animation = 'slideOut 0.3s ease-in';
+        setTimeout(() => {
+          if (alertDiv.parentNode) {
+            alertDiv.parentNode.removeChild(alertDiv);
+          }
+        }, 300);
+      }, duration);
+    }
+
+    function saveJson() {
+      const data = { input: document.getElementById('input').value, output: window._lastParsed || [] };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob); const a = document.createElement('a');
+      a.href = url; a.download = 'parsed-sql-log.json'; a.click(); URL.revokeObjectURL(url);
+    }
+
+    // Tab component
+    function createTabs(sections) {
+      const wrap = document.createElement("div");
+      const tabs = document.createElement("div"); tabs.className = "tabs";
+      const contentWrap = document.createElement("div");
+
+      const btns = [];
+      Object.entries(sections).forEach(([name, node], i) => {
+        if (!node) return;
+        const btn = document.createElement("button");
+        btn.className = "tab-btn" + (i === 0 ? " active" : "");
+        btn.innerText = name;
+        btn.onclick = () => {
+          btns.forEach(b => b.classList.remove("active"));
+          Array.from(contentWrap.children).forEach(c => c.classList.remove("active"));
+          btn.classList.add("active");
+          contentWrap.children[i].classList.add("active");
+        };
+        btns.push(btn);
+        tabs.appendChild(btn);
+
+        const pane = document.createElement("div");
+        pane.className = "tab-content" + (i === 0 ? " active" : "");
+        pane.appendChild(node);
+        contentWrap.appendChild(pane);
+      });
+
+      wrap.appendChild(tabs);
+      wrap.appendChild(contentWrap);
+      return wrap;
+    }
+
+    function createSections(sections) {
+      const wrap = document.createElement("div");
+      Object.entries(sections).forEach(([name, node]) => {
+        if (!node) return;
+        const det = document.createElement("details");
+        det.className = "group"; det.open = true;
+        const sum = document.createElement("summary"); sum.textContent = name;
+        det.appendChild(sum);
+        det.appendChild(node);
+        wrap.appendChild(det);
+      });
+      return wrap;
+    }
+
+
+    // SELECT Columns table
+    function createSelectTableImproved(cols) {
+      const table = document.createElement("table");
+      table.className = "table mono";
+      table.innerHTML = `<thead><tr><th>Expression</th><th>Alias</th></tr></thead><tbody></tbody>`;
+      const tbody = table.querySelector("tbody");
+
+      cols.forEach(c => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+      <td>${highlightSQL(c.expr)}</td>
+      <td class="alias-cell">${c.alias}</td>`;
+        tbody.appendChild(tr);
+      });
+      return table;
+    }
+
+    // FROM / JOINs table with ON condition
+    function createFromTableImproved(tables) {
+      const table = document.createElement("table");
+      table.className = "table mono";
+      table.innerHTML = `
+    <thead>
+      <tr>
+        <th>Type</th>
+        <th>Table</th>
+        <th>Alias</th>
+        <th>On Condition</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  `;
+      const tbody = table.querySelector("tbody");
+
+      tables.forEach(t => {
+        const tr = document.createElement("tr");
+
+        // Nếu là subquery thì làm cell riêng
+        if (t.isSubquery) {
+          const td = document.createElement("td");
+          td.colSpan = 4;
+          td.className = "subquery-cell";
+          td.innerHTML = `🔍 View Subquery has alias: ${t.alias || ""}`;
+          td.onclick = () => { showSubqueryModal(t.innerSQL, t.alias); };
+          tr.appendChild(td);
+        } else {
+          tr.innerHTML = `
+        <td>${t.type}</td>
+        <td>${highlightSQL(t.table)}</td>
+        <td class="alias-cell">${highlightSQL(t.alias || "")}</td>
+        <td>
+  ${(t.on || "")
+              .split(/\b(AND|OR)\b/i)
+              .map(part => {
+                if (/^(AND|OR)$/i.test(part.trim())) {
+                  return `<div style="color:#34d399;font-weight:bold">${part.trim()}</div>`;
+                }
+                return `<div>${highlightSQL(part.trim())}</div>`;
+              })
+              .join("")
+            }
+</td>`;
+        }
+
+        tbody.appendChild(tr);
+      });
+
+      return table;
+    }
+
+    // WHERE as tree view
+    function createWhereTree(conds) {
+      const root = document.createElement("ul");
+      root.className = "where-tree";
+
+      conds.forEach(c => {
+        // Bóc sạch ngoặc ngoài thừa toàn bộ WHERE
+        let expr = stripOuterParens(c.trim());
+
+        // Tách theo AND/OR
+        expr.split(/\s+AND\s+|\s+OR\s+/i).forEach(part => {
+          let cond = stripOuterParens(part.trim()); // gọt lần nữa từng phần
+          if (cond) {
+            const li = document.createElement("li");
+            li.innerHTML = highlightSQL(cond);
+            root.appendChild(li);
+          }
+        });
+      });
+
+      return root;
+    }
+
+    function stripOuterParens(s) {
+      let prev;
+      do {
+        prev = s;
+        if (s.startsWith("(") && s.endsWith(")")) {
+          // Kiểm tra ngoặc có khớp không
+          let depth = 0, balanced = true;
+          for (let i = 0; i < s.length; i++) {
+            if (s[i] === "(") depth++;
+            else if (s[i] === ")") {
+              depth--;
+              if (depth < 0) { balanced = false; break; }
+            }
+          }
+          if (balanced && depth === 0) {
+            s = s.slice(1, -1).trim();
+          }
+        }
+      } while (s !== prev);
+      return s;
+    }
+
+    function renderSubqueryBlock(innerSQL, alias) {
+      const formattedInner = beautifySQL(innerSQL);
+      // Parse các phần của subquery
+      const { distinct, cols } = parseSelect(formattedInner);
+      const tables = parseFrom(formattedInner);
+      const conds = parseWhere(formattedInner);
+      const orders = parseOrderBy(formattedInner);
+      const limit = parseLimit(formattedInner);
+
+      // Wrapper 2 cột
+      const wrap = document.createElement("div");
+      wrap.className = "groups";
+
+      // ===== Left column: Select Columns =====
+      const left = document.createElement("div");
+      left.className = "col-left";
+      if (cols.length) {
+        const det = document.createElement("details");
+        det.className = "group"; det.open = true;
+        const sum = document.createElement("summary");
+        sum.textContent = distinct ? "Select Distinct Columns" : "Select Columns";
+        det.appendChild(sum);
+        det.appendChild(createSelectTableImproved(cols));
+        left.appendChild(det);
+      }
+
+      // ===== Right column: From/Joins + Where + Order By + Limit =====
+      const right = document.createElement("div");
+      right.className = "col-right";
+
+      if (tables.length) {
+        const det = document.createElement("details");
+        det.className = "group"; det.open = true;
+        const sum = document.createElement("summary");
+        sum.textContent = "From / Joins";
+        det.appendChild(sum);
+        det.appendChild(createFromTableImproved(tables));
+        right.appendChild(det);
+      }
+
+      if (conds.length) {
+        const det = document.createElement("details");
+        det.className = "group"; det.open = true;
+        const sum = document.createElement("summary");
+        sum.textContent = "Where";
+        det.appendChild(sum);
+        det.appendChild(createWhereTree(conds));
+        right.appendChild(det);
+      }
+
+      if (orders.length) {
+        const det = document.createElement("details");
+        det.className = "group"; det.open = true;
+        const sum = document.createElement("summary");
+        sum.textContent = "Order By";
+        det.appendChild(sum);
+        det.appendChild(createOrderByTable(orders));
+        right.appendChild(det);
+      }
+
+      if (limit) {
+        right.appendChild(createLimitGroup(limit));
+      }
+
+      // Gắn vào wrapper
+      wrap.appendChild(left);
+      wrap.appendChild(right);
+
+      return wrap;
+    }
+
+    function showSubqueryModal(innerSQL, alias) {
+      const overlay = document.createElement("div");
+      overlay.className = "modal-overlay";
+
+      const modal = document.createElement("div");
+      modal.className = "modal";
+
+      const header = document.createElement("div");
+      header.className = "modal-header";
+      const title = document.createElement("h3");
+      title.textContent = `Subquery has alias: ${alias || ""}`;
+
+      // Thêm nút Copy vào phần header
+      const copyBtn = document.createElement('button');
+      copyBtn.className = "modal-copy";
+      copyBtn.innerText = '📋 Copy';
+      copyBtn.onclick = () => {
+        copyToClipboard(innerSQL); // Copy nội dung vào clipboard
+      };
+
+      // Thêm nút Copy vào header
+      header.appendChild(title);
+      header.appendChild(copyBtn);  // Đặt nút Copy vào bên phải tiêu đề
+
+      const body = renderSubqueryBlock(innerSQL, alias);
+      modal.appendChild(header);
+      modal.appendChild(body);
+
+      overlay.appendChild(modal);
+      document.body.appendChild(overlay);
+
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          overlay.remove();
+        }
+      });
+    }
+
+  </script>
+</body>
+
+</html>

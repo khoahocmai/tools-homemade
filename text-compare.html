@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text compare</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --bg: #0a1326;
+            --panel: #0f254a;
+            --muted: #9aa4b2;
+            --text: #bfe0ff;
+            --accent: #1f72ff;
+            --accent2: #4fff77;
+            --warn: #ff6b6b;
+            --danger: #ff1a1a;
+            --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+            --border: rgba(255, 255, 255, .08);
+            --border-hover: rgba(255, 255, 255, .16);
+        }
+
+        [data-theme="light"] {
+            --bg: #f9fafb;
+            --panel: #fff;
+            --muted: #6b7280;
+            --text: #1f2937;
+            --accent: #1f72ff;
+            --accent2: #059669;
+            --warn: #dc2626;
+            --danger: #b91c1c;
+            --border: rgba(0, 0, 0, .12);
+            --border-hover: rgba(0, 0, 0, .24);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 16px/1.5 Inter, system-ui, Segoe UI, Roboto, sans-serif;
+            transition: background .3s, color .3s;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            padding: 10px 16px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .controls button {
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: var(--panel);
+            color: var(--text);
+            transition: .2s;
+        }
+
+        .controls button:hover {
+            border-color: var(--border-hover);
+            filter: brightness(1.1);
+        }
+
+        /* --- Diff containers --- */
+        .diff-container {
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre;
+            overflow-x: auto;
+            background: var(--panel);
+            border-radius: 8px;
+            padding: 8px 12px;
+            color: var(--text);
+        }
+
+        .diff-rows {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .diff-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 1px 0;
+            margin: 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .diff-row .num {
+            width: 45px;
+            text-align: right;
+            color: var(--muted);
+            font-family: var(--mono);
+            font-size: 14px;
+            padding-right: 8px;
+            vertical-align: top;
+            user-select: none;
+        }
+
+        .diff-row .content {
+            flex: 1;
+            display: inline-block;
+            padding: 2px 8px 2px 8px;
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            border-radius: 4px;
+        }
+
+        /* --- Colors --- */
+        [data-theme="dark"] .added {
+            background: rgba(79, 250, 123, .15);
+            color: #b0ffb7;
+            border: 1px solid #81f871;
+        }
+
+        [data-theme="dark"] .removed {
+            background: rgba(255, 100, 100, .12);
+            color: #ffaaaa;
+            border: 1px solid #f87171;
+        }
+
+        [data-theme="dark"] .modified {
+            background: rgba(255, 209, 102, .15);
+            color: #ffd166;
+        }
+
+        [data-theme="dark"] .missing {
+            background: rgba(255, 100, 100, .1);
+            color: #ffb3b3;
+        }
+
+        [data-theme="dark"] .unchanged {
+            color: var(--text);
+        }
+
+        [data-theme="light"] .added {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #5cc74d;
+        }
+
+        [data-theme="light"] .removed {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #ef4444;
+        }
+
+        [data-theme="light"] .modified {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        [data-theme="light"] .missing {
+            background: rgba(255, 100, 100, .1);
+            color: #ffb3b3;
+        }
+
+        [data-theme="light"] .unchanged {
+            color: #374151;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 1rem;
+            margin-bottom: .5rem;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            margin-right: .5rem;
+            border-radius: 2px;
+        }
+
+        /* --- Light/dark legend backgrounds --- */
+        [data-theme="dark"] .legend-color.unchanged {
+            background: rgba(191, 224, 255, .1);
+        }
+
+        [data-theme="dark"] .legend-color.modified {
+            background: rgba(255, 209, 102, .15);
+        }
+
+        [data-theme="dark"] .legend-color.added {
+            background: rgba(155, 255, 209, .15);
+        }
+
+        [data-theme="dark"] .legend-color.removed {
+            background: rgba(255, 155, 155, .15);
+        }
+
+        [data-theme="light"] .legend-color.unchanged {
+            background: #e5e7eb;
+        }
+
+        [data-theme="light"] .legend-color.modified {
+            background: #fde68a;
+        }
+
+        [data-theme="light"] .legend-color.added {
+            background: #bbf7d0;
+        }
+
+        [data-theme="light"] .legend-color.removed {
+            background: #fecaca;
+        }
+
+        /* --- Light/dark stat backgrounds --- */
+        [data-theme="dark"] .stat.similarity {
+            background: rgba(31, 114, 255, 0.15);
+            color: #bfe0ff;
+            border: 1px solid rgba(31, 114, 255, 0.25);
+        }
+
+        [data-theme="light"] .stat.similarity {
+            background: #dbeafe;
+            color: #1f72ff;
+            border: 1px solid #93c5fd;
+        }
+
+        /* --- Textarea layout --- */
+        .textarea-container {
+            position: relative;
+            display: flex;
+            border: 1px solid var(--border);
+            border-radius: .375rem;
+            background: var(--panel);
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+
+        .line-numbers {
+            background: var(--bg);
+            border-right: 1px solid var(--border);
+            padding: .75rem .5rem;
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--muted);
+            user-select: none;
+            min-width: 60px;
+            text-align: right;
+            position: sticky;
+            left: 0;
+            top: 0;
+        }
+
+        .textarea-with-lines {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: .75rem;
+            font-family: var(--mono);
+            font-size: 14px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: var(--text);
+            background: transparent;
+            max-height: 590px;
+            overflow-y: auto;
+        }
+
+        .textarea-with-lines:focus {
+            outline: none;
+            box-shadow: none;
+            border-color: var(--border-hover);
+        }
+
+        /* --- Effects --- */
+        .error {
+            background: rgba(255, 155, 155, .15);
+            animation: shake .5s ease-in-out;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            25%,
+            75% {
+                transform: translateX(-5px)
+            }
+
+            50% {
+                transform: translateX(5px)
+            }
+        }
+
+        /* --- Misc --- */
+        .stat.similarity {
+            background: var(--similarity-bg);
+            color: var(--similarity-text);
+        }
+
+        html {
+            scroll-padding-top: 80px;
+        }
+
+        #diffLineNumbers1,
+        #diffLineNumbers2 {
+            display: none;
+        }
+    </style>
+</head>
+
+<body style="background: var(--bg); color: var(--text); font: 16px/1.5 Inter, system-ui, Segoe UI, Roboto, sans-serif;">
+    <header>
+        <div class="brand">📝 <span>Text Compare</span></div>
+        <div class="controls">
+            <button id="btnToggleTheme">🌙</button>
+            <button onclick="compareTexts()">🔍 So sánh</button>
+            <button onclick="pasteExample()">📋 Ví dụ</button>
+            <button onclick="clearAll()">🧹 Xóa tất cả</button>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 max-w-full">
+        <div class="grid md:grid-cols-2 gap-6 mb-8">
+            <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+                <label for="text1" class="block text-sm font-medium mb-2" style="color: var(--text);">
+                    Văn bản gốc
+                </label>
+                <div class="textarea-container">
+                    <pre id="text1" class="textarea-with-lines " contenteditable="true"
+                        oninput="updateLineNumbers('text1','lineNumbers1')"
+                        onscroll="syncScroll('text1','lineNumbers1')" placeholder="Nhập văn bản gốc tại đây..."></pre>
+                </div>
+            </div>
+
+            <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+                <label for="text2" class="block text-sm font-medium mb-2" style="color: var(--text);">
+                    Văn bản so sánh
+                </label>
+                <div class="textarea-container">
+                    <pre id="text2" class="textarea-with-lines " contenteditable="true"
+                        oninput="updateLineNumbers('text2','lineNumbers2')"
+                        onscroll="syncScroll('text2','lineNumbers2')"
+                        placeholder="Nhập văn bản so sánh tại đây..."></pre>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg shadow-md p-4 mb-6" id="legend" style="display: none; background: var(--panel);">
+            <h3 class="text-lg font-semibold mb-3" style="color: var(--text);">Chú thích:</h3>
+            <div class="flex flex-wrap">
+                <div class="legend-item">
+                    <div class="legend-color unchanged"></div>
+                    <span class="text-sm" style="color: var(--text);">Nội dung không thay đổi</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color modified"></div>
+                    <span class="text-sm" style="color: var(--text);">Nội dung đã thay đổi</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color added"></div>
+                    <span class="text-sm" style="color: var(--text);">Nội dung được thêm</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color removed"></div>
+                    <span class="text-sm" style="color: var(--text);">Nội dung bị xóa (thiếu)</span>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6" id="results" style="display: none;">
+            <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--text);">Văn bản gốc (có đánh dấu)</h3>
+                <div class="textarea-container">
+                    <div id="diffLineNumbers1" class="line-numbers"></div>
+                    <div id="diff1" class="diff-container flex-1" style="background: var(--bg);"></div>
+                </div>
+            </div>
+
+            <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+                <h3 class="text-lg font-semibold mb-4" style="color: var(--text);">Văn bản so sánh (có đánh dấu)</h3>
+                <div class="textarea-container">
+                    <div id="diffLineNumbers2" class="line-numbers"></div>
+                    <div id="diff2" class="diff-container flex-1" style="background: var(--bg);"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="rounded-lg shadow-md p-6 mt-6" id="stats" style="display: none; background: var(--panel);">
+            <h3 class="text-lg font-semibold mb-4" style="color: var(--text);">Thống kê sự khác biệt:</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                <div class="p-3 rounded stat modified">
+                    <div class="text-2xl font-bold" id="modifiedCount">0</div>
+                    <div class="text-sm">Nội dung đã thay đổi</div>
+                </div>
+
+                <div class="p-3 rounded stat added">
+                    <div class="text-2xl font-bold" id="addedCount">0</div>
+                    <div class="text-sm">Nội dung được thêm</div>
+                </div>
+
+                <div class="p-3 rounded stat removed">
+                    <div class="text-2xl font-bold" id="removedCount">0</div>
+                    <div class="text-sm">Nội dung bị xóa (thiếu)</div>
+                </div>
+
+                <div class="p-3 rounded stat similarity">
+                    <div class="text-2xl font-bold" id="similarityPercent">0%</div>
+                    <div class="text-sm">Độ tương đồng</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.querySelectorAll('.textarea-with-lines').forEach(el => {
+            el.addEventListener('paste', function (e) {
+                e.preventDefault();
+                const text = e.clipboardData.getData('text/plain');
+                // Dán đúng vị trí con trỏ thay vì overwrite toàn bộ
+                document.execCommand("insertText", false, text);
+            });
+        });
+
+        const btnToggleTheme = document.getElementById('btnToggleTheme');
+        btnToggleTheme.addEventListener('click', () => {
+            const theme = document.documentElement.getAttribute('data-theme');
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                btnToggleTheme.textContent = '🌙';
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+                btnToggleTheme.textContent = '🌞';
+            }
+        });
+        function pasteExample() {
+            document.getElementById('text1').textContent =
+                '{\n  "name": "John Doe",\n  "age": 30,\n  "city": "New York"\n}';
+            document.getElementById('text2').textContent =
+                '{\n  "name": "Jane Doe",\n  "age": 25,\n  "city": "Los Angeles",\n  "country": "USA"\n}';
+        }
+
+        function safeParseJSON(str) {
+            try {
+                return JSON.parse(str);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function normalizeJson(str) {
+            const obj = safeParseJSON(str);
+            if (obj !== null) {
+                return JSON.stringify(obj, null, 2);
+            } else {
+                return str
+                    .replace(/\r\n/g, '\n')
+                    .replace(/\u00A0/g, ' ')
+                    .replace(/[ \t]+$/gm, '')
+                    .trimEnd();
+            }
+        }
+
+        function normalizeCode(str, indentSize = 2) {
+            str = normalizeLineEndings(str).trimStart();
+            const lines = str.split(/\n/);
+            if (lines.length > 0 && lines[0].trim() === '') {
+                lines.shift(); // bỏ dòng trống đầu tiên
+            }
+            let level = 0;
+            const result = [];
+
+            for (let rawLine of lines) {
+                let line = rawLine.trim();
+                if (!line) continue;
+
+                if (line.startsWith("}")) {
+                    level = Math.max(0, level - 1);
+                }
+
+                const indent = " ".repeat(level * indentSize);
+                result.push(indent + line);
+
+                if (line.endsWith("{")) {
+                    level++;
+                }
+            }
+            return result.join("\n");
+        }
+
+        function normalizeLineEndings(str) {
+            return str.replace(/\r\n|\r/g, '\n');
+        }
+
+        function updateLineNumbers(textareaId, lineNumbersId) {
+            const textarea = document.getElementById(textareaId);
+            const lineNumbers = document.getElementById(lineNumbersId);
+            const lines = normalizeLineEndings(document.getElementById(textareaId).textContent).split('\n');
+            const lineCount = lines.length;
+
+            let lineNumbersText = '';
+            for (let i = 1; i <= lineCount; i++) {
+                lineNumbersText += i + '\n';
+            }
+
+            lineNumbers.textContent = lineNumbersText.slice(0, -1);
+        }
+
+        function syncScroll(textareaId, lineNumbersId) {
+            const textarea = document.getElementById(textareaId);
+            const lineNumbers = document.getElementById(lineNumbersId);
+            lineNumbers.scrollTop = textarea.scrollTop;
+        }
+
+        function compareJsonLine(line1, line2) {
+            const keyRegex = /^(\s*"[^"]+"\s*:\s*)(.*)$/;
+            const m1 = line1.match(keyRegex);
+            const m2 = line2.match(keyRegex);
+
+            if (m1 && m2 && m1[1] === m2[1]) {
+                const keyPart = m1[1];
+                const val1 = m1[2];
+                const val2 = m2[2];
+
+                if (val1 === val2) {
+                    return { line1, line2 };
+                } else {
+                    return {
+                        line1: keyPart + `<span class="removed">${val1}</span>`,
+                        line2: keyPart + `<span class="added">${val2}</span>`
+                    };
+                }
+            }
+
+            return compareWordsInLines(line1, line2);
+        }
+
+        function displayDetailedDiffRows(diffResult, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+
+            const rowsWrapper = document.createElement('div');
+            rowsWrapper.className = 'diff-rows';
+
+            for (let i = 0; i < diffResult.length; i++) {
+                const item = diffResult[i];
+
+                const row = document.createElement('div');
+                row.className = 'diff-row';
+
+                const num = document.createElement('div');
+                num.className = 'num';
+                num.textContent = (i + 1).toString();
+
+                const content = document.createElement('div');
+                content.className = 'content';
+
+                if (item.type === 'modified') {
+                    content.innerHTML = item.content;
+                    content.classList.add('modified');
+                } else if (item.type === 'added') {
+                    content.textContent = item.content;
+                    content.classList.add('added');
+                } else if (item.type === 'removed') {
+                    content.textContent = item.content;
+                    content.classList.add('removed');
+                } else if (item.type === 'missing') {
+                    content.innerHTML = '&nbsp;';
+                    content.classList.add('missing');
+                } else {
+                    content.textContent = item.content;
+                    content.classList.add('unchanged');
+                }
+
+                row.appendChild(num);
+                row.appendChild(content);
+                rowsWrapper.appendChild(row);
+            }
+
+            container.appendChild(rowsWrapper);
+        }
+
+        function compareTexts() {
+            const text1 = normalizeJson(document.getElementById('text1').textContent.trim());
+            const text2 = normalizeJson(document.getElementById('text2').textContent.trim());
+
+            let isError = false;
+            for (const id of ['text1', 'text2']) {
+                const el = document.getElementById(id);
+                if (!document.getElementById(id).textContent.trim()) { el.classList.add('error'); isError = true; }
+                else { el.classList.remove('error'); }
+            }
+            if (isError) {
+                document.getElementById('legend').style.display = 'none';
+                document.getElementById('results').style.display = 'none';
+                document.getElementById('stats').style.display = 'none';
+                return;
+            }
+
+            // Kiểm tra nếu 2 text giống hệt nhau
+            if (text1 === text2) {
+                const lines = text1.split('\n');
+                const identicalResult = lines.map(line => ({ content: line, type: 'unchanged' }));
+
+                displayDetailedDiffRows(identicalResult, 'diff1');
+                displayDetailedDiffRows(identicalResult, 'diff2');
+
+                updateStatistics({ added: 0, removed: 0, modified: 0, unchanged: lines.length });
+
+                document.getElementById('legend').style.display = 'block';
+                document.getElementById('results').style.display = 'grid';
+                document.getElementById('stats').style.display = 'block';
+                document.getElementById('legend').scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+
+            const lines1 = text1.split('\n');
+            const lines2 = text2.split('\n');
+
+            // Sử dụng thuật toán diff đơn giản hơn cho trường hợp ít khác biệt
+            const quickDiff = performSimpleLineDiff(lines1, lines2);
+
+            displayDetailedDiffRows(quickDiff.result1, 'diff1');
+            displayDetailedDiffRows(quickDiff.result2, 'diff2');
+
+            syncAllRowHeightsSoon();
+            attachDiffObservers();
+
+            updateStatistics(quickDiff.stats);
+
+            document.getElementById('legend').style.display = 'block';
+            document.getElementById('results').style.display = 'grid';
+            document.getElementById('stats').style.display = 'block';
+            document.getElementById('legend').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function performSimpleLineDiff(lines1, lines2) {
+            const result1 = [];
+            const result2 = [];
+            const stats = { added: 0, removed: 0, modified: 0, unchanged: 0 };
+
+            const maxLines = Math.max(lines1.length, lines2.length);
+
+            for (let i = 0, j = 0; i < lines1.length || j < lines2.length;) {
+                const line1 = lines1[i] || '';
+                const line2 = lines2[j] || '';
+
+                if (!line1 && line2) {
+                    result1.push({ content: '', type: 'missing' });
+                    result2.push({ content: line2, type: 'added' });
+                    stats.added++;
+                    j++;
+                    continue;
+                }
+
+                if (line1 && !line2) {
+                    result1.push({ content: line1, type: 'removed' });
+                    result2.push({ content: '', type: 'missing' });
+                    stats.removed++;
+                    i++;
+                    continue;
+                }
+
+                // Nếu giống nhau hoàn toàn
+                if (line1.trim() === line2.trim()) {
+                    result1.push({ content: line1, type: 'unchanged' });
+                    result2.push({ content: line2, type: 'unchanged' });
+                    i++; j++;
+                    stats.unchanged++;
+                    continue;
+                }
+
+                // ✅ Tìm dòng tương tự gần nhất trong ±2 dòng (để bắt “trượt xuống”)
+                let foundShift = false;
+                for (let offset = 1; offset <= 2; offset++) {
+                    if (j + offset < lines2.length && isSimilar(line1, lines2[j + offset])) {
+                        // Đệm các dòng mới (added)
+                        for (let k = 0; k < offset; k++) {
+                            result1.push({ content: '', type: 'missing' });
+                            result2.push({ content: lines2[j + k], type: 'added' });
+                            stats.added++;
+                        }
+                        // Đánh dấu dòng hiện tại là match
+                        result1.push({ content: line1, type: 'unchanged' });
+                        result2.push({ content: lines2[j + offset], type: 'unchanged' });
+                        i++; j += offset + 1;
+                        stats.unchanged++;
+                        foundShift = true;
+                        break;
+                    }
+                    if (i + offset < lines1.length && isSimilar(lines1[i + offset], line2)) {
+                        // Đệm các dòng bị xóa
+                        for (let k = 0; k < offset; k++) {
+                            result1.push({ content: lines1[i + k], type: 'removed' });
+                            result2.push({ content: '', type: 'missing' });
+                            stats.removed++;
+                        }
+                        result1.push({ content: lines1[i + offset], type: 'unchanged' });
+                        result2.push({ content: line2, type: 'unchanged' });
+                        i += offset + 1; j++;
+                        stats.unchanged++;
+                        foundShift = true;
+                        break;
+                    }
+                }
+                if (foundShift) continue;
+
+                // Nếu không tìm thấy shift → xử lý diff thông thường
+                const d = compareJsonLine(line1, line2);
+                result1.push({ content: d.line1, type: 'modified' });
+                result2.push({ content: d.line2, type: 'modified' });
+                stats.modified++;
+                i++; j++;
+            }
+
+
+            return { result1, result2, stats };
+        } function buildDiffFromAlignment(alignment) {
+            const result1 = [];
+            const result2 = [];
+            const stats = { added: 0, removed: 0, modified: 0, unchanged: 0 };
+
+            // Post-process để xử lý dấu đóng ngoặc JSON
+            const processedAlignment = postProcessJSONBraces(alignment);
+
+            for (let i = 0; i < processedAlignment.length; i++) {
+                const a = processedAlignment[i];
+
+                if (a.type === 'remove' && i + 1 < processedAlignment.length && processedAlignment[i + 1].type === 'add') {
+                    const b = processedAlignment[i + 1];
+
+                    // Chỉ gộp thành modified nếu 2 dòng thực sự tương tự (cùng key JSON)
+                    if (isSimilar(a.line1 ?? '', b.line2 ?? '')) {
+                        const d = compareJsonLine(a.line1 ?? '', b.line2 ?? '');
+                        result1.push({ content: d.line1, type: 'modified' });
+                        result2.push({ content: d.line2, type: 'modified' });
+                        stats.modified++;
+                        i++; // bỏ qua phần tử add đã xử lý
+                        continue;
+                    }
+                    // Nếu không tương tự, xử lý như remove và add riêng biệt
+                    result1.push({ content: a.line1, type: 'removed' });
+                    result2.push({ content: '', type: 'missing' });
+                    stats.removed++;
+                    continue;
+                }
+
+                if (a.type === 'match') {
+                    result1.push({ content: a.line1, type: 'unchanged' });
+                    result2.push({ content: a.line2, type: 'unchanged' });
+                    stats.unchanged++;
+                } else if (a.type === 'add') {
+                    result1.push({ content: '', type: 'missing' });
+                    result2.push({ content: a.line2, type: 'added' });
+                    stats.added++;
+                } else if (a.type === 'remove') {
+                    result1.push({ content: a.line1, type: 'removed' });
+                    result2.push({ content: '', type: 'missing' });
+                    stats.removed++;
+                } else if (a.type === 'modify') {
+                    const d = compareJsonLine(a.line1 ?? '', a.line2 ?? '');
+                    result1.push({ content: d.line1, type: 'modified' });
+                    result2.push({ content: d.line2, type: 'modified' });
+                    stats.modified++;
+                }
+            }
+            return { result1, result2, stats };
+        }
+
+        function postProcessJSONBraces(alignment) {
+            const processed = [...alignment];
+
+            // Tìm các dấu đóng ngoặc JSON ở cuối
+            for (let i = processed.length - 1; i >= 0; i--) {
+                const item = processed[i];
+
+                // Nếu là dòng add và chỉ chứa dấu đóng ngoặc
+                if (item.type === 'add' && item.line2 && item.line2.trim() === '}') {
+                    // Kiểm tra xem có dòng nào ở trước đó cũng là dấu đóng ngoặc không
+                    let foundMatchingBrace = false;
+                    for (let j = i - 1; j >= 0; j--) {
+                        const prevItem = processed[j];
+                        if (prevItem.line1 && prevItem.line1.trim() === '}') {
+                            // Tìm thấy dấu đóng ngoặc tương ứng, chuyển thành match
+                            processed[i] = {
+                                line1: prevItem.line1,
+                                line2: item.line2,
+                                type: 'match'
+                            };
+                            // Xóa item trước đó
+                            processed.splice(j, 1);
+                            foundMatchingBrace = true;
+                            break;
+                        }
+                    }
+
+                    if (foundMatchingBrace) {
+                        i--; // Điều chỉnh index vì đã xóa một item
+                    }
+                }
+            }
+
+            return processed;
+        }
+
+        function createDiffWorker() {
+            const workerScript = `
+    self.onmessage = function(e) {
+        const { lines1, lines2 } = e.data;
+        const m = lines1.length;
+        const n = lines2.length;
+        const dp = new Uint32Array((m + 1) * (n + 1));
+        const idx = (i, j) => i * (n + 1) + j;
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                if (lines1[i - 1] === lines2[j - 1]) {
+                    dp[idx(i, j)] = dp[idx(i - 1, j - 1)] + 1;
+                } else {
+                    dp[idx(i, j)] = Math.max(dp[idx(i - 1, j)], dp[idx(i, j - 1)]);
+                }
+            }
+        }
+        const lcs = [];
+        let i = m, j = n;
+        while (i > 0 && j > 0) {
+            if (lines1[i - 1] === lines2[j - 1]) {
+                lcs.unshift({ i1: i - 1, i2: j - 1, line: lines1[i - 1] });
+                i--; j--;
+            } else if (dp[idx(i - 1, j)] > dp[idx(i, j - 1)]) {
+                i--;
+            } else {
+                j--;
+            }
+        }
+        self.postMessage({ lcs });
+    }`;
+            const blob = new Blob([workerScript], { type: 'application/javascript' });
+            return new Worker(URL.createObjectURL(blob));
+        }
+
+        function computeLCSFallback(lines1, lines2) {
+            const m = lines1.length;
+            const n = lines2.length;
+            const dp = new Uint32Array((m + 1) * (n + 1));
+            const idx = (i, j) => i * (n + 1) + j;
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (lines1[i - 1] === lines2[j - 1]) {
+                        dp[idx(i, j)] = dp[idx(i - 1, j - 1)] + 1;
+                    } else {
+                        dp[idx(i, j)] = Math.max(dp[idx(i - 1, j)], dp[idx(i, j - 1)]);
+                    }
+                }
+            }
+            const lcs = [];
+            let i = m, j = n;
+            while (i > 0 && j > 0) {
+                if (lines1[i - 1] === lines2[j - 1]) {
+                    lcs.unshift({ i1: i - 1, i2: j - 1, line: lines1[i - 1] });
+                    i--; j--;
+                } else if (dp[idx(i - 1, j)] > dp[idx(i, j - 1)]) {
+                    i--;
+                } else {
+                    j--;
+                }
+            }
+            return lcs;
+        }
+
+        let workerAvailable = !!window.Worker;
+
+        async function computeLCS(lines1, lines2) {
+            if (workerAvailable && (lines1.length > 1000 || lines2.length > 1000)) {
+                return new Promise((resolve) => {
+                    const w = createDiffWorker();
+                    w.onmessage = (e) => {
+                        const lcs = e.data.lcs || [];
+                        w.terminate();
+                        resolve(lcs);
+                    };
+                    w.postMessage({ lines1, lines2 });
+                });
+            }
+            return computeLCSFallback(lines1, lines2);
+        }
+
+        function alignLinesWithLCS(lines1, lines2, lcs) {
+            const alignment = [];
+            let i1 = 0, i2 = 0, lcsIndex = 0;
+
+            while (i1 < lines1.length || i2 < lines2.length) {
+                if (lcsIndex < lcs.length &&
+                    i1 === lcs[lcsIndex].i1 && i2 === lcs[lcsIndex].i2) {
+                    alignment.push({
+                        line1: lines1[i1],
+                        line2: lines2[i2],
+                        type: 'match'
+                    });
+                    i1++; i2++; lcsIndex++;
+                } else if (lcsIndex < lcs.length && i1 === lcs[lcsIndex].i1) {
+                    alignment.push({
+                        line1: null,
+                        line2: lines2[i2],
+                        type: 'add'
+                    });
+                    i2++;
+                } else if (lcsIndex < lcs.length && i2 === lcs[lcsIndex].i2) {
+                    alignment.push({
+                        line1: lines1[i1],
+                        line2: null,
+                        type: 'remove'
+                    });
+                    i1++;
+                } else if (i1 < lines1.length && i2 < lines2.length) {
+                    if (isSimilar(lines1[i1], lines2[i2])) {
+                        alignment.push({
+                            line1: lines1[i1],
+                            line2: lines2[i2],
+                            type: 'modify'
+                        });
+                    } else {
+                        alignment.push({ line1: lines1[i1], line2: null, type: 'remove' });
+                        alignment.push({ line1: null, line2: lines2[i2], type: 'add' });
+                    }
+                    i1++; i2++;
+                } else if (i1 < lines1.length) {
+                    alignment.push({
+                        line1: lines1[i1],
+                        line2: null,
+                        type: 'remove'
+                    });
+                    i1++;
+                } else if (i2 < lines2.length) {
+                    alignment.push({
+                        line1: null,
+                        line2: lines2[i2],
+                        type: 'add'
+                    });
+                    i2++;
+                }
+            }
+
+            return alignment;
+        }
+
+        function isSimilar(a, b) {
+            if (!a || !b) return false;
+
+            // Loại bỏ whitespace để so sánh
+            const trimA = a.trim();
+            const trimB = b.trim();
+
+            // Nếu giống hệt nhau sau khi trim
+            if (trimA === trimB) return true;
+
+            // Kiểm tra JSON key pattern
+            const keyRegex = /^(\s*"[^"]+"\s*:\s*)(.*)$/;
+            const m1 = trimA.match(keyRegex);
+            const m2 = trimB.match(keyRegex);
+
+            if (m1 && m2 && m1[1] === m2[1]) {
+                return true;
+            }
+
+            // Kiểm tra các dấu ngoặc JSON
+            if (/^\s*[{}[\]]\s*,?$/.test(trimA) && /^\s*[{}[\]]\s*,?$/.test(trimB)) {
+                return true;
+            }
+
+            // Kiểm tra similarity score - giảm threshold để strict hơn
+            const similarity = calculateSimilarity(trimA, trimB);
+            return similarity > 0.9; // Tăng từ 0.85 lên 0.9 để strict hơn
+        }
+
+        function calculateSimilarity(str1, str2) {
+            if (str1 === str2) return 1.0;
+            if (str1.length === 0 || str2.length === 0) return 0.0;
+
+            const maxLen = Math.max(str1.length, str2.length);
+            const distance = levenshteinDistance(str1, str2);
+            return (maxLen - distance) / maxLen;
+        }
+
+        function levenshteinDistance(str1, str2) {
+            const m = str1.length;
+            const n = str2.length;
+            const dp = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
+
+            for (let i = 0; i <= m; i++) dp[i][0] = i;
+            for (let j = 0; j <= n; j++) dp[0][j] = j;
+
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (str1[i - 1] === str2[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1];
+                    } else {
+                        dp[i][j] = Math.min(
+                            dp[i - 1][j] + 1,    // deletion
+                            dp[i][j - 1] + 1,    // insertion
+                            dp[i - 1][j - 1] + 1 // substitution
+                        );
+                    }
+                }
+            }
+            return dp[m][n];
+        }
+
+        function mergeAdjacentSpans(html, cls) {
+            // Gộp các span cùng loại (added/removed) liền nhau
+            const regex = new RegExp(
+                `<span class="${cls}">([^<]*)</span>(\\s*)<span class="${cls}">([^<]*)</span>`,
+                "g"
+            );
+            let merged = html;
+            while (regex.test(merged)) {
+                merged = merged.replace(
+                    regex,
+                    `<span class="${cls}">$1$2$3</span>`
+                );
+            }
+            return merged;
+        }
+
+        function compareWordsInLines(line1, line2) {
+            const words1 = line1.split(/(\s+)/);
+            const words2 = line2.split(/(\s+)/);
+
+            let result1 = '';
+            let result2 = '';
+
+            const maxWords = Math.max(words1.length, words2.length);
+
+            for (let i = 0; i < maxWords; i++) {
+                const word1 = words1[i] || '';
+                const word2 = words2[i] || '';
+
+                if (word1 === word2) {
+                    result1 += word1;
+                    result2 += word2;
+                } else if (!word1) {
+                    result2 += `<span class="added">${word2}</span>`;
+                } else if (!word2) {
+                    result1 += `<span class="removed">${word1}</span>`;
+                } else if (word1.trim() && word2.trim()) {
+                    const charDiff = compareCharacters(word1, word2);
+                    result1 += charDiff.word1;
+                    result2 += charDiff.word2;
+                } else {
+                    result1 += word1;
+                    result2 += word2;
+                }
+            }
+
+            result1 = mergeAdjacentSpans(result1, "removed");
+            result2 = mergeAdjacentSpans(result2, "added");
+
+            return { line1: result1, line2: result2 };
+        }
+
+        function compareCharacters(word1, word2) {
+            let prefixEnd = 0;
+            while (prefixEnd < Math.min(word1.length, word2.length) &&
+                word1[prefixEnd] === word2[prefixEnd]) {
+                prefixEnd++;
+            }
+
+            let suffixStart1 = word1.length;
+            let suffixStart2 = word2.length;
+            while (suffixStart1 > prefixEnd && suffixStart2 > prefixEnd &&
+                word1[suffixStart1 - 1] === word2[suffixStart2 - 1]) {
+                suffixStart1--;
+                suffixStart2--;
+            }
+
+            const prefix = word1.substring(0, prefixEnd);
+            const suffix1 = word1.substring(suffixStart1);
+            const suffix2 = word2.substring(suffixStart2);
+
+            const middle1 = word1.substring(prefixEnd, suffixStart1);
+            const middle2 = word2.substring(prefixEnd, suffixStart2);
+
+            let result1 = prefix;
+            let result2 = prefix;
+
+            if (middle1) {
+                result1 += `<span class="removed">${middle1}</span>`;
+            }
+            if (middle2) {
+                result2 += `<span class="added">${middle2}</span>`;
+            }
+
+            result1 += suffix1;
+            result2 += suffix2;
+
+            return { word1: result1, word2: result2 };
+        }
+
+        function escapeHtml(str) {
+            if (str == null) return '';
+            return str
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        function createVirtualRenderer(containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = ''; // clear cũ
+
+            function setItems(items) {
+                const rowsHtml = items.map((item, i) => `<div class="diff-row"><div class="num">${i + 1}</div><div class="content ${item.type}">${item.content || '&nbsp;'}</div></div>`).join('');
+                container.innerHTML = rowsHtml;
+            }
+
+            return { setItems };
+        }
+
+        function updateStatistics(stats) {
+            document.getElementById('addedCount').textContent = stats.added;
+            document.getElementById('removedCount').textContent = stats.removed;
+            document.getElementById('modifiedCount').textContent = stats.modified;
+
+            const total = stats.added + stats.removed + stats.modified + stats.unchanged;
+            const similarity = total > 0 ? Math.round((stats.unchanged / total) * 100) : 0;
+            document.getElementById('similarityPercent').textContent = similarity + '%';
+        }
+
+        function syncAllRowHeights() {
+            const rows1 = document.querySelectorAll("#diff1 .diff-row");
+            const rows2 = document.querySelectorAll("#diff2 .diff-row");
+
+            const rowCount = Math.min(rows1.length, rows2.length);
+            for (let i = 0; i < rowCount; i++) {
+                const c1 = rows1[i].querySelector(".content");
+                const c2 = rows2[i].querySelector(".content");
+
+                // reset trước để đo lại đúng
+                c1.style.minHeight = "";
+                c2.style.minHeight = "";
+
+                const h1 = c1.offsetHeight;
+                const h2 = c2.offsetHeight;
+
+                // Chỉ sync nếu thực sự khác nhau và cần thiết
+                if (Math.abs(h1 - h2) > 1) {
+                    const maxH = Math.max(h1, h2);
+                    c1.style.minHeight = maxH + "px";
+                    c2.style.minHeight = maxH + "px";
+                }
+            }
+        }
+
+        // Gọi sync sau khi DOM layout ổn định (2 frame)
+        function syncAllRowHeightsSoon() {
+            requestAnimationFrame(() => requestAnimationFrame(syncAllRowHeights));
+        }
+
+        let diffResizeObserver;
+        function attachDiffObservers() {
+            if (diffResizeObserver) diffResizeObserver.disconnect();
+            diffResizeObserver = new ResizeObserver(() => {
+                syncAllRowHeightsSoon();
+            });
+            // Gắn observer vào các cell nội dung đã render
+            document.querySelectorAll('#diff1 .content, #diff2 .content').forEach(el => {
+                diffResizeObserver.observe(el);
+            });
+        }
+
+        function clearAll() {
+            document.getElementById('text1').innerText = '';
+            document.getElementById('text2').innerText = '';
+
+            document.getElementById('diff1').innerHTML = '';
+            document.getElementById('diff2').innerHTML = '';
+
+            document.getElementById('addedCount').textContent = '0';
+            document.getElementById('removedCount').textContent = '0';
+            document.getElementById('modifiedCount').textContent = '0';
+            document.getElementById('similarityPercent').textContent = '0%';
+
+            document.getElementById('legend').style.display = 'none';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+
+            document.querySelectorAll("#diff1 .content, #diff2 .content")
+                .forEach(c => c.style.minHeight = "");
+        }
+
+        document.getElementById('text1').textContent = '{\n  "name": "John Doe",\n  "age": 30,\n  "city": "New York"\n}';
+        document.getElementById('text2').textContent = '{\n  "name": "Jane Doe",\n  "age": 25,\n  "city": "Los Angeles",\n  "country": "USA"\n}';
+        document.addEventListener("keydown", function (e) {
+            if (e.key === "Enter") {
+                const active = document.activeElement;
+                const inTextArea =
+                    active && (active.id === "text1" || active.id === "text2");
+
+                if (inTextArea) {
+                    // đang gõ trong input => chỉ xuống dòng
+                    e.preventDefault();
+                    document.execCommand("insertHTML", false, "\n");
+                } else {
+                    // không focus vào input => chạy so sánh
+                    e.preventDefault();
+                    compareTexts();
+                }
+            }
+        });
+
+        updateLineNumbers('text1', 'lineNumbers1');
+        updateLineNumbers('text2', 'lineNumbers2');
+
+        // Gọi lại khi cửa sổ thay đổi kích thước
+        window.addEventListener("resize", () => {
+            syncAllRowHeightsSoon();
+        });
+
+
+        // Quan sát thay đổi chiều cao nội dung để auto sync
+        const observer = new ResizeObserver(() => {
+            syncAllRowHeights();
+        });
+
+        // Bắt đầu theo dõi tất cả các cell nội dung diff
+        document.querySelectorAll("#diff1 .content, #diff2 .content").forEach(el => {
+            observer.observe(el);
+        });
+    </script>
+</body>
+
+</html>

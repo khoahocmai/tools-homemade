@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Data Compare</title>
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --bg: #0a1326;
+            --panel: #0f254a;
+            --muted: #9aa4b2;
+            --text: #bfe0ff;
+            --border: rgba(255, 255, 255, .08);
+            --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+        }
+
+        body.light {
+            --bg: #f4f6fb;
+            --panel: #ffffff;
+            --muted: #555;
+            --text: #1a1a1a;
+            --border: rgba(0, 0, 0, .1);
+        }
+
+        body {
+            margin: 0;
+            background: var(--bg);
+            color: var(--text);
+            font: 15px/1.5 Inter, system-ui, Segoe UI, Roboto, sans-serif;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 16px;
+            background: var(--panel);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .brand {
+            display: flex;
+            gap: 8px;
+            font-weight: 700;
+            font-size: 16px;
+            align-items: center;
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .controls button {
+            border-radius: 6px;
+            padding: 6px 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, #1f3d6b, #13315c);
+            color: #fff;
+            transition: 0.2s;
+        }
+
+        body.light .controls button {
+            background: linear-gradient(180deg, #e6e9f0, #cfd3df);
+            color: #111;
+        }
+
+        .controls button:hover {
+            filter: brightness(1.1);
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            padding: 14px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        @media (max-width:1000px) {
+            .row {
+                grid-template-columns: 1fr
+            }
+        }
+
+        .panel {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 14px;
+            font-size: 13px;
+            text-transform: uppercase;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .panel-header label {
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1px solid var(--border);
+            background: linear-gradient(180deg, #1f3d6b, #13315c);
+            color: #fff;
+        }
+
+        body.light .panel-header label {
+            background: linear-gradient(180deg, #e6e9f0, #cfd3df);
+            color: #111;
+        }
+
+        .panel-header input[type=file] {
+            display: none;
+        }
+
+        .body {
+            padding: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            min-height: 220px;
+            background: #0c172c;
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            font-family: var(--mono);
+            resize: vertical;
+        }
+
+        body.light textarea {
+            background: #fafafa;
+            color: #111;
+        }
+
+        pre {
+            background: #0c172c;
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 10px;
+            max-height: 240px;
+            overflow: auto;
+            font-family: var(--mono);
+            font-size: 13px;
+        }
+
+        body.light pre {
+            background: #f5f5f5;
+            color: #111;
+        }
+
+        .stats {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .pill {
+            background: #0e2247;
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 4px 10px;
+            font-size: 12px;
+            color: var(--text);
+        }
+
+        body.light .pill {
+            background: #e0e0e0;
+            color: #111;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="brand"><span>🧩</span>Data Compare</div>
+        <div class="controls">
+            <button onclick="toggleTheme()" id="themeBtn">🌙</button>
+            <button onclick="doCompare()">🔍 So sánh</button>
+            <button onclick="clearAll()">🧹 Xóa</button>
+        </div>
+    </header>
+
+    <div class="row">
+        <section class="panel">
+            <div class="panel-header">
+                <span>Dữ liệu A</span>
+                <label for="file1">📄 File A</label>
+                <input type="file" id="file1" accept=".xlsx,.xls,.csv" />
+            </div>
+            <div class="body">
+                <textarea id="data1" placeholder="Nhập JSON / mảng UUID / CSV ..."></textarea>
+            </div>
+        </section>
+        <section class="panel">
+            <div class="panel-header">
+                <span>Dữ liệu B</span>
+                <label for="file2">📄 File B</label>
+                <input type="file" id="file2" accept=".xlsx,.xls,.csv" />
+            </div>
+            <div class="body">
+                <textarea id="data2" placeholder="Nhập JSON / mảng UUID / CSV ..."></textarea>
+            </div>
+        </section>
+    </div>
+
+    <div class="row" style="grid-template-columns:1fr; display:none;" id="resultPanel">
+        <section class="panel">
+            <div class="panel-header"><span>Kết quả</span></div>
+            <div class="body" id="results"></div>
+        </section>
+    </div>
+
+    <script>
+        function handleFile(file, textareaId) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: "array" });
+                const firstSheet = wb.Sheets[wb.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, { header: 1 }).flat();
+                document.getElementById(textareaId).value = JSON.stringify(jsonData, null, 2);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        document.getElementById("file1").addEventListener("change", e => {
+            if (e.target.files.length > 0) handleFile(e.target.files[0], "data1");
+        });
+        document.getElementById("file2").addEventListener("change", e => {
+            if (e.target.files.length > 0) handleFile(e.target.files[0], "data2");
+        });
+
+        function parseInput(str) {
+            str = str.trim();
+            if (!str) return [];
+            try { return JSON.parse(str); } catch { return str.split(/[\s,]+/).filter(Boolean); }
+        }
+        function compareArrays(a1, a2) {
+            const s1 = new Set(a1), s2 = new Set(a2);
+            return {
+                onlyIn1: a1.filter(x => !s2.has(x)),
+                onlyIn2: a2.filter(x => !s1.has(x)),
+                common: a1.filter(x => s2.has(x))
+            };
+        }
+        function doCompare() {
+            const arr1 = parseInput(document.getElementById("data1").value);
+            const arr2 = parseInput(document.getElementById("data2").value);
+            const { onlyIn1, onlyIn2, common } = compareArrays(arr1, arr2);
+
+            document.getElementById("results").innerHTML = `
+        <div class="stats">
+          <span class="pill">✅ Chung: ${common.length}</span>
+          <span class="pill">➖ Chỉ A: ${onlyIn1.length}</span>
+          <span class="pill">➕ Chỉ B: ${onlyIn2.length}</span>
+        </div>
+        <h3>✅ Chung</h3>
+        <pre>${JSON.stringify(common, null, 2)}</pre>
+        <h3>➖ Chỉ ở A</h3>
+        <pre>${JSON.stringify(onlyIn1, null, 2)}</pre>
+        <h3>➕ Chỉ ở B</h3>
+        <pre>${JSON.stringify(onlyIn2, null, 2)}</pre>
+      `;
+
+            const panel = document.getElementById("resultPanel");
+            panel.style.display = "grid";
+            panel.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+        function clearAll() {
+            document.getElementById("data1").value = "";
+            document.getElementById("data2").value = "";
+            document.getElementById("results").innerHTML = "";
+            document.getElementById("resultPanel").style.display = "none";
+        }
+        function toggleTheme() {
+            document.body.classList.toggle("light");
+            document.getElementById("themeBtn").textContent =
+                document.body.classList.contains("light") ? "🌞" : "🌙";
+        }
+
+        // Enter để so sánh (trừ khi đang focus vào textarea)
+        document.addEventListener("keydown", e => {
+            if (e.key === "Enter" && !e.target.matches("textarea")) {
+                e.preventDefault();
+                doCompare();
+            }
+        });
+    </script>
+</body>
+
+</html>

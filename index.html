@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Tools</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f4f6f9;
+            color: #333;
+        }
+
+        header {
+            background: #2563eb;
+            color: #fff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .intro {
+            text-align: center;
+            font-size: 18px;
+            margin-bottom: 30px;
+            color: #555;
+        }
+
+        .cards {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .card {
+            background: #fff;
+            border-radius: 12px;
+            padding: 25px 20px;
+            width: 280px;
+            text-align: center;
+            text-decoration: none;
+            color: #333;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        }
+
+        .card-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            color: #2563eb;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .card-desc {
+            font-size: 15px;
+            color: #666;
+        }
+    </style>
+    <!-- Thư viện icon (Font Awesome) -->
+    <script src="https://kit.fontawesome.com/yourkitid.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <header>
+        <h1>Tools</h1>
+    </header>
+
+    <div class="container">
+        <p class="intro">Chọn chức năng mà bạn muốn sử dụng:</p>
+
+        <div class="cards">
+            <a href="log-beautifier.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-terminal"></i></div>
+                <div class="card-title">Làm đẹp Log</div>
+                <div class="card-desc">Giúp format log dễ đọc, dễ phân tích hơn.</div>
+            </a>
+
+            <a href="pretty-json.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-code"></i></div>
+                <div class="card-title">Làm đẹp JSON</div>
+                <div class="card-desc">Format JSON gọn gàng, hỗ trợ copy dễ dàng.</div>
+            </a>
+
+            <a href="text-compare.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
+                <div class="card-title">So sánh Văn bản</div>
+                <div class="card-desc">So sánh 2 đoạn văn bản và highlight sự khác biệt.</div>
+            </a>
+
+            <a href="dto-to-json.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-database"></i></div>
+                <div class="card-title">Example JSON</div>
+                <div class="card-desc">Cung cấp Json mẫu cho DTO/Entity.</div>
+            </a>
+
+            <a href="data-compare.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
+                <div class="card-title">So sánh Dữ liệu</div>
+                <div class="card-desc">So sánh 2 tập dữ liệu và hiển thị sự khác biệt.</div>
+            </a>
+
+            <a href="weather.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
+                <div class="card-title">Kiểm tra thời tiết</div>
+                <div class="card-desc">Xem thông tin thời tiết hiện tại cho một thành phố.</div>
+            </a>
+
+            <a href="nasa-explorer.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-nasa-explorer"></i></div>
+                <div class="card-title">Kiểm tra ảnh thiên văn NASA</div>
+                <div class="card-desc">Xem ảnh thiên văn các hành tinh của NASA.</div>
+            </a>
+
+            <a href="random-wheel.html" target="_blank" class="card">
+                <div class="card-icon"><i class="fas fa-random"></i></div>
+                <div class="card-title">Vòng quay may mắn</div>
+                <div class="card-desc">Chọn ngẫu nhiên một mục từ danh sách của bạn.</div>
+            </a>
+        </div>
+    </div>
+</body>
+
+</html>

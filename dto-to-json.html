@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="vi" data-theme="dark">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🧩 DTO → JSON</title>
+  <style>
+    :root {
+      --bg: #0a1326;
+      --panel: #0f254a;
+      --muted: #9aa4b2;
+      --text: #bfe0ff;
+      --accent: #1f72ff;
+      --mono: 'JetBrains Mono', 'Fira Code', Consolas, monospace;
+      --border: rgba(255, 255, 255, .08);
+      --input-bg: #081a33;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+
+    header {
+      padding: 10px 14px;
+      background: var(--panel);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    header h1 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 14px;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .panel h2 {
+      margin: 0;
+      font-size: 14px;
+      padding: 8px 14px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    textarea {
+      width: 100%;
+      border: none;
+      outline: none;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      background: var(--input-bg);
+      color: var(--text);
+      resize: none;
+      flex: 1;
+      /* chiếm hết chiều cao panel */
+      height: 100%;
+      /* full chiều cao */
+      min-height: 300px;
+      /* tối thiểu 300px */
+      overflow: auto;
+    }
+
+    pre {
+      margin: 0;
+      padding: 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      background: var(--input-bg);
+      color: var(--text);
+      overflow: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      flex: 1;
+    }
+
+    button {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+
+    button.ghost {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .footer {
+      padding: 6px 14px;
+      font-size: 12px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <h1>🧩 Example JSON</h1>
+    <div class="header-actions">
+      <button id="clearBtn" class="ghost">Clear</button>
+      <button id="copyBtn">Copy JSON</button>
+      <label for="fileInput" class="ghost" style="padding:6px 12px; border-radius:8px; cursor:pointer;">
+        Import file
+      </label>
+      <input type="file" id="fileInput" style="display:none;" accept=".ts,.js,.java,.py,.txt" />
+    </div>
+  </header>
+
+  <div class="row">
+    <!-- Input panel -->
+    <div class="panel">
+      <h2>Input DTO / Entity</h2>
+      <textarea id="input" placeholder="Dán code ở đây..."></textarea>
+    </div>
+
+    <!-- Output panel -->
+    <div class="panel">
+      <h2>Generated example JSON</h2>
+      <pre id="output"></pre>
+    </div>
+  </div>
+
+  <script>
+    /* === Parsers === */
+    function parseTypeScript(src) {
+      const fields = []; const re = /([A-Za-z0-9_$]+)\s*\??\s*:\s*([^;,\n{}]+)/g; let m;
+      while ((m = re.exec(src)) !== null) { fields.push({ name: m[1].trim(), type: m[2].trim() }); }
+      return fields;
+    }
+    function parseJava(src) {
+      const fields = []; const re = /(?:public|private|protected)?\s*(?:static\s+)?([A-Za-z0-9_<>\[\]\.?,\s]+)\s+([A-Za-z0-9_]+)\s*;/g; let m;
+      while ((m = re.exec(src)) !== null) { fields.push({ name: m[2].trim(), type: m[1].trim() }); }
+      return fields;
+    }
+    function parsePython(src) {
+      const fields = []; const re = /([A-Za-z0-9_]+)\s*:\s*([A-Za-z0-9_\[\]\., \|]+)(?:\s*=\s*[^#\n]+)?/g; let m;
+      while ((m = re.exec(src)) !== null) { if (m[1].trim() === 'return') continue; fields.push({ name: m[1].trim(), type: m[2].trim() }); }
+      return fields;
+    }
+    function parseQsrGraphql(src) {
+      const fields = []; const re = /@Qsr\.Plugins\.Graphql\.Field[^\n]*\n\s*([A-Za-z0-9_]+)\??\s*:\s*([A-Za-z0-9_\[\]<>\|]+)/g; let m;
+      while ((m = re.exec(src)) !== null) { fields.push({ name: m[1], type: m[2] }); }
+      return fields;
+    }
+    function parseQsrGraphqlClasses(src) {
+      const classes = {};
+      const classRegex = /export class (\w+)[^{]*{([\s\S]*?)^}/gm;
+      let m;
+      while ((m = classRegex.exec(src)) !== null) {
+        const className = m[1];
+        const body = m[2];
+        const fields = [];
+        const reField = /(?:@Qsr\.Plugins\.[^\n]*\n\s*)+([A-Za-z0-9_]+)\??\s*:\s*([A-Za-z0-9_\[\]<>\|\.]+)/g;
+        let f;
+        while ((f = reField.exec(body)) !== null) {
+          fields.push({ name: f[1], type: f[2] });
+        }
+        classes[className] = fields;
+      }
+      return classes;
+    }
+    function parseQsrOrmEntity(src) {
+      const fields = [];
+      // match: @Qsr.Orm.Columns.*(...) <tênField>: <kiểu>;
+      const re = /@Qsr\.Orm\.(?:Columns\.[A-Za-z]+|ManyToOne|OneToMany|OneToOne)[\s\S]*?\n\s*([A-Za-z0-9_]+)\??\s*:\s*([A-Za-z0-9_\[\]<>\|\.]+)/g;
+      let m;
+      while ((m = re.exec(src)) !== null) {
+        const full = m[0];
+        const name = m[1];
+        const type = m[2];
+        const isRelation = /ManyToOne|OneToMany|OneToOne/.test(full);
+        fields.push({ name, type, relation: isRelation });
+      }
+      return fields;
+    }
+    function detectLanguage(src) {
+      if (/interface\s+[A-Za-z0-9_]+\s*{/.test(src) || /:\s*[A-Za-z0-9_\[\]\|<>]+\s*;/.test(src)) return 'typescript';
+      if (/class\s+[A-Za-z0-9_]+\s*{/.test(src) && /;/g.test(src)) return 'java';
+      if (/@dataclass/.test(src) || /def __init__\(/.test(src) || /:\s*int|:\s*str|:\s*float/.test(src)) return 'python';
+      if (/:\s*[^;]+;/.test(src)) return 'typescript';
+      if (/;\s*\n/.test(src)) return 'java';
+      return 'unknown';
+    }
+    function sampleForType(typeStr, depth = 0, classes = {}, enums = {}, isRelation = false) {
+      if (depth > 6 || !typeStr) return null;
+      typeStr = typeStr.trim();
+
+      // Enum check
+      if (enums[typeStr]) {
+        return enums[typeStr][0] || null; // ví dụ "Male" hoặc "INACTIVE"
+      }
+
+      // Array check
+      if (/(.+)\[\]$/.test(typeStr)) {
+        const inner = RegExp.$1.trim();
+        return [sampleForType(inner, depth + 1, classes, enums, isRelation)];
+      }
+
+      // Class DTO đã parse
+      if (classes[typeStr]) {
+        const obj = {};
+        for (const f of classes[typeStr]) {
+          obj[f.name] = sampleForType(f.type, depth + 1, classes, enums, f.relation);
+        }
+        return obj;
+      }
+
+      // Relation fallback
+      if (isRelation) {
+        if (/\[\]$/.test(typeStr)) return [{}];
+        return {};
+      }
+
+      // Primitive fallback
+      const s = typeStr.toLowerCase();
+      if (/string|char|text|uuid/.test(s)) return "example";
+      if (/int|short|long|byte|number|double|float|decimal/.test(s)) return 42;
+      if (/boolean|bool/.test(s)) return true;
+      if (/date|time|instant/.test(s)) return new Date().toISOString();
+      return "example";
+    }
+    function parseEnums(src) {
+      const enums = {};
+      const reEnum = /export enum (\w+)\s*{([^}]*)}/gm;
+      let m;
+      while ((m = reEnum.exec(src)) !== null) {
+        const enumName = m[1];
+        const body = m[2];
+        const values = [];
+        const reVal = /(\w+)\s*=\s*['"]([^'"]+)['"]/g;
+        let v;
+        while ((v = reVal.exec(body)) !== null) {
+          values.push(v[2]);
+        }
+        enums[enumName] = values;
+      }
+      return enums;
+    }
+    function generateJSON(fields, classes) {
+      const out = {};
+      for (const f of fields) {
+        out[f.name] = sampleForType(f.type, 0, classes);
+      }
+      return out;
+    }
+
+    /* === Main === */
+    function runParse() {
+      const src = document.getElementById('input').value || '';
+
+      const enums = parseEnums(src);
+      const classes = parseQsrGraphqlClasses(src);
+
+      let fields = parseQsrGraphql(src);
+
+      const classNames = Object.keys(classes);
+      if (classNames.length) {
+        fields = fields.concat(classes[classNames[classNames.length - 1]]);
+      }
+
+      const ormFields = parseQsrOrmEntity(src);
+      if (ormFields.length > 0) {
+        fields = fields.concat(ormFields);
+      }
+
+      fields = fields.filter((v, i, a) => a.findIndex(x => x.name === v.name) === i);
+
+      const json = generateJSON(fields, classes, enums);
+      document.getElementById('output').textContent = JSON.stringify(json, null, 2);
+
+      if (fields.length === 0) {
+        document.getElementById('output').textContent = '// Không tìm thấy field nào';
+      }
+    }
+    function generateJSON(fields, classes, enums) {
+      const out = {};
+      for (const f of fields) {
+        out[f.name] = sampleForType(f.type, 0, classes, enums, f.relation);
+      }
+      return out;
+    }
+    document.getElementById('input').addEventListener('input', runParse);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      document.getElementById('input').value = '';
+      document.getElementById('output').textContent = '';
+    });
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      navigator.clipboard.writeText(document.getElementById('output').textContent).then(() => alert('Copied!'));
+    });
+    document.getElementById('fileInput').addEventListener('change', e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        document.getElementById('input').value = reader.result;
+        runParse(); // parse ngay sau khi load file
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+
+</html>
