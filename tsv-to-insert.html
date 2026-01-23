@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SQL Insert Generator</title>
+  <style>
+    /* Cập nhật hệ thống màu sắc và biến theo cấu trúc của Pretty JSON */
+    :root {
+      --bg: #0a1326;
+      --panel: #0f254a;
+      --muted: #9aa4b2;
+      --text: #bfe0ff;
+      --accent: #1f72ff;
+      --accent2: #4fff77;
+      --warn: #ff6b6b;
+      --danger: #ff1a1a;
+      --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+      --pad: 14px;
+      --border: rgba(255, 255, 255, .08);
+      --border-hover: rgba(255, 255, 255, .16);
+      --input-bg: #0c172c;
+    }
+
+    [data-theme="light"] {
+      --bg: #f0f0f0;
+      --panel: #f1f3f4;
+      --muted: #777;
+      --text: #333;
+      --accent: #1f72ff;
+      --border: rgba(0, 0, 0, .12);
+      --border-hover: rgba(0, 0, 0, .24);
+      --input-bg: #ffffff;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 16px/1.5 Inter, system-ui, Segoe UI, Roboto, sans-serif;
+      transition: background .3s, color .3s;
+      padding: 0;
+    }
+
+    /* Cấu trúc Header tương tự Pretty JSON */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      padding: 12px var(--pad);
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    .brand .logo {
+      font-size: 20px;
+    }
+
+    .brand .title {
+      font-size: 16px;
+      letter-spacing: .3px;
+    }
+
+    .controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 700;
+      padding: 9px 14px;
+      transition: .2s;
+      background: linear-gradient(180deg, #1f3d6b, #13315c);
+      color: #fff;
+    }
+
+    [data-theme="light"] button {
+      background: #e8f4fd;
+      color: #1f72ff;
+    }
+
+    button:hover {
+      filter: brightness(1.2);
+    }
+
+    .btn-mini {
+      padding: 6px 10px;
+      font-size: 12px;
+      border-radius: 10px;
+    }
+
+    /* Cấu trúc Layout chia 2 cột như Pretty JSON */
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      padding: 14px;
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    @media (max-width: 1100px) {
+      .row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, .25);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .panel h2 {
+      margin: 0;
+      padding: 10px var(--pad);
+      font-size: 13px;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .body {
+      padding: var(--pad);
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      color: var(--muted);
+    }
+
+    input[type="text"],
+    textarea {
+      width: 100%;
+      background: var(--input-bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      font-family: var(--mono);
+      padding: 12px;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    input[type="text"]:focus,
+    textarea:focus {
+      border-color: var(--accent);
+    }
+
+    textarea {
+      flex: 1;
+      min-height: 400px;
+      resize: vertical;
+    }
+
+    #output {
+      background: var(--panel);
+      color: #a3d0ff;
+      white-space: pre;
+    }
+
+    .output-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Áp dụng cấu trúc HTML của Pretty JSON -->
+  <header>
+    <div class="brand">
+      <span class="logo">🛠️</span>
+      <span class="title">SQL Insert Generator</span>
+    </div>
+    <div class="controls">
+      <button id="btnToggleTheme" class="btn-mini" onclick="toggleTheme()">🌙</button>
+      <button id="btnSample" onclick="loadSample()">Dán ví dụ</button>
+      <button id="btnClear" onclick="clearAll()">🧹 Xoá</button>
+    </div>
+  </header>
+
+  <main class="row">
+    <!-- Cột trái: Input -->
+    <section class="panel">
+      <h2>Cấu hình & Dữ liệu</h2>
+      <div class="body">
+        <div>
+          <label>Table Name</label>
+          <input type="text" id="tableName" placeholder="Ví dụ: qsr_orders_orders -> 'public'.'qsr_orders_orders'">
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column;">
+          <label>Raw Data (Header + Tab separated rows)</label>
+          <textarea id="rawData" placeholder="Paste dữ liệu từ Excel hoặc Database Client vào đây..."></textarea>
+          <div class="hint">Dòng 1: Headers | Các dòng sau: Dữ liệu</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cột phải: Output -->
+    <section class="panel">
+      <div class="output-header" style="padding: 0 var(--pad); border-bottom: 1px solid var(--border);">
+        <h2>Kết quả SQL</h2>
+        <button id="btnCopy" class="btn-mini" onclick="copyToClipboard()" style="margin: 5px 0;">📋 Copy SQL</button>
+      </div>
+      <div class="body">
+        <textarea id="output" readonly placeholder="Kết quả SQL sẽ xuất hiện ở đây..."></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const tableNameInput = document.getElementById('tableName');
+    const rawDataInput = document.getElementById('rawData');
+    const outputArea = document.getElementById('output');
+
+    tableNameInput.addEventListener('input', generateSQL);
+    rawDataInput.addEventListener('input', generateSQL);
+
+    function toggleTheme() {
+      const body = document.body;
+      const btn = document.getElementById('btnToggleTheme');
+      if (body.getAttribute('data-theme') === 'light') {
+        body.removeAttribute('data-theme');
+        btn.innerText = '🌙';
+      } else {
+        body.setAttribute('data-theme', 'light');
+        btn.innerText = '☀️';
+      }
+    }
+
+    function loadSample() {
+      tableNameInput.value = "users";
+      rawDataInput.value = "id\tname\temail\tis_active\n1\tNguyen Van A\ta@example.com\tt\n2\tTran Thi B\tb@example.com\tf\n3\tLe Van C\tc@example.com\tNULL";
+      generateSQL();
+    }
+
+    function clearAll() {
+      tableNameInput.value = "";
+      rawDataInput.value = "";
+      outputArea.value = "";
+    }
+
+    function generateSQL() {
+      const rawContent = rawDataInput.value.trim();
+      const tableName = tableNameInput.value.trim() || "your_table_name";
+
+      if (!rawContent) {
+        outputArea.value = "";
+        return;
+      }
+
+      const lines = rawContent.split('\n');
+      if (lines.length < 2) {
+        outputArea.value = "-- Cần ít nhất 1 dòng header và 1 dòng dữ liệu";
+        return;
+      }
+
+      const headers = lines[0].split('\t').map(h => h.trim());
+      const dataRows = lines.slice(1);
+
+      let fullSql = "";
+
+      dataRows.forEach((line) => {
+        if (!line.trim()) return;
+
+        const values = line.split('\t');
+
+        let sql = `INSERT INTO "public"."${tableName}" (\n`;
+        sql += headers.map(h => `  "${h}"`).join(',\n');
+        sql += `\n) VALUES (\n`;
+
+        const formattedValues = values.map((val, i) => {
+          let cleanVal = val ? val.trim() : "";
+          let headerName = headers[i];
+
+          if (cleanVal === "" || cleanVal.toLowerCase() === "null") return "  NULL";
+          if (cleanVal === "f") return "  false";
+          if (cleanVal === "t") return "  true";
+
+          if (headerName === 'tax_lines' || (cleanVal.startsWith('[') && cleanVal.endsWith(']'))) {
+            return `  '${cleanVal.replace(/'/g, "''")}'::jsonb`;
+          }
+
+          if (!isNaN(cleanVal) && cleanVal !== "") return `  ${cleanVal}`;
+
+          return `  '${cleanVal.replace(/'/g, "''")}'`;
+        });
+
+        sql += formattedValues.join(',\n');
+        sql += `\n);\n\n`;
+
+        fullSql += sql;
+      });
+
+      outputArea.value = fullSql;
+    }
+
+    async function copyToClipboard() {
+      if (!outputArea.value) return;
+      try {
+        await navigator.clipboard.writeText(outputArea.value);
+        const btn = document.getElementById('btnCopy');
+        const originalText = btn.innerText;
+        btn.innerText = '✅ Đã copy!';
+        setTimeout(() => btn.innerText = originalText, 2000);
+      } catch (err) {
+        outputArea.select();
+        document.execCommand('copy');
+        alert('Đã copy!');
+      }
+    }
+  </script>
+</body>
+
+</html>

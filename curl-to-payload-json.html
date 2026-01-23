@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>cURL → GraphQL Super Viewer</title>
+
+  <!-- Prism -->
+  <link id="prismTheme" href="https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/prism.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-graphql.min.js"></script>
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #020617;
+      --border: #334155;
+      --text: #e5e7eb;
+      --accent: #38bdf8;
+      --success: #22c55e;
+    }
+
+    body.light {
+      --bg: #f8fafc;
+      --panel: #ffffff;
+      --border: #cbd5f5;
+      --text: #0f172a;
+      --accent: #2563eb;
+    }
+
+    body {
+      font-family: Consolas, monospace;
+      background: var(--bg);
+      color: var(--text);
+      padding: 16px;
+      transition: 0.2s;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 160px;
+      background: var(--panel);
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 6px;
+      box-sizing: border-box;
+    }
+
+    h2,
+    h3 {
+      color: var(--accent);
+      margin-top: 24px;
+    }
+
+    pre {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      padding: 12px;
+      border-radius: 6px;
+      overflow: auto;
+    }
+
+    button {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--border);
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    button:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .token-box {
+      margin-top: 10px;
+      padding: 10px;
+      background: rgba(56, 189, 248, 0.1);
+      border: 1px dashed var(--accent);
+      border-radius: 6px;
+      display: none;
+      /* Ẩn mặc định, hiện khi có token */
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .token-text {
+      font-size: 13px;
+      color: var(--success);
+      font-weight: bold;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      margin-right: 10px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      vertical-align: middle;
+      text-align: left;
+    }
+
+    th {
+      color: var(--accent);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hint {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-bottom: 8px;
+    }
+
+    #copyMsg {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--success);
+      color: white;
+      padding: 8px 16px;
+      border-radius: 4px;
+      display: none;
+      z-index: 100;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="copyMsg">Copied!</div>
+
+  <div class="top-bar">
+    <h2>📋 Paste cURL (auto parse)</h2>
+    <button onclick="toggleTheme()">🌙 / ☀️</button>
+  </div>
+
+  <div class="hint">
+    👉 Dán cURL prod vào là parse liền — token được mask, copy vẫn full
+  </div>
+
+  <textarea id="curlInput" placeholder="Paste cURL vào đây..."></textarea>
+
+  <h2>🌐 URL <button onclick="copyText(raw.url)">Copy</button></h2>
+  <pre id="url"></pre>
+
+  <h2>🧾 Headers <button onclick="copyText(JSON.stringify(raw.headers, null, 2))">Copy</button></h2>
+  <div id="tokenContainer" class="token-box">
+    <div class="token-text" id="tokenPreview">Token found: eyJhbGci...</div>
+    <button onclick="copyAuthToken()" style="border-color: var(--success); color: var(--success);">Copy Token not
+      Bearer</button>
+  </div>
+  <table id="headersTable"></table>
+
+  <h2>📦 GraphQL</h2>
+
+  <h3>operationName</h3>
+  <pre id="operationName"></pre>
+
+  <h3>query <button onclick="copyText(raw.query)">Copy</button></h3>
+  <pre><code class="language-graphql" id="query"></code></pre>
+
+  <h3>variables <button onclick="copyText(JSON.stringify(raw.variables, null, 2))">Copy</button></h3>
+  <pre><code class="language-json" id="variables"></code></pre>
+
+  <h2>🚀 Export</h2>
+  <button onclick="exportPostman()">Export Postman Collection</button>
+
+  <script>
+    let raw = { url: '', headers: {}, query: '', variables: {} };
+    let timer;
+
+    /* ================= THEME ================= */
+    function toggleTheme() {
+      document.body.classList.toggle('light');
+      const isLight = document.body.classList.contains('light');
+      localStorage.setItem('theme', isLight ? 'light' : 'dark');
+
+      document.getElementById('prismTheme').href =
+        isLight
+          ? 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism.min.css'
+          : 'https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism-tomorrow.min.css';
+    }
+
+    (function initTheme() {
+      if (localStorage.getItem('theme') === 'light') {
+        toggleTheme();
+      }
+    })();
+
+    /* ================= PARSER ================= */
+    curlInput.addEventListener('input', () => {
+      clearTimeout(timer);
+      timer = setTimeout(parseCurl, 300);
+    });
+
+    function parseCurl() {
+      const input = curlInput.value;
+      if (!input.trim()) return;
+
+      raw.url = (input.match(/curl\s+'([^']+)'/) || [])[1] || '';
+      url.textContent = raw.url;
+
+      raw.headers = {};
+      raw.authToken = '';
+      [...input.matchAll(/-H\s+'([^:]+):\s*([^']+)'/g)].forEach(m => {
+        const key = m[1];
+        const val = m[2];
+        raw.headers[key] = val;
+        if (key.toLowerCase() === 'authorization') {
+          raw.authToken = val;
+        }
+      });
+
+      // Hiển thị Token Box nếu có Authorization
+      const tokenContainer = document.getElementById('tokenContainer');
+      if (raw.authToken) {
+        tokenContainer.style.display = 'flex';
+        document.getElementById('tokenPreview').textContent = `Token: ${raw.authToken.substring(0, 30)}...`;
+      } else {
+        tokenContainer.style.display = 'none';
+      }
+
+      [...input.matchAll(/-H\s+'([^:]+):\s*([^']+)'/g)]
+        .forEach(m => raw.headers[m[1]] = m[2]);
+
+      const masked = {};
+      for (const k in raw.headers) {
+        masked[k] =
+          k.toLowerCase() === 'authorization'
+            ? raw.headers[k].replace(/(.{18}).+/, '$1...')
+            : raw.headers[k];
+      }
+
+      headersTable.innerHTML = `<tr><th>Key</th><th>Value (Masked)</th><th>Action</th></tr>` +
+        Object.entries(raw.headers).map(([k, v]) => {
+          const isAuth = k.toLowerCase() === 'authorization';
+          const displayVal = isAuth ? v.replace(/(.{15}).+/, '$1...') : v;
+          return `<tr>
+            <td><b>${k}</b></td>
+            <td style="font-size:12px; color:#94a3b8;">${displayVal}</td>
+            <td><button onclick="copyHeaderValue('${k}')">Copy</button></td>
+          </tr>`;
+        }).join('');
+
+      const bodyMatch = input.match(/--data-raw\s+\$?'([\s\S]+)'$/);
+      if (!bodyMatch) return;
+
+      const body = JSON.parse(bodyMatch[1]);
+
+      operationName.textContent = body.operationName ?? '';
+      raw.query = body.query?.replace(/\\n/g, '\n') ?? '';
+      raw.variables = body.variables ?? {};
+
+      query.textContent = raw.query;
+      variables.textContent = JSON.stringify(raw.variables, null, 2);
+
+      Prism.highlightAll();
+    }
+
+    /* ================= UTILS ================= */
+    function copyText(text) {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        const msg = document.getElementById('copyMsg');
+        msg.style.display = 'block';
+        setTimeout(() => msg.style.display = 'none', 1500);
+      });
+    }
+
+    function exportPostman() {
+      const postman = {
+        info: {
+          name: "GraphQL (from cURL)",
+          schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+        },
+        item: [{
+          name: raw.url,
+          request: {
+            method: "POST",
+            header: Object.entries(raw.headers).map(([k, v]) => ({ key: k, value: v })),
+            url: raw.url,
+            body: {
+              mode: "raw",
+              raw: JSON.stringify({ query: raw.query, variables: raw.variables }, null, 2)
+            }
+          }
+        }]
+      };
+
+      const blob = new Blob([JSON.stringify(postman, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'postman-graphql.json';
+      a.click();
+    }
+
+    function copyHeaderValue(key) {
+      copyText(raw.headers[key]);
+    }
+
+    function copyAuthToken() {
+      copyText(raw.authToken.substring(7));
+    }
+  </script>
+
+</body>
+
+</html>
