@@ -341,6 +341,7 @@
             <button id="btnToggleTheme">🌙</button>
             <button onclick="compareTexts()">🔍 So sánh</button>
             <button onclick="pasteExample()">📋 Ví dụ</button>
+            <button onclick="pasteJsonExample()">📋 Ví dụ Json</button>
             <button onclick="clearAll()">🧹 Xóa tất cả</button>
         </div>
     </header>
@@ -459,11 +460,25 @@
                 btnToggleTheme.textContent = '🌞';
             }
         });
-        function pasteExample() {
+
+        function pasteJsonExample() {
             document.getElementById('text1').textContent =
                 '{\n  "name": "John Doe",\n  "age": 30,\n  "city": "New York"\n}';
             document.getElementById('text2').textContent =
                 '{\n  "name": "Jane Doe",\n  "age": 25,\n  "city": "Los Angeles",\n  "country": "USA"\n}';
+            requestAnimationFrame(() => {
+                compareTexts();
+            });
+        }
+
+        function pasteExample() {
+            document.getElementById('text1').textContent =
+                'Công nghệ trí tuệ nhân tạo (AI) đang thay đổi cách chúng ta làm việc hàng ngày. Nó giúp tự động hóa các tác vụ lặp lại và tối ưu hóa quy trình sản xuất. Hệ thống AI có thể phân tích dữ liệu nhanh chóng hơn con người.';
+            document.getElementById('text2').textContent =
+                'Công nghệ trí tuệ nhân tạo (AI) đang thay đổi cách chúng ta làm việc hàng ngày. Nó giúp tự động hóa các tác vụ lặp lại và tối ưu hóa quy trình sản xuất. Công cụ AI có thể phân tích dữ liệu nhanh chóng và chính xác.';
+            requestAnimationFrame(() => {
+                compareTexts();
+            });
         }
 
         function safeParseJSON(str) {
@@ -485,6 +500,27 @@
                     .replace(/[ \t]+$/gm, '')
                     .trimEnd();
             }
+        }
+
+        function normalizeTextForSimilarity(s) {
+            return (s || "")
+                .toLowerCase()
+                .replace(/\r\n|\r/g, "\n")
+                .replace(/[ \t]+/g, " ")
+                .replace(/\n+/g, "\n")
+                .trim();
+        }
+
+        function similarityPercentByLevenshtein(a, b) {
+            const A = normalizeTextForSimilarity(a);
+            const B = normalizeTextForSimilarity(b);
+            if (!A && !B) return 100;
+            if (!A || !B) return 0;
+
+            const maxLen = Math.max(A.length, B.length);
+            const dist = levenshteinDistance(A, B); // bạn đã có sẵn hàm này
+            const sim = 1 - dist / maxLen;
+            return Math.max(0, Math.min(100, Math.round(sim * 100)));
         }
 
         function normalizeCode(str, indentSize = 2) {
@@ -607,8 +643,11 @@
         }
 
         function compareTexts() {
-            const text1 = normalizeJson(document.getElementById('text1').textContent.trim());
-            const text2 = normalizeJson(document.getElementById('text2').textContent.trim());
+            const raw1 = document.getElementById('text1').textContent.trim();
+            const raw2 = document.getElementById('text2').textContent.trim();
+
+            const text1 = normalizeJson(raw1);
+            const text2 = normalizeJson(raw2);
 
             let isError = false;
             for (const id of ['text1', 'text2']) {
@@ -631,7 +670,7 @@
                 displayDetailedDiffRows(identicalResult, 'diff1');
                 displayDetailedDiffRows(identicalResult, 'diff2');
 
-                updateStatistics({ added: 0, removed: 0, modified: 0, unchanged: lines.length });
+                updateStatistics({ added: 0, removed: 0, modified: 0, unchanged: lines.length }, raw1, raw2);
 
                 document.getElementById('legend').style.display = 'block';
                 document.getElementById('results').style.display = 'grid';
@@ -652,7 +691,7 @@
             syncAllRowHeightsSoon();
             attachDiffObservers();
 
-            updateStatistics(quickDiff.stats);
+            updateStatistics(quickDiff.stats, raw1, raw2);
 
             document.getElementById('legend').style.display = 'block';
             document.getElementById('results').style.display = 'grid';
@@ -741,7 +780,9 @@
 
 
             return { result1, result2, stats };
-        } function buildDiffFromAlignment(alignment) {
+        }
+
+        function buildDiffFromAlignment(alignment) {
             const result1 = [];
             const result2 = [];
             const stats = { added: 0, removed: 0, modified: 0, unchanged: 0 };
@@ -1143,13 +1184,14 @@
             return { setItems };
         }
 
-        function updateStatistics(stats) {
+        function updateStatistics(stats, rawText1, rawText2) {
             document.getElementById('addedCount').textContent = stats.added;
             document.getElementById('removedCount').textContent = stats.removed;
             document.getElementById('modifiedCount').textContent = stats.modified;
 
             const total = stats.added + stats.removed + stats.modified + stats.unchanged;
-            const similarity = total > 0 ? Math.round((stats.unchanged / total) * 100) : 0;
+            // const similarity = total > 0 ? Math.round((stats.unchanged / total) * 100) : 0;
+            const similarity = similarityPercentByLevenshtein(rawText1, rawText2);
             document.getElementById('similarityPercent').textContent = similarity + '%';
         }
 
@@ -1215,8 +1257,8 @@
                 .forEach(c => c.style.minHeight = "");
         }
 
-        document.getElementById('text1').textContent = '{\n  "name": "John Doe",\n  "age": 30,\n  "city": "New York"\n}';
-        document.getElementById('text2').textContent = '{\n  "name": "Jane Doe",\n  "age": 25,\n  "city": "Los Angeles",\n  "country": "USA"\n}';
+        document.getElementById('text1').textContent = 'Công nghệ trí tuệ nhân tạo (AI) đang thay đổi cách chúng ta làm việc hàng ngày. Nó giúp tự động hóa các tác vụ lặp lại và tối ưu hóa quy trình sản xuất. Hệ thống AI có thể phân tích dữ liệu nhanh chóng hơn con người.';
+        document.getElementById('text2').textContent = 'Công nghệ trí tuệ nhân tạo (AI) đang thay đổi cách chúng ta làm việc hàng ngày. Nó giúp tự động hóa các tác vụ lặp lại và tối ưu hóa quy trình sản xuất. Công cụ AI có thể phân tích dữ liệu nhanh chóng và chính xác.';
         document.addEventListener("keydown", function (e) {
             if (e.key === "Enter") {
                 const active = document.activeElement;

@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>JSON Compare (by key/path)</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0a1326;
+      --panel: #0f254a;
+      --text: #bfe0ff;
+      --muted: #9aa4b2;
+      --border: rgba(255, 255, 255, .08);
+      --mono: Consolas, monospace;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font: 14px/1.5 system-ui, Segoe UI;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background: var(--panel);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    button {
+      cursor: pointer;
+      border: 1px solid var(--border);
+      background: #13315c;
+      color: #fff;
+      border-radius: 8px;
+      padding: 6px 10px;
+      font-weight: 600
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 12px;
+      max-width: 1400px;
+      margin: 0 auto
+    }
+
+    @media (max-width:1000px) {
+      .row {
+        grid-template-columns: 1fr
+      }
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden
+    }
+
+    .ph {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      color: var(--muted);
+      font-weight: 700
+    }
+
+    .body {
+      padding: 12px
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 240px;
+      background: #0c172c;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+      font-family: var(--mono)
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-family: var(--mono);
+      font-size: 13px
+    }
+
+    th,
+    td {
+      border-bottom: 1px solid var(--border);
+      padding: 8px;
+      vertical-align: top
+    }
+
+    th {
+      color: var(--muted);
+      text-align: left
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      margin-right: 6px
+    }
+
+    .added {
+      background: rgba(0, 255, 120, .15)
+    }
+
+    .removed {
+      background: rgba(255, 80, 80, .15)
+    }
+
+    .changed {
+      background: rgba(255, 200, 0, .12)
+    }
+
+    .same {
+      background: rgba(150, 150, 150, .12)
+    }
+
+    pre {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div style="font-weight:800">🧬 JSON Compare (key/path)</div>
+    <div style="display:flex;gap:8px">
+      <button onclick="doCompare()">🔍 So sánh</button>
+      <button onclick="clearAll()">🧹 Xóa</button>
+    </div>
+  </header>
+
+  <div class="row">
+    <section class="panel">
+      <div class="ph">JSON A</div>
+      <div class="body"><textarea id="a" placeholder="Paste JSON A..."></textarea></div>
+    </section>
+    <section class="panel">
+      <div class="ph">JSON B</div>
+      <div class="body"><textarea id="b" placeholder="Paste JSON B..."></textarea></div>
+    </section>
+  </div>
+
+  <div class="row" style="grid-template-columns:1fr;display:none" id="outWrap">
+    <section class="panel">
+      <div class="ph">
+        Kết quả
+        <span id="stats" style="margin-left:10px;font-weight:500;color:var(--text)"></span>
+      </div>
+      <div class="body" id="out"></div>
+    </section>
+  </div>
+
+  <script>
+    function safeParse(s) {
+      const t = (s || "").trim();
+      if (!t) return null;
+      // hỗ trợ JSONC nhẹ: remove //... và trailing commas
+      const noComments = t.replace(/\/\/.*$/gm, "");
+      const noTrailing = noComments.replace(/,\s*([}\]])/g, "$1");
+      return JSON.parse(noTrailing);
+    }
+
+    function isObject(v) { return v && typeof v === "object" && !Array.isArray(v); }
+
+    function flatten(value, path = "$", out = new Map()) {
+      if (Array.isArray(value)) {
+        if (value.length === 0) out.set(path, []);
+        value.forEach((v, i) => flatten(v, `${path}[${i}]`, out));
+        return out;
+      }
+      if (isObject(value)) {
+        const keys = Object.keys(value);
+        if (keys.length === 0) out.set(path, {});
+        keys.forEach(k => flatten(value[k], `${path}.${k}`, out));
+        return out;
+      }
+      out.set(path, value); // primitive (string/number/bool/null)
+      return out;
+    }
+
+    function jsonEqual(a, b) {
+      return JSON.stringify(a) === JSON.stringify(b);
+    }
+
+    function doCompare() {
+      let A, B;
+      try { A = safeParse(document.getElementById("a").value); }
+      catch (e) { return alert("JSON A không hợp lệ: " + e.message); }
+      try { B = safeParse(document.getElementById("b").value); }
+      catch (e) { return alert("JSON B không hợp lệ: " + e.message); }
+
+      const mA = flatten(A);
+      const mB = flatten(B);
+
+      const allPaths = Array.from(new Set([...mA.keys(), ...mB.keys()])).sort((x, y) => x.localeCompare(y));
+
+      const rows = [];
+      let added = 0, removed = 0, changed = 0, same = 0;
+
+      for (const p of allPaths) {
+        const hasA = mA.has(p), hasB = mB.has(p);
+        if (hasA && !hasB) { removed++; rows.push({ p, st: "removed", a: mA.get(p), b: undefined }); continue; }
+        if (!hasA && hasB) { added++; rows.push({ p, st: "added", a: undefined, b: mB.get(p) }); continue; }
+        // both
+        const va = mA.get(p), vb = mB.get(p);
+        if (jsonEqual(va, vb)) { same++; rows.push({ p, st: "same", a: va, b: vb }); }
+        else { changed++; rows.push({ p, st: "changed", a: va, b: vb }); }
+      }
+
+      document.getElementById("stats").innerHTML = `
+      <span class="pill added">➕ Added: ${added}</span>
+      <span class="pill removed">➖ Removed: ${removed}</span>
+      <span class="pill changed">✏️ Changed: ${changed}</span>
+      <span class="pill same">✅ Same: ${same}</span>
+    `;
+
+      document.getElementById("out").innerHTML = `
+      <table>
+        <thead>
+          <tr>
+            <th style="width:28%">Path</th>
+            <th style="width:31%">A</th>
+            <th style="width:10%">Status</th>
+            <th style="width:31%">B</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr class="${r.st}">
+              <td><pre>${escapeHtml(r.p)}</pre></td>
+              <td><pre>${escapeHtml(formatVal(r.a))}</pre></td>
+              <td><span class="pill ${r.st}">${r.st}</span></td>
+              <td><pre>${escapeHtml(formatVal(r.b))}</pre></td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+    `;
+
+      const wrap = document.getElementById("outWrap");
+      wrap.style.display = "grid";
+      wrap.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function formatVal(v) {
+      if (v === undefined) return "(missing)";
+      if (typeof v === "string") return v;
+      return JSON.stringify(v, null, 2);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+    }
+
+    function clearAll() {
+      document.getElementById("a").value = "";
+      document.getElementById("b").value = "";
+      document.getElementById("out").innerHTML = "";
+      document.getElementById("outWrap").style.display = "none";
+      document.getElementById("stats").innerHTML = "";
+    }
+  </script>
+</body>
+
+</html>

@@ -831,8 +831,11 @@
         }
         function quoteKeysAndExpandShorthand(src) {
             let out = '', i = 0, inStr = false, esc = false;
+            const stack = []; // '{' hoặc '['
+
             while (i < src.length) {
                 const ch = src[i];
+                // trong string
                 if (inStr) {
                     out += ch;
                     if (esc) esc = false;
@@ -841,6 +844,7 @@
                     i++;
                     continue;
                 }
+                // mở string
                 if (ch === '"') {
                     inStr = true;
                     out += ch;
@@ -848,7 +852,13 @@
                     continue;
                 }
 
-                if (ch === '{' || ch === ',') {
+                // tracking context
+                if (ch === '{' || ch === '[') { stack.push(ch); out += ch; i++; continue; }
+                if (ch === '}' || ch === ']') { stack.pop(); out += ch; i++; continue; }
+
+                const inObject = stack.length && stack[stack.length - 1] === '{';
+
+                if (inObject && (ch === '{' || ch === ',')) {
                     out += ch; i++;
                     while (i < src.length && /\s/.test(src[i])) { out += src[i++]; }
 
@@ -1028,18 +1038,85 @@
 
             return s;
         }
-        function normalizeJson(raw) {
-            let s = autoFixJson(raw); // tự động vá ngoặc nếu thiếu
-            s = stripComments(s);
-            s = stripTrailingCommas(s);
-            s = fixSingleQuotes(s);
-            s = replaceUndefined(s);
-            s = handleEllipsis(s);
-            s = quoteKeysAndExpandShorthand(s);
-            s = fixInvalidEscapes(s);
-            return s;
-        }
+        function quoteRegexLiterals(src) {
+            let out = '';
+            let i = 0;
+            let inStr = false, esc = false;
 
+            while (i < src.length) {
+                const ch = src[i];
+                const nxt = src[i + 1];
+
+                // trong string "..."
+                if (inStr) {
+                    out += ch;
+                    if (esc) esc = false;
+                    else if (ch === '\\') esc = true;
+                    else if (ch === '"') inStr = false;
+                    i++;
+                    continue;
+                }
+
+                // mở string
+                if (ch === '"') {
+                    inStr = true;
+                    out += ch;
+                    i++;
+                    continue;
+                }
+
+                // gặp regex literal bắt đầu bằng /.../flags (không phải comment)
+                if (ch === '/' && nxt !== '/' && nxt !== '*') {
+                    const start = i;
+                    i++; // skip '/'
+
+                    let inClass = false; // inside [...]
+                    let escaped = false;
+
+                    while (i < src.length) {
+                        const c = src[i];
+
+                        if (escaped) {
+                            escaped = false;
+                            i++;
+                            continue;
+                        }
+                        if (c === '\\') {
+                            escaped = true;
+                            i++;
+                            continue;
+                        }
+                        if (c === '[') inClass = true;
+                        if (c === ']') inClass = false;
+
+                        // kết thúc regex khi gặp '/' ngoài char class
+                        if (c === '/' && !inClass) {
+                            i++; // include closing '/'
+                            break;
+                        }
+                        i++;
+                    }
+
+                    // đọc flags (gimsyu d...)
+                    while (i < src.length && /[a-z]/i.test(src[i])) i++;
+
+                    const literal = src.slice(start, i); // ví dụ: /[đ]/g
+
+                    // biến thành string JSON hợp lệ
+                    const jsonStr = '"' + literal
+                        .replace(/\\/g, '\\\\')
+                        .replace(/"/g, '\\"') + '"';
+
+                    out += jsonStr;
+                    continue;
+                }
+
+                out += ch;
+                i++;
+            }
+
+            return out;
+        }
         function fixSingleQuotes(src) {
             let out = '';
             let inDouble = false;
@@ -1083,6 +1160,18 @@
             }
 
             return out;
+        }
+        function normalizeJson(raw) {
+            let s = autoFixJson(raw); // tự động vá ngoặc nếu thiếu
+            s = stripComments(s);
+            s = quoteRegexLiterals(s);
+            s = stripTrailingCommas(s);
+            s = fixSingleQuotes(s);
+            s = replaceUndefined(s);
+            s = handleEllipsis(s);
+            s = quoteKeysAndExpandShorthand(s);
+            s = fixInvalidEscapes(s);
+            return s;
         }
 
         /* ===== Sort all fields alphabetically ===== */
@@ -1289,15 +1378,19 @@
             let count = 0;
             lines.forEach(line => {
                 const label = line.querySelector('.label');
-                const txt = line.textContent || '';
+                const keyText = label?.querySelector('.key')?.textContent || '';
+                const valueText =
+                    label?.querySelector('.val-str, .val-num, .val-bool, .val-null')?.textContent || '';
+
+                const haystack = keyText + ' ' + valueText;
 
                 let ok = false;
                 if (reTest) {
                     // Tạo regex clone bỏ cờ g để tránh bug lastIndex
                     const reCheck = new RegExp(reTest.source, reTest.flags.replace('g', ''));
-                    ok = reCheck.test(txt);
+                    ok = reCheck.test(haystack);
                 } else {
-                    ok = txt.toLowerCase().includes(q.toLowerCase());
+                    ok = haystack.toLowerCase().includes(q.toLowerCase());
                 }
                 if (!ok) return;
 
@@ -1305,9 +1398,7 @@
                 line.classList.add('hit');
 
                 if (label && reHL) {
-                    const targets = label.querySelectorAll(
-                        '.key, .type, .val-str, .val-num, .val-bool, .val-null'
-                    );
+                    const targets = label.querySelectorAll('.key, .val-str, .val-num, .val-bool, .val-null');
                     targets.forEach(el => highlightText(el, reHL));
                 }
 

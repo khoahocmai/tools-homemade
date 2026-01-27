@@ -1,0 +1,30 @@
+body {
+  font-family: Arial, sans-serif;
+  width: 220px;
+  padding: 12px;
+}
+
+h1 {
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+button {
+  width: 100%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: #22c55e;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button.off {
+  background: #ef4444;
+}
+
+.status {
+  margin-top: 8px;
+  font-size: 13px;
+}
