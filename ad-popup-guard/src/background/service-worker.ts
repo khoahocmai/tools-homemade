@@ -9,6 +9,12 @@ const BLOCKED_PATTERNS = [
   /s\.shopee\.vn\//i,
 ];
 
+const BLANK_URLS = new Set([
+  'about:blank',
+  'chrome://newtab/',
+  'edge://newtab/',
+]);
+
 const FIRST_URL_KEY = (tabId: number) => `first_url_${tabId}`;
 const LAST_GOOD_URL_KEY = (tabId: number) => `last_good_url_${tabId}`;
 const RESTORE_AT_KEY = (tabId: number) => `last_restore_at_${tabId}`;
@@ -34,6 +40,38 @@ function isGoodUrl(url?: string) {
     return false;
   if (isBlockedUrl(url)) return false;
   return true;
+}
+
+function isBlankLike(url?: string) {
+  if (!url) return true;
+  if (BLANK_URLS.has(url)) return true;
+  // đôi khi CocCoc/Chrome trả về url rỗng hoặc chỉ "about:blank#..."
+  if (url.startsWith('about:blank')) return true;
+  return false;
+}
+
+async function closeTabSafely(tabId: number) {
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab?.windowId) return;
+
+  const tabsInWindow = await chrome.tabs.query({ windowId: tab.windowId });
+  // ✅ không đóng tab cuối cùng (tránh đóng luôn window/browser)
+  if (tabsInWindow.length <= 1) {
+    await chrome.tabs.update(tabId, { url: 'chrome://newtab/' }).catch(() => { });
+    return;
+  }
+
+  await chrome.tabs.remove(tabId).catch(() => { });
+}
+
+async function focusOpenerAndClosePopup(tabId: number) {
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab?.openerTabId) return;
+
+  // focus lại tab gốc trước
+  await chrome.tabs.update(tab.openerTabId, { active: true }).catch(() => { });
+  // rồi đóng tab trắng
+  await closeTabSafely(tabId);
 }
 
 async function getWindowTabCount(windowId: number) {
@@ -119,12 +157,26 @@ chrome.storage.onChanged.addListener((changes, area) => {
 });
 
 /** ===== Track first URL of newly created tab (to detect popup ads) ===== */
-chrome.tabs.onCreated.addListener((tab) => {
-  if (!enabled) return;
+chrome.tabs.onCreated.addListener(async (tab) => {
+  if (!tab.id) return;
+  if (!tab.openerTabId) return;
 
-  const first = (tab as any).pendingUrl || tab.url;
-  if (tab.id != null && first) {
-    void chrome.storage.session.set({ [FIRST_URL_KEY(tab.id)]: first }).catch(() => { });
+  const first = tab.pendingUrl || tab.url || '';
+  // nếu vừa tạo ra đã blank thì đóng luôn (nhanh gọn)
+  if (isBlankLike(first)) {
+    // delay nhẹ để browser kịp set url/pendingUrl
+    setTimeout(() => focusOpenerAndClosePopup(tab.id!), 150);
+  }
+});
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (!tab?.openerTabId) return;
+  if (!changeInfo.url) return;
+
+  if (isBlankLike(changeInfo.url)) {
+    setTimeout(() => {
+      focusOpenerAndClosePopup(tabId);
+    }, 50);
   }
 });
 
