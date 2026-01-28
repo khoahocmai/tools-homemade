@@ -3,18 +3,42 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>Chặn Quảng Cáo</title>
-
-  <!-- External CSS -->
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Ad & Popup Guard</title>
   <link rel="stylesheet" href="popup.css" />
 </head>
 
 <body>
-  <h1>🛡 Chặn Redirect</h1>
-  <button id="toggle">...</button>
-  <div class="status" id="status"></div>
+  <div class="wrap">
+    <div class="head">
+      <div class="brand">
+        <span class="logo">🛡</span>
+        <div class="title">
+          <div class="name">Ad & Popup Guard</div>
+          <div class="sub" id="sub">Đang hoạt động</div>
+        </div>
+      </div>
+    </div>
 
-  <!-- External script -->
+    <div class="card">
+      <div class="row">
+        <div class="label">Chặn popup / redirect</div>
+
+        <label class="switch" title="Bật / Tắt">
+          <input id="enabled" type="checkbox" />
+          <span class="slider"></span>
+        </label>
+      </div>
+
+      <div class="status" id="status">—</div>
+
+      <div class="actions">
+        <button id="saveUrl" class="btn">Lưu URL tab hiện tại</button>
+        <button id="clear" class="btn btn-ghost" title="Xoá status">Xoá</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./popup.js"></script>
 </body>
 

@@ -1,5 +1,10 @@
-const btn = document.getElementById("toggle");
-const status = document.getElementById("status");
+const $enabled = document.getElementById("enabled");
+const $status = document.getElementById("status");
+const $sub = document.getElementById("sub");
+const $saveUrl = document.getElementById("saveUrl");
+const $clear = document.getElementById("clear");
+
+const LAST_URL_KEY = (tabId) => `last_good_url_${tabId}`;
 
 const BLOCKED_URLS = [
   /tiktok\.com\/view\/product/i,
@@ -16,43 +21,65 @@ function isGoodUrl(url) {
   return true;
 }
 
-function saveActiveTabUrl() {
+function setStatus(text, type = "muted") {
+  $status.textContent = text;
+  // nhẹ thôi, không cần class phức tạp
+  $status.style.color = type === "ok" ? "#bfe0ff" : "#9aa4b2";
+}
+
+function renderEnabled(enabled) {
+  $enabled.checked = !!enabled;
+  $sub.textContent = enabled ? "Đang bật chặn" : "Đang tắt chặn";
+  setStatus("—");
+}
+
+async function getEnabled() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(["enabled"], (res) => resolve(res.enabled ?? true));
+  });
+}
+
+async function setEnabled(next) {
+  return new Promise((resolve) => {
+    chrome.storage.local.set({ enabled: next }, () => resolve());
+  });
+}
+
+async function saveActiveTabUrl() {
   chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
     const tab = tabs?.[0];
     const url = tab?.url;
 
     if (tab?.id != null && isGoodUrl(url)) {
-      const key = `last_good_url_${tab.id}`; // ✅ cùng format với service-worker
+      const key = LAST_URL_KEY(tab.id);
       chrome.storage.session.set({ [key]: url }, () => {
-        status.textContent = `✅ Đã lưu URL: ${url}`;
+        setStatus(`✅ Đã lưu URL`, "ok");
       });
     } else {
-      status.textContent = `⚠️ Không lưu được URL (url=${url || "null"})`;
+      setStatus(`⚠️ Không lưu được URL tab hiện tại`);
     }
   });
 }
 
-function render(enabled) {
-  btn.textContent = enabled ? "TẮT chặn quảng cáo" : "BẬT chặn quảng cáo";
-  btn.className = enabled ? "" : "off";
-  // status sẽ được cập nhật thêm bởi saveActiveTabUrl()
-}
+// init
+(async function init() {
+  const enabled = await getEnabled();
+  renderEnabled(enabled);
+  if (enabled) saveActiveTabUrl();
+})();
 
-chrome.storage.local.get(["enabled"], (res) => {
-  render(res.enabled ?? true);
-  // mở popup lên là lưu luôn (tuỳ bạn, không thích thì bỏ dòng này)
+// toggle
+$enabled.addEventListener("change", async () => {
+  const next = $enabled.checked;
+  await setEnabled(next);
+  renderEnabled(next);
+});
+
+// actions
+$saveUrl.addEventListener("click", () => {
   saveActiveTabUrl();
 });
 
-btn.addEventListener("click", () => {
-  // ✅ bấm nút là lưu URL hiện tại trước
-  saveActiveTabUrl();
-
-  // rồi mới toggle bật/tắt như code cũ của bạn
-  chrome.storage.local.get(["enabled"], (res) => {
-    const next = !(res.enabled ?? true);
-    chrome.storage.local.set({ enabled: next }, () => {
-      render(next);
-    });
-  });
+$clear.addEventListener("click", () => {
+  setStatus("—");
 });
