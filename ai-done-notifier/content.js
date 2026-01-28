@@ -2,27 +2,16 @@
   console.log("[AI DONE] content loaded", location.href);
 
   const DEFAULTS = {
-    enableNotification: true,
     enableSound: true,
     flashTitle: true,
 
-    // (legacy, giữ lại để options không vỡ)
-    stableMs: 1600,
-
-    // tối thiểu coi là "đang trả lời"
+    // detection tuning
     minThinkingMs: 1200,
-
-    // chỉ notify khi tab inactive (do background xử lý)
-    notifyOnlyWhenInactive: true,
-    focusTabOnDone: false,
-
-    // ✅ im lặng >= endSilenceMs mới coi là DONE (chống spam do pause 2–3s)
     endSilenceMs: 4000,
   };
 
   const opts = await chrome.storage.sync.get(DEFAULTS);
 
-  // ---------- Utils ----------
   const now = () => Date.now();
   const safeText = (el) => (el?.innerText || el?.textContent || "").trim();
 
@@ -34,7 +23,7 @@
       );
       audio.volume = 1;
       audio.play().catch(() => { });
-    } catch (_) { }
+    } catch { }
   }
 
   function flashTitleOnce() {
@@ -51,33 +40,13 @@
     return "AI";
   }
 
-  function getLastAssistantMessage() {
-    const els = document.querySelectorAll(
-      '[data-message-author-role="assistant"], article'
-    );
-    for (let i = els.length - 1; i >= 0; i--) {
-      const t = safeText(els[i]);
-      if (t) return els[i];
-    }
-    return null;
-  }
-
-  function getLastUserMessage() {
-    const els = document.querySelectorAll('[data-message-author-role="user"]');
-    for (let i = els.length - 1; i >= 0; i--) {
-      const t = safeText(els[i]);
-      if (t) return t;
-    }
-    return "";
-  }
-
   function safeSendMessage(payload) {
     try {
       const cr = globalThis.chrome;
       if (cr && cr.runtime && typeof cr.runtime.sendMessage === "function") {
         cr.runtime.sendMessage(payload);
       } else {
-        console.warn("[AI DONE] sendMessage not available (not extension context?)");
+        console.warn("[AI DONE] sendMessage not available");
       }
     } catch (e) {
       console.warn("[AI DONE] sendMessage failed", e);
@@ -91,8 +60,67 @@
     if (opts.flashTitle) flashTitleOnce();
   }
 
+  function emitStart() {
+    console.log("[AI DONE] emitStart()", getSiteName());
+    safeSendMessage({ type: "AI_START", site: getSiteName() });
+  }
+
+  function isGemini() {
+    return location.host.includes("gemini.google.com");
+  }
+
+  function getLastAssistantMessage() {
+    // ChatGPT / Claude
+    if (!isGemini()) {
+      const els = document.querySelectorAll(
+        '[data-message-author-role="assistant"], article'
+      );
+      for (let i = els.length - 1; i >= 0; i--) {
+        const t = safeText(els[i]);
+        if (t) return els[i];
+      }
+      return null;
+    }
+
+    // ---- Gemini ----
+    // Gemini render trong main + role=main
+    const main = document.querySelector("main");
+    if (!main) return null;
+
+    // Lấy block text lớn nhất (response hiện tại)
+    const blocks = main.querySelectorAll("div");
+    let best = null;
+    let maxLen = 0;
+
+    blocks.forEach((el) => {
+      const t = safeText(el);
+      if (t.length > maxLen) {
+        maxLen = t.length;
+        best = el;
+      }
+    });
+
+    return best;
+  }
+
+  function getLastUserMessage() {
+    const els = document.querySelectorAll('[data-message-author-role="user"]');
+    for (let i = els.length - 1; i >= 0; i--) {
+      const t = safeText(els[i]);
+      if (t) return t;
+    }
+    return "";
+  }
+
+  function getUserSignature() {
+    if (isGemini()) {
+      const input = document.querySelector("textarea");
+      return input ? input.value.trim() : "";
+    }
+    return getLastUserMessage();
+  }
+
   // ---------- State ----------
-  // Session = 1 câu hỏi user -> 1 lần notify khi AI xong
   let notified = false;
   let lastUserSig = "";
   let sessionStartAt = 0;
@@ -101,28 +129,25 @@
   let lastText = "";
   let lastChangeAt = 0;
 
-  // ---------- Main loop ----------
   function tick() {
-    // 1) Detect new user prompt => start a new session
-    const userSig = getLastUserMessage();
+    // start new session when user asks something new
+    // const userSig = getLastUserMessage();
+    const userSig = getUserSignature();
     if (userSig && userSig !== lastUserSig) {
       lastUserSig = userSig;
 
       notified = false;
       thinking = true;
       sessionStartAt = now();
-
-      // reset assistant tracking
       lastText = "";
       lastChangeAt = now();
 
       console.log("[AI DONE] new prompt detected → start session");
+      emitStart(); // ✅ badge thinking
     }
 
-    // Nếu chưa có session thì thôi (tránh notify lúc vừa load trang)
     if (!thinking) return;
 
-    // 2) Track assistant text changes
     const el = getLastAssistantMessage();
     if (!el) return;
 
@@ -132,34 +157,27 @@
     if (text !== lastText) {
       lastText = text;
       lastChangeAt = now();
-      // log nhẹ thôi, nếu spam quá bạn có thể comment dòng dưới
-      // console.log("[AI DONE] assistant text updated");
       return;
     }
 
-    // 3) DONE condition: đủ thời gian tối thiểu + đủ im lặng
     const sinceStart = now() - sessionStartAt;
     const stableFor = now() - lastChangeAt;
 
+    const minThinking = opts.minThinkingMs ?? 1200;
     const endSilence = opts.endSilenceMs ?? 4000;
 
-    if (!notified && sinceStart >= opts.minThinkingMs && stableFor >= endSilence) {
+    if (!notified && sinceStart >= minThinking && stableFor >= endSilence) {
       notified = true;
       thinking = false;
-      console.log("[AI DONE] DONE (end silence)", {
-        sinceStart,
-        stableFor,
-        endSilence,
-      });
+      console.log("[AI DONE] DONE (end silence)", { sinceStart, stableFor });
       emitDone();
     }
   }
 
-  // ---------- Start loop safely ----------
+  // start watcher safely (document_start friendly)
   function startWatcher() {
-    const target = document.body;
-
-    if (!target || !(target instanceof Node)) {
+    const target = document.body || document.documentElement;
+    if (!(target instanceof Node)) {
       setTimeout(startWatcher, 50);
       return;
     }
@@ -168,12 +186,16 @@
     setInterval(tick, 700);
 
     const observer = new MutationObserver(() => tick());
-
-    observer.observe(target, {
-      childList: true,
-      subtree: true,
-      characterData: true,
-    });
+    try {
+      observer.observe(target, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    } catch (e) {
+      console.warn("[AI DONE] observe failed, retrying...", e);
+      setTimeout(startWatcher, 100);
+    }
   }
 
   startWatcher();

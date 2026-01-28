@@ -3,87 +3,401 @@
 
 <head>
   <meta charset="utf-8" />
-  <title>AI Done Notifier - Options</title>
+  <title>Agent Bell 🔔 - Options</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      padding: 16px;
-      max-width: 520px;
+    :root {
+      --bg: #0b1220;
+      --card: rgba(255, 255, 255, 0.06);
+      --card2: rgba(255, 255, 255, 0.08);
+      --text: #e8eefc;
+      --muted: rgba(232, 238, 252, 0.7);
+      --line: rgba(255, 255, 255, 0.12);
+      --accent: #2563eb;
+      --shadow: 0 12px 30px rgba(0, 0, 0, 0.35);
     }
 
-    .row {
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial, "Apple Color Emoji",
+        "Segoe UI Emoji";
+      background: radial-gradient(1200px 600px at 20% 0%, rgba(37, 99, 235, 0.35), transparent 60%),
+        radial-gradient(1200px 600px at 80% 0%, rgba(16, 185, 129, 0.22), transparent 55%),
+        var(--bg);
+      color: var(--text);
+      padding: 24px;
+    }
+
+    .wrap {
+      max-width: 880px;
+      margin: 0 auto;
+    }
+
+    header {
       display: flex;
+      gap: 14px;
       align-items: center;
       justify-content: space-between;
-      padding: 10px 0;
-      border-bottom: 1px solid #eee;
+      margin-bottom: 16px;
     }
 
-    label {
-      font-weight: 600;
+    .title {
+      display: flex;
+      gap: 12px;
+      align-items: center;
     }
 
-    input[type="number"] {
-      width: 120px;
-      padding: 6px;
+    .logo {
+      width: 40px;
+      height: 40px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.95), rgba(59, 130, 246, 0.55));
+      box-shadow: var(--shadow);
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0;
+      line-height: 1.2;
+    }
+
+    .sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 10px;
     }
 
     button {
-      margin-top: 16px;
-      padding: 10px 14px;
+      border: 0;
+      background: var(--card2);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 12px;
       cursor: pointer;
+      border: 1px solid var(--line);
+    }
+
+    button.primary {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 1), rgba(59, 130, 246, 0.75));
+      border: 0;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 14px;
+    }
+
+    @media (min-width: 860px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+    }
+
+    .card h2 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-top: 1px solid var(--line);
+    }
+
+    .row:first-of-type {
+      border-top: 0;
+    }
+
+    .label {
+      font-size: 13px;
     }
 
     .hint {
-      color: #666;
       font-size: 12px;
-      margin-top: 10px;
+      color: var(--muted);
+      margin-top: 4px;
+      line-height: 1.35;
+    }
+
+    /* Toggle */
+    .toggle {
+      position: relative;
+      width: 46px;
+      height: 28px;
+    }
+
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      transition: 0.2s;
+    }
+
+    .slider:before {
+      content: "";
+      position: absolute;
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      top: 2px;
+      background: rgba(255, 255, 255, 0.92);
+      border-radius: 999px;
+      transition: 0.2s;
+    }
+
+    .toggle input:checked+.slider {
+      background: rgba(37, 99, 235, 0.65);
+      border-color: rgba(37, 99, 235, 0.95);
+    }
+
+    .toggle input:checked+.slider:before {
+      transform: translateX(18px);
+    }
+
+    input[type="number"],
+    select,
+    input[type="text"] {
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid var(--line);
+      color: var(--text);
+      border-radius: 12px;
+      padding: 8px 10px;
+      min-width: 160px;
+      outline: none;
+    }
+
+    .footer {
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .pill {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      padding: 6px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
     }
   </style>
 </head>
 
 <body>
-  <h2>AI Done Notifier</h2>
+  <div class="wrap">
+    <header>
+      <div class="title">
+        <div class="logo">🔔</div>
+        <div>
+          <h1>Agent Bell (AI Done Notifier)</h1>
+          <div class="sub">Thông báo khi ChatGPT/Claude/Gemini trả lời xong + badge tùy chọn</div>
+        </div>
+      </div>
 
-  <div class="row">
-    <label>Notification</label>
-    <input id="enableNotification" type="checkbox" />
+      <div class="actions">
+        <button id="reset">Reset</button>
+        <button class="primary" id="save">Save</button>
+      </div>
+    </header>
+
+    <div class="grid">
+      <!-- Notifications -->
+      <section class="card">
+        <h2>Notifications</h2>
+
+        <div class="row">
+          <div>
+            <div class="label">Desktop notification</div>
+            <div class="hint">Bật thông báo hệ điều hành (Windows/Mac/Linux).</div>
+          </div>
+          <label class="toggle">
+            <input id="enableNotification" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Sound (beep)</div>
+            <div class="hint">Phát tiếng “beep” khi AI trả lời xong.</div>
+          </div>
+          <label class="toggle">
+            <input id="enableSound" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Flash tab title</div>
+            <div class="hint">Đổi title tab tạm thời thành [DONE].</div>
+          </div>
+          <label class="toggle">
+            <input id="flashTitle" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Notify only when tab inactive</div>
+            <div class="hint">Chỉ notify khi tab không active hoặc cửa sổ Chrome không focus.</div>
+          </div>
+          <label class="toggle">
+            <input id="notifyOnlyWhenInactive" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+      </section>
+
+      <!-- Focus -->
+      <section class="card">
+        <h2>Focus</h2>
+
+        <div class="row">
+          <div>
+            <div class="label">Focus window on done</div>
+            <div class="hint">Khi AI xong, cố gắng focus cửa sổ Chrome.</div>
+          </div>
+          <label class="toggle">
+            <input id="focusWindowOnDone" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Focus tab on done</div>
+            <div class="hint">Chuyển active tab về trang AI (nếu đang ở tab khác trong Chrome).</div>
+          </div>
+          <label class="toggle">
+            <input id="focusTabOnDone" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="footer">
+          <span class="pill">Tip</span>
+          OS đôi khi không cho “ép” focus từ app khác → notification + click notification là chuẩn nhất.
+        </div>
+      </section>
+
+      <!-- Badge -->
+      <section class="card">
+        <h2>Badge</h2>
+
+        <div class="row">
+          <div>
+            <div class="label">Enable badge on icon</div>
+            <div class="hint">Hiện badge ở icon extension.</div>
+          </div>
+          <label class="toggle">
+            <input id="enableBadge" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Show badge while thinking</div>
+            <div class="hint">Hiện “•” khi bắt đầu trả lời (AI_START).</div>
+          </div>
+          <label class="toggle">
+            <input id="badgeShowWhileThinking" type="checkbox" />
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Badge mode when done</div>
+            <div class="hint">dot = chấm •, count = tăng số, doneText = text tùy chọn.</div>
+          </div>
+          <select id="badgeMode">
+            <option value="dot">Dot (•)</option>
+            <option value="count">Count (1,2,3…)</option>
+            <option value="doneText">Custom text</option>
+          </select>
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Custom done text</div>
+            <div class="hint">Chỉ dùng khi Badge mode = Custom text.</div>
+          </div>
+          <input id="badgeDoneText" type="text" placeholder="VD: DONE" />
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">Auto clear badge after (ms)</div>
+            <div class="hint">0 = không tự xóa (để count tích lũy).</div>
+          </div>
+          <input id="badgeClearAfterMs" type="number" min="0" step="100" />
+        </div>
+      </section>
+
+      <!-- Detection tuning -->
+      <section class="card">
+        <h2>Detection tuning</h2>
+
+        <div class="row">
+          <div>
+            <div class="label">Min thinking (ms)</div>
+            <div class="hint">Tối thiểu phải “đang trả lời” bao lâu mới xét DONE.</div>
+          </div>
+          <input id="minThinkingMs" type="number" min="0" step="100" />
+        </div>
+
+        <div class="row">
+          <div>
+            <div class="label">End silence (ms)</div>
+            <div class="hint">Không đổi text ≥ thời gian này thì coi là trả lời xong (chống spam do pause).</div>
+          </div>
+          <input id="endSilenceMs" type="number" min="500" step="100" />
+        </div>
+
+        <div class="footer">
+          Gợi ý: 3000–5000ms là đẹp. Nếu vẫn bị “báo sớm”, tăng lên 6000–7000ms.
+        </div>
+      </section>
+    </div>
+
+    <script src="options.js"></script>
   </div>
-
-  <div class="row">
-    <label>Sound (beep)</label>
-    <input id="enableSound" type="checkbox" />
-  </div>
-
-  <div class="row">
-    <label>Flash tab title</label>
-    <input id="flashTitle" type="checkbox" />
-  </div>
-
-  <div class="row">
-    <label>Focus window on done</label>
-    <input id="focusWindowOnDone" type="checkbox" />
-  </div>
-
-  <div class="row">
-    <label>Notify only when tab inactive</label>
-    <input id="notifyOnlyWhenInactive" type="checkbox" />
-  </div>
-
-  <div class="row">
-    <label>Focus tab on done</label>
-    <input id="focusTabOnDone" type="checkbox" />
-  </div>
-
-  <div class="row">
-    <label>Stable time (ms)</label>
-    <input id="stableMs" type="number" min="200" step="100" />
-  </div>
-
-  <button id="save">Save</button>
-  <div class="hint">Tip: nếu notify bị “sớm” quá, tăng Stable time lên (vd 2000–3000ms).</div>
-
-  <script src="options.js"></script>
 </body>
 
 </html>
