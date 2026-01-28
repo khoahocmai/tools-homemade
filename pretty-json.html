@@ -641,6 +641,145 @@
             color: #1f72ff;
             border: 1px solid var(--border);
         }
+
+        .search-float {
+            position: fixed;
+            right: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 9999;
+            display: none;
+
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(15, 28, 55, .92);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            padding: 10px;
+            box-shadow: 0 10px 28px rgba(0, 0, 0, .35);
+        }
+
+        /* handle */
+        .float-handle {
+            width: 46px;
+            height: 46px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .06);
+            color: #d7e7ff;
+            cursor: pointer;
+        }
+
+        /* body layout 2 dòng */
+        .float-body {
+            display: grid;
+            gap: 10px;
+            width: 260px;
+        }
+
+        .float-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .float-row-2 {
+            justify-content: space-between;
+        }
+
+        /* input */
+        .search-float input.search {
+            flex: 1;
+            border-radius: 12px;
+            padding: 9px 10px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .04);
+            color: #d7e7ff;
+            outline: none;
+        }
+
+        /* row 2 parts */
+        .searchOptions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .float-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .search-float .badge {
+            min-width: 86px;
+            height: 36px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            color: #d7e7ff;
+        }
+
+        /* ====== COLLAPSE/EXPAND RULES ====== */
+
+        /* collapsed: chỉ hiện handle */
+        .search-float.is-collapsed .float-body {
+            display: none;
+        }
+
+        .search-float.is-collapsed .float-handle {
+            display: block;
+        }
+
+        /* expanded: ẩn handle (đúng yêu cầu của bạn) */
+        .search-float.is-expanded .float-handle {
+            display: none;
+        }
+
+        .search-float.is-expanded .float-body {
+            display: grid;
+        }
+
+        .float-row-input {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .float-row-input input.search {
+            width: 100%;
+            padding-right: 44px;
+        }
+
+        .float-row-input .clear-btn {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, .12);
+            background: rgba(255, 255, 255, .06);
+            color: #d7e7ff;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+        }
+
+        .float-row-input .clear-btn,
+        #btnClearSearch2.clear-btn {
+            padding: 0;
+            line-height: 1;
+            font-size: 18px;
+        }
+
+        #btnClearSearch2.clear-btn {
+            display: grid;
+            place-items: center;
+        }
     </style>
 </head>
 
@@ -679,9 +818,9 @@
         <section class="panel result-panel">
             <h2>Kết quả</h2>
             <div class="body">
-                <div class="bar sticky">
+                <div class="bar sticky" id="resultSearchBar">
                     <div class="searchWrap">
-                        <input id="search" type="text" placeholder="🔎 Tìm khóa/giá trị (regex OK)" class="search" />
+                        <input id="search" type="text" placeholder="🔎 Tìm khóa/giá trị" class="search" />
                         <button id="btnClearSearch" class="clear-btn" title="Xoá tìm kiếm">×</button>
                     </div>
                     <div class="searchOptions">
@@ -755,12 +894,49 @@
         </section>
     </div>
 
+    <div id="searchFloat" class="search-float is-collapsed" aria-hidden="true">
+
+        <!-- CHỈ HIỆN KHI COLLAPSED -->
+        <button id="floatHandle" class="float-handle" title="Tìm kiếm">🔎</button>
+
+        <!-- CHỈ HIỆN KHI EXPANDED -->
+        <div class="float-body">
+            <!-- Dòng 1 -->
+            <div class="float-row float-row-input">
+                <input id="search2" type="text" placeholder="Tìm..." class="search" />
+                <button id="btnClearSearch2" class="clear-btn" title="Xoá">×</button>
+            </div>
+
+            <!-- Dòng 2 -->
+            <div class="float-row float-row-2">
+                <div class="searchOptions">
+                    <button class="btn-mini" id="optCase2">Aa</button>
+                    <button class="btn-mini" id="optWhole2">🔍</button>
+                </div>
+
+                <div class="float-nav">
+                    <button class="btn" id="floatPrev" title="Kết quả trước">↑</button>
+                    <div class="badge" id="floatCounter">0/0</div>
+                    <button class="btn" id="floatNext" title="Kết quả tiếp">↓</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         /* ===== Helpers ===== */
         const $ = s => document.querySelector(s);
-        const input = $('#input'), tree = $('#tree'), pretty = $('#pretty');
-        const meta = $('#meta'), rc = $('#resultCount'), err = $('#err'), childInfo = $('#childInfo');
-        const search = $('#search'), btnClearSearch = $('#btnClearSearch');
+        const input = $('#input'),
+            tree = $('#tree'),
+            pretty = $('#pretty');
+        const meta = $('#meta'),
+            rc = $('#resultCount'),
+            err = $('#err'),
+            childInfo = $('#childInfo');
+        const search = $('#search'),
+            search2 = $('#search2'),
+            btnClearSearch = $('#btnClearSearch'),
+            btnClearSearch2 = $('#btnClearSearch2');
         let searchHits = [];
         let currentHitIndex = -1;
 
@@ -785,7 +961,8 @@
         function escapeHtml(s) { return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c])) }
         function typeOf(v) { if (v === null) return 'null'; if (Array.isArray(v)) return 'array'; return typeof v; }
         function setPill(el, txt) { el.textContent = txt || ''; el.classList.toggle('hide', !txt); }
-        function toggleClearSearch() { btnClearSearch.classList.toggle('show', !!search.value.trim()); }
+        function toggleClearSearch() { btnClearSearch.classList.toggle('show', !!(search?.value || '').trim()); }
+        function toggleClearSearch2() { btnClearSearch2.classList.toggle('show', !!(search2?.value || '').trim()); }
         function copyText(t) { navigator.clipboard.writeText(t); }
 
         /* ===== Preprocess: comments, trailing commas, quote keys, expand shorthand ===== */
@@ -1410,6 +1587,7 @@
             setPill(rc, `Kết quả: ${count}${count ? ` (1/${count})` : ''}`);
             updateNavButtons();
             if (searchHits.length) focusHit(0, true);
+            updateFloatingNav();
         }
 
         function updateNavButtons() {
@@ -1432,6 +1610,7 @@
             line.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto', block: 'center' });
             currentHitIndex = i;
             setPill(rc, `Kết quả: ${searchHits.length} (${currentHitIndex + 1}/${searchHits.length})`);
+            updateFloatingNav();
         }
         function openParentsOfLine(line) {
             // Bảo đảm node hiện tại và toàn bộ ancestor được expand
@@ -1451,6 +1630,175 @@
             }
         }
 
+        // ===== Floating search nav (Option B) =====
+        const searchFloat = document.getElementById('searchFloat');
+        const floatPrev = document.getElementById('floatPrev');
+        const floatNext = document.getElementById('floatNext');
+        const floatCounter = document.getElementById('floatCounter');
+        const optCase2 = document.getElementById('optCase2');
+        const optWhole2 = document.getElementById('optWhole2');
+
+        function isElementInViewport(el) {
+            if (!el) return true;
+            const r = el.getBoundingClientRect();
+            return r.bottom > 0 && r.top < window.innerHeight;
+        }
+
+        function updateFloatingNav() {
+            if (!searchFloat) return;
+
+            const bar = document.getElementById('resultSearchBar'); // ✅ thanh search ngang
+            const barVisible = isElementInViewport(bar);
+
+            // ✅ chỉ hiện khi: có keyword + thanh search ngang không còn nhìn thấy
+            const show = !barVisible;
+
+            searchFloat.style.display = show ? 'grid' : 'none';
+            searchFloat.setAttribute('aria-hidden', show ? 'false' : 'true');
+
+            if (!show) return;
+
+            // sync text input (khi user search ở thanh ngang)
+            if (search2 && search2.value !== search.value) {
+                search2.value = search.value;
+                toggleClearSearch2();
+            }
+
+            // sync option state
+            syncSearchUIFromFlags();
+
+            // Counter
+            if (floatCounter) {
+                const has = searchHits.length > 0;
+                const cur = has ? (currentHitIndex + 1) : 0;
+                floatCounter.textContent = `${cur}/${searchHits.length}`;
+            }
+        }
+
+        // Bind nút điều hướng dọc
+        if (!window.__floatNavBound) {
+            floatNext?.addEventListener('click', () => {
+                if (!searchHits.length) return;
+                const next = (currentHitIndex + 1) % searchHits.length;
+                focusHit(next, true);
+                updateFloatingNav();
+            });
+
+            floatPrev?.addEventListener('click', () => {
+                if (!searchHits.length) return;
+                const prev = (currentHitIndex - 1 + searchHits.length) % searchHits.length;
+                focusHit(prev, true);
+                updateFloatingNav();
+            });
+
+            window.__floatNavBound = true;
+        }
+
+        // Khi scroll/resize thì kiểm tra lại
+        window.addEventListener('scroll', () => updateFloatingNav(), { passive: true });
+        window.addEventListener('resize', () => updateFloatingNav());
+
+        function syncSearchUIFromFlags() {
+            // sync nút optCase/optWhole của thanh ngang (đang có) + thanh dọc (mới)
+            const a1 = document.getElementById('optCase');
+            const w1 = document.getElementById('optWhole');
+
+            const setBtn = (btn, on, textOn, textOff, titleOn, titleOff) => {
+                if (!btn) return;
+                btn.classList.toggle('active', !!on);
+                btn.textContent = on ? textOn : textOff;
+                btn.title = on ? titleOn : titleOff;
+            };
+
+            setBtn(a1, searchFlags.case, 'Aa*', 'Aa', 'Phân biệt HOA/thường', 'Không phân biệt HOA/thường');
+            setBtn(optCase2, searchFlags.case, 'Aa*', 'Aa', 'Phân biệt HOA/thường', 'Không phân biệt HOA/thường');
+
+            setBtn(w1, searchFlags.whole, '🔍*', '🔍', 'Tìm chính xác', 'Tìm không chính xác');
+            setBtn(optWhole2, searchFlags.whole, '🔍*', '🔍', 'Tìm chính xác', 'Tìm không chính xác');
+        }
+
+        search2?.addEventListener('input', () => {
+            // sync value sang thanh ngang (nguồn dữ liệu thật là #search)
+            search.value = search2.value;
+            toggleClearSearch();
+            toggleClearSearch2();
+
+            // debounce để không bị “nhảy” khi mới gõ “nam”
+            debouncedApplySearch();
+        });
+
+        search2?.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                search.value = search2.value;
+                toggleClearSearch();
+                toggleClearSearch2();
+                applySearch();
+                updateFloatingNav();
+            }
+        });
+
+        btnClearSearch2?.addEventListener('click', () => {
+            search.value = '';
+            search2.value = '';
+            toggleClearSearch();
+            toggleClearSearch2();
+            applySearch();
+            updateFloatingNav();
+            search2.focus({ preventScroll: true });
+        });
+
+        optCase2?.addEventListener('click', () => {
+            searchFlags.case = !searchFlags.case;
+            syncSearchUIFromFlags();
+            applySearch();
+            updateFloatingNav();
+        });
+
+        optWhole2?.addEventListener('click', () => {
+            searchFlags.whole = !searchFlags.whole;
+            syncSearchUIFromFlags();
+            applySearch();
+            updateFloatingNav();
+        });
+
+        const floatHandle = document.getElementById('floatHandle');
+
+        function floatExpand() {
+            if (!searchFloat) return;
+            searchFloat.classList.remove('is-collapsed');
+            searchFloat.classList.add('is-expanded');
+        }
+
+        function floatCollapse() {
+            if (!searchFloat) return;
+            // nếu đang focus input thì không collapse
+            if (document.activeElement === search2) return;
+            searchFloat.classList.remove('is-expanded');
+            searchFloat.classList.add('is-collapsed');
+        }
+
+        // hover để mở
+        searchFloat?.addEventListener('mouseenter', floatExpand);
+        searchFloat?.addEventListener('mouseleave', floatCollapse);
+
+        // click icon để toggle
+        floatHandle?.addEventListener('click', () => {
+            const expanded = searchFloat.classList.contains('is-expanded');
+            if (expanded) floatCollapse();
+            else {
+                floatExpand();
+                search2?.focus({ preventScroll: true });
+            }
+        });
+
+        // focus vào input thì mở
+        search2?.addEventListener('focus', floatExpand);
+        // blur input thì thu lại
+        search2?.addEventListener('blur', () => {
+            // delay nhỏ để click nút ↑↓ không bị collapse ngay
+            setTimeout(floatCollapse, 120);
+        });
 
         /* Hover & lock child-count */
         function updateChildCount(line) { if (!line) { setPill(childInfo, ''); return; } const n = Array.isArray(line._childKeys) ? line._childKeys.length : 0; setPill(childInfo, `Con trực tiếp: ${n}`); }
@@ -1671,6 +2019,8 @@
             optWhole.classList.remove('active');
             optWhole.textContent = '🔍';
             optWhole.title = 'Tìm kiếm không chính xác';
+
+            syncSearchUIFromFlags();
         }
 
         /* ===== Events ===== */
@@ -1762,8 +2112,31 @@
         updateSortButtonLabel();
         $('#btnSample').addEventListener('click', () => { input.value = '{ "field-1": "value-1", "field-2": 200, "array-1": [ { "array-field-1": "a", "array-field-2": 1 }, { "array-field-1": "b", "array-field-2": 2 }, { "array-field-1": "c", "array-field-2": 3, "emptyArr": [], "emptyObj": {} } ], "object-1": { "field-1a": true, "field-1b": null, "emptyArr": [], "emptyObj": {}, "nested": { "deeperEmptyArr": [], "deeperEmptyObj": {} } }, "emptyArrayTop": [], "emptyObjectTop": {} }'; analyze(); });
         $('#fileInput').addEventListener('change', e => { const f = e.target.files?.[0]; if (!f) return; const r = new FileReader(); r.onload = () => { input.value = String(r.result || ''); analyze(); }; r.readAsText(f); });
-        search.addEventListener('input', () => { toggleClearSearch(); applySearch(); });
-        btnClearSearch.addEventListener('click', () => { search.value = ''; resetSearchFlags(); applySearch(); toggleClearSearch(); search.focus(); });
+
+        function debounce(fn, wait = 1200) {
+            let t = null;
+            return function (...args) {
+                clearTimeout(t);
+                t = setTimeout(() => fn.apply(this, args), wait);
+            };
+        }
+        const debouncedApplySearch = debounce(() => applySearch(), 300); // 1000ms = 1.0s
+
+        search.addEventListener('input', () => { toggleClearSearch(); debouncedApplySearch(); });
+        search.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                applySearch(); // chạy ngay
+            }
+        });
+        btnClearSearch.addEventListener('click', () => {
+            search.value = '';
+            resetSearchFlags();
+            applySearch();
+            toggleClearSearch();
+            updateFloatingNav();
+            search.focus();
+        });
         $('#btnToggleQuotes').addEventListener('click', () => { unquoteKeys = !unquoteKeys; updateQuotesBtn(); try { const data = JSON.parse(normalizeJson(input.value || '{}')); const base = JSON.stringify(data, null, 2); pretty.textContent = unquoteKeys ? removeQuotesFromKeys(base) : base; } catch { } });
         // Gắn nút điều hướng kết quả TÌM KIẾM chỉ 1 lần
         if (!window.__navBound) {
