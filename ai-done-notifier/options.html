@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+
+<head>
+  <meta charset="utf-8" />
+  <title>AI Done Notifier - Options</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 16px;
+      max-width: 520px;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid #eee;
+    }
+
+    label {
+      font-weight: 600;
+    }
+
+    input[type="number"] {
+      width: 120px;
+      padding: 6px;
+    }
+
+    button {
+      margin-top: 16px;
+      padding: 10px 14px;
+      cursor: pointer;
+    }
+
+    .hint {
+      color: #666;
+      font-size: 12px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+
+<body>
+  <h2>AI Done Notifier</h2>
+
+  <div class="row">
+    <label>Notification</label>
+    <input id="enableNotification" type="checkbox" />
+  </div>
+
+  <div class="row">
+    <label>Sound (beep)</label>
+    <input id="enableSound" type="checkbox" />
+  </div>
+
+  <div class="row">
+    <label>Flash tab title</label>
+    <input id="flashTitle" type="checkbox" />
+  </div>
+
+  <div class="row">
+    <label>Focus window on done</label>
+    <input id="focusWindowOnDone" type="checkbox" />
+  </div>
+
+  <div class="row">
+    <label>Notify only when tab inactive</label>
+    <input id="notifyOnlyWhenInactive" type="checkbox" />
+  </div>
+
+  <div class="row">
+    <label>Focus tab on done</label>
+    <input id="focusTabOnDone" type="checkbox" />
+  </div>
+
+  <div class="row">
+    <label>Stable time (ms)</label>
+    <input id="stableMs" type="number" min="200" step="100" />
+  </div>
+
+  <button id="save">Save</button>
+  <div class="hint">Tip: nếu notify bị “sớm” quá, tăng Stable time lên (vd 2000–3000ms).</div>
+
+  <script src="options.js"></script>
+</body>
+
+</html>
