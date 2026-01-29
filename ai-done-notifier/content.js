@@ -1,3 +1,8 @@
+// content/index.js — AI Done Notifier (ChatGPT/Claude/Gemini)
+// Fix: không notify sớm khi AI còn thinking
+// 1) Chỉ đọc text trong vùng content (prose/markdown) của assistant message
+// 2) Nếu còn nút "Stop generating" (đang generate) => tuyệt đối chưa DONE
+
 (async function () {
   console.log("[AI DONE] content loaded", location.href);
 
@@ -5,8 +10,11 @@
     enableNotification: true,
     enableSound: true,
     flashTitle: true,
-    minThinkingMs: 1200,
-    endSilenceMs: 4500,
+
+    // Detection tuning
+    minThinkingMs: 1200, // từ lúc send -> tối thiểu bao lâu mới cho phép DONE
+    endSilenceMs: 4500,  // assistant im lặng bao lâu thì DONE
+
     debug: true,
   };
 
@@ -75,30 +83,98 @@
     if (opts.flashTitle) flashTitleOnce();
   }
 
-  // ---------- Assistant container ----------
-  function getAssistantContainer() {
-    if (isChatGPT() || isClaude()) {
-      const els = document.querySelectorAll('[data-message-author-role="assistant"], article');
-      for (let i = els.length - 1; i >= 0; i--) {
-        const t = safeText(els[i]);
-        if (t) return els[i];
-      }
-      return null;
+  // ---------- ChatGPT generating detector ----------
+  // Nếu đang generate/thinking, thường có nút "Stop generating"
+  function isChatGPTGenerating() {
+    if (!isChatGPT()) return false;
+
+    const selectors = [
+      'button[aria-label="Stop generating"]',
+      'button[aria-label*="Stop generating"]',
+      'button[data-testid="stop-button"]',
+      'button[data-testid*="stop-generating"]',
+    ];
+    for (const s of selectors) {
+      if (document.querySelector(s)) return true;
+    }
+
+    // fallback (đa ngôn ngữ)
+    const btns = document.querySelectorAll("button");
+    for (const b of btns) {
+      const aria = (b.getAttribute("aria-label") || "").toLowerCase();
+      const text = (b.textContent || "").toLowerCase();
+
+      // English
+      if ((aria.includes("stop") && aria.includes("generat")) || (text.includes("stop") && text.includes("generat")))
+        return true;
+
+      // Vietnamese (best effort)
+      if ((aria.includes("dừng") && (aria.includes("tạo") || aria.includes("sinh"))) ||
+        (text.includes("dừng") && (text.includes("tạo") || text.includes("sinh"))))
+        return true;
+    }
+
+    return false;
+  }
+
+  // ---------- Assistant message helpers ----------
+  function getAssistantNodes() {
+    if (isChatGPT()) {
+      return Array.from(document.querySelectorAll('[data-message-author-role="assistant"]'));
+    }
+
+    if (isClaude()) {
+      return Array.from(
+        document.querySelectorAll('[data-message-author-role="assistant"], [data-testid*="assistant"]')
+      );
     }
 
     if (isGemini()) {
-      return document.querySelector("main") || document.querySelector('[role="main"]') || document.body;
+      const main = document.querySelector("main,[role='main']");
+      return main ? [main] : [];
     }
 
-    return document.body;
+    return [];
   }
 
-  // ---------- Session state (Option A) ----------
+  function getLastAssistantNode() {
+    const nodes = getAssistantNodes();
+    return nodes.length ? nodes[nodes.length - 1] : null;
+  }
+
+  // QUAN TRỌNG: chỉ lấy text "content trả lời", loại bỏ text UI (Copy/Buttons/Stop...)
+  function getAssistantContentText(assistantEl) {
+    if (!assistantEl) return "";
+
+    if (isChatGPT()) {
+      const content =
+        assistantEl.querySelector(
+          // các class/selector thường gặp trong ChatGPT UI
+          ".markdown, .prose, [data-testid='markdown'], [data-testid='message-content'], .whitespace-pre-wrap"
+        ) || assistantEl;
+
+      return safeText(content);
+    }
+
+    // Claude/Gemini tạm lấy trực tiếp (có thể refine sau)
+    return safeText(assistantEl);
+  }
+
+  // ---------- Session state ----------
   let sessionActive = false;
   let notified = false;
   let sessionStartAt = 0;
 
-  let baselineText = "";
+  let assistantCountAtStart = 0;
+
+  // chờ assistant message mới xuất hiện
+  let awaitingAssistant = true;
+  // chờ assistant thực sự có chữ trả lời (không phải placeholder/UI)
+  let awaitingOutput = true;
+
+  let activeAssistantEl = null;
+
+  // text tracking
   let lastText = "";
   let lastChangeAt = 0;
   let hasAssistantOutput = false;
@@ -113,14 +189,27 @@
     notified = false;
     sessionStartAt = now();
 
-    const container = getAssistantContainer();
-    baselineText = container ? safeText(container) : "";
+    // badge thinking
+    safeSendMessage({
+      type: "AI_START",
+      site: getSiteName(),
+      reason,
+      url: location.href,
+      title: document.title,
+    });
 
-    lastText = baselineText;
+    const nodes = getAssistantNodes();
+    assistantCountAtStart = nodes.length;
+
+    awaitingAssistant = true;
+    awaitingOutput = true;
+    activeAssistantEl = null;
+
+    lastText = "";
     lastChangeAt = now();
     hasAssistantOutput = false;
 
-    dlog("[AI DONE] startSession()", { site: getSiteName(), reason });
+    dlog("[AI DONE] startSession()", { site: getSiteName(), reason, assistantCountAtStart });
   }
 
   // ---------- Input detection helpers ----------
@@ -129,23 +218,18 @@
 
     const tag = el.tagName;
 
-    // classic inputs
     if (tag === "TEXTAREA") return true;
     if (tag === "INPUT") {
       const type = (el.getAttribute("type") || "").toLowerCase();
       return ["text", "search"].includes(type) || type === "";
     }
 
-    // contenteditable / role textbox (ChatGPT thường dùng cái này)
     if (el.isContentEditable) return true;
     const role = (el.getAttribute?.("role") || "").toLowerCase();
     if (role === "textbox") return true;
 
-    // sometimes the real editable is parent
-    const ceParent = el.closest?.('[contenteditable="true"]');
-    if (ceParent) return true;
-    const roleParent = el.closest?.('[role="textbox"]');
-    if (roleParent) return true;
+    if (el.closest?.('[contenteditable="true"]')) return true;
+    if (el.closest?.('[role="textbox"]')) return true;
 
     return false;
   }
@@ -153,7 +237,6 @@
   function looksLikeSendButton(btn) {
     if (!btn) return false;
 
-    // common attributes
     const aria = (btn.getAttribute("aria-label") || "").toLowerCase();
     const title = (btn.getAttribute("title") || "").toLowerCase();
     const text = safeText(btn).toLowerCase();
@@ -161,87 +244,133 @@
 
     const hay = `${aria} ${title} ${text} ${testid}`.trim();
 
-    // ChatGPT hay dùng "Send message", "Send prompt"
     if (hay.includes("send")) return true;
-    if (hay.includes("gửi")) return true;
     if (hay.includes("submit")) return true;
+    if (hay.includes("gửi")) return true;
 
-    // một số UI dùng icon-only button, testid thường gợi ý
-    if (hay.includes("paperplane") || hay.includes("send-button") || hay.includes("send_message")) return true;
+    if (hay.includes("paperplane") || hay.includes("send-button") || hay.includes("send_message"))
+      return true;
 
     return false;
   }
 
-  // ---------- Hook SEND events (FIXED) ----------
   function installSendHooks() {
-    // 1) Enter key trong textarea / contenteditable / role=textbox
     document.addEventListener(
       "keydown",
       (e) => {
         if (e.key !== "Enter") return;
-        if (e.shiftKey) return;         // shift+enter = newline
-        if (e.isComposing) return;      // IME
+        if (e.shiftKey) return;
+        if (e.isComposing) return;
         const target = e.target || document.activeElement;
         if (!isEditableTarget(target)) return;
 
-        // ChatGPT đôi khi bắt Enter ở bubbling; ta set capture=true nên OK
         startSession("enter_send");
       },
       true
     );
 
-    // 2) Click send button
     document.addEventListener(
       "click",
       (e) => {
         const btn = e.target?.closest?.("button");
         if (!btn) return;
         if (!looksLikeSendButton(btn)) return;
+
         startSession("click_send");
       },
       true
     );
 
-    // 3) Submit form (một số site dùng form submit)
     document.addEventListener(
       "submit",
       (e) => {
-        // chỉ start nếu trong form có input editable
         const form = e.target;
         if (!form) return;
+
         const hasEditable =
-          form.querySelector?.("textarea, input[type='text'], input[type='search'], [contenteditable='true'], [role='textbox']") != null;
+          form.querySelector?.(
+            "textarea, input[type='text'], input[type='search'], [contenteditable='true'], [role='textbox']"
+          ) != null;
+
         if (!hasEditable) return;
+
         startSession("form_submit");
       },
       true
     );
 
-    dlog("[AI DONE] send hooks installed (textarea + contenteditable + click + submit)");
+    dlog("[AI DONE] send hooks installed");
   }
 
   // ---------- DONE detection ----------
   function tick() {
     const t = now();
-    if (t - lastTickAt < 250) return; // debounce
+    if (t - lastTickAt < 250) return;
     lastTickAt = t;
 
     if (!sessionActive) return;
 
-    const container = getAssistantContainer();
-    if (!container) return;
+    // nếu element bị re-render, tự recover
+    if (!awaitingAssistant && activeAssistantEl && !document.contains(activeAssistantEl)) {
+      activeAssistantEl = getLastAssistantNode();
+      if (!activeAssistantEl) {
+        awaitingAssistant = true;
+        awaitingOutput = true;
+        return;
+      }
+    }
 
-    const text = safeText(container);
-    if (!text) return;
+    // 1) Đợi assistant message MỚI xuất hiện
+    if (awaitingAssistant) {
+      const nodes = getAssistantNodes();
+      if (nodes.length <= assistantCountAtStart) {
+        // chưa có assistant message mới => vẫn thinking
+        return;
+      }
 
-    if (text !== lastText) {
+      activeAssistantEl = nodes[nodes.length - 1];
+      awaitingAssistant = false;
+      awaitingOutput = true;
+
+      // reset tracking theo message mới
+      lastText = "";
+      lastChangeAt = now();
+      hasAssistantOutput = false;
+
+      dlog("[AI DONE] assistant message created (may be placeholder)");
+      return;
+    }
+
+    if (!activeAssistantEl) return;
+
+    // 2) lấy text content (không gồm UI)
+    const text = getAssistantContentText(activeAssistantEl);
+
+    // 2.1) Nếu chưa có output thật thì CHỈ chờ tới khi có chữ
+    if (awaitingOutput) {
+      if (!text || text.length === 0) {
+        return; // vẫn chưa có chữ trả lời
+      }
+
+      // có chữ thật -> bắt đầu theo dõi ổn định
+      awaitingOutput = false;
+      hasAssistantOutput = true;
       lastText = text;
       lastChangeAt = now();
 
-      if (text !== baselineText) hasAssistantOutput = true;
+      dlog("[AI DONE] output started", { len: text.length, preview: text.slice(0, 60) });
+      return;
+    }
 
-      // debug nhẹ
-      // dlog("[AI DONE] assistant text updated", { hasAssistantOutput });
+    // 3) nếu text thay đổi => đang stream/đang update
+    if (text !== lastText) {
+      lastText = text;
+      lastChangeAt = now();
+      return;
+    }
+
+    // 4) Chặn DONE nếu ChatGPT còn đang generate (còn nút Stop generating)
+    if (isChatGPTGenerating()) {
       return;
     }
 
@@ -249,16 +378,16 @@
     const stableFor = now() - lastChangeAt;
     const endSilence = opts.endSilenceMs ?? 4500;
 
-    // ✅ Chỉ DONE khi đã có output thật
     if (!notified && hasAssistantOutput && sinceStart >= opts.minThinkingMs && stableFor >= endSilence) {
       notified = true;
       sessionActive = false;
+
       dlog("[AI DONE] DONE", { sinceStart, stableFor, endSilence });
       emitDone("end_silence");
     }
   }
 
-  // ---------- Start watcher safely ----------
+  // ---------- Start watcher ----------
   function startWatcher() {
     const target = document.body || document.documentElement;
     if (!target) {
@@ -266,7 +395,7 @@
       return;
     }
 
-    dlog("[AI DONE] tick loop started");
+    dlog("[AI DONE] watcher started");
     setInterval(tick, 700);
 
     const observer = new MutationObserver(tick);

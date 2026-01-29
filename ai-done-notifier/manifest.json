@@ -6,7 +6,8 @@
   "permissions": [
     "notifications",
     "storage",
-    "tabs"
+    "tabs",
+    "webRequest"
   ],
   "host_permissions": [
     "https://chatgpt.com/*",
