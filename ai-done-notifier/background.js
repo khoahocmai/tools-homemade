@@ -246,7 +246,6 @@ async function handleDone(tabId, site, title) {
 
   // chống notify trùng (AI_DONE + webRequest)
   if (await recentlyNotified(tabId)) return;
-  await markNotified(tabId);
 
   const inactive = await isTabEffectivelyInactive(tabId);
   if (opts.notifyOnlyWhenInactive && !inactive) {
@@ -254,6 +253,8 @@ async function handleDone(tabId, site, title) {
     await clearWaiting(tabId);
     return;
   }
+
+  await markNotified(tabId);
 
   // Notification
   if (opts.enableNotification) {
@@ -305,27 +306,28 @@ async function handleDone(tabId, site, title) {
 }
 
 // ---------- Messages from content ----------
-chrome.runtime.onMessage.addListener((msg, sender) => {
-  const tabId = sender?.tab?.id;
-  if (tabId == null) return;
-
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
   (async () => {
+    const tabId = sender?.tab?.id;
+    if (tabId == null) {
+      sendResponse({ ok: false, error: "no tabId" });
+      return;
+    }
+
+    // debug (xem trong Service Worker console)
+    console.log("[BG] onMessage", { type: msg?.type, tabId, site: msg?.site });
+
     const opts = await getOptions();
 
     if (msg?.type === "AI_START") {
-      const opts = await getOptions();
-
-      // set last chatgpt tab
       if ((msg?.site || "").toLowerCase() === "chatgpt" || (sender?.tab?.url || "").includes("chatgpt")) {
         await setLastChatGPTTab(tabId);
       }
 
-      // thinking badge
       if (opts.enableBadge && opts.badgeShowWhileThinking) {
         await setBadge(tabId, "•");
       }
 
-      // waiting state (ONE TIME only)
       await setWaiting(tabId, {
         startedAt: Date.now(),
         site: msg?.site || "AI",
@@ -333,21 +335,34 @@ chrome.runtime.onMessage.addListener((msg, sender) => {
         networkSeen: false,
       });
 
-      // schedule warmup alarm
       await chrome.alarms.clear(warmupAlarmName(tabId));
       chrome.alarms.create(warmupAlarmName(tabId), {
         when: Date.now() + (opts.warmupCheckMs ?? 2000),
       });
 
+      sendResponse({ ok: true });
       return;
     }
 
-    if (msg?.type !== "AI_DONE") return;
+    if (msg?.type === "AI_DONE") {
+      const title = sender?.tab?.title || msg?.title || "AI";
+      const site = msg?.site || "AI";
+      await handleDone(tabId, site, title);
 
-    const title = sender?.tab?.title || msg?.title || "AI";
-    const site = msg?.site || "AI";
-    await handleDone(tabId, site, title);
-  })();
+      sendResponse({ ok: true });
+      return;
+    }
+
+    sendResponse({ ok: true, ignored: true });
+  })().catch((e) => {
+    console.error("[BG] onMessage error", e);
+    try {
+      sendResponse({ ok: false, error: String(e) });
+    } catch { }
+  });
+
+  // QUAN TRỌNG: giữ message port mở cho async code
+  return true;
 });
 
 // ---------- ChatGPT: detect DONE by network (works even when tab not focused) ----------
