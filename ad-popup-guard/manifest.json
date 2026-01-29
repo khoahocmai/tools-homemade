@@ -3,7 +3,7 @@
   "name": "Ad & Popup Guard",
   "version": "0.1.0",
   "action": {
-    "default_popup": "src/popup/popup.html"
+    "default_popup": "popup.html"
   },
   "permissions": [
     "declarativeNetRequest",
