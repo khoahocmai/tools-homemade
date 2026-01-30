@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pretty JSON</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+<header>
+        <div class="brand" id="brand">
+            <span class="logo">🧩</span><span class="title">Pretty JSON</span>
+        </div>
+        <div class="controls">
+            <button id="btnToggleTheme" class="btn-mini">🌙</button>
+            <label class="button" for="fileInput">📄 Mở file</label>
+            <input id="fileInput" type="file" accept=".json,.txt,.log,.js,.jsonc" />
+            <button id="btnSample">Dán ví dụ</button>
+            <button id="btnCopy">📋 Copy</button>
+            <button id="btnToggleAll">⤡ Collapse all</button>
+            <button id="btnToggleQuotes" class="btn-mini">🔤 Bỏ " " field</button>
+            <button id="btnSortAZ">🔠 Sort A–Z</button>
+            <button id="btnDownload">⬇️ Tải JSON</button>
+            <button id="btnClear">🧹 Xoá</button>
+        </div>
+    </header>
+
+    <!-- Hàng 1: Input + Kết quả -->
+    <div class="row">
+        <section class="panel">
+            <h2>Đầu vào</h2>
+            <div class="body">
+                <textarea id="input"
+                    placeholder='Dán JSON/JSON5/Object literal vào đây...'>{ "field-1": "value-1", "field-2": 200, "array-1": [ { "array-field-1": "a", "array-field-2": 1 }, { "array-field-1": "b", "array-field-2": 2 }, { "array-field-1": "c", "array-field-2": 3, "emptyArr": [], "emptyObj": {} } ], "object-1": { "field-1a": true, "field-1b": null, "emptyArr": [], "emptyObj": {}, "nested": { "deeperEmptyArr": [], "deeperEmptyObj": {} } }, "emptyArrayTop": [], "emptyObjectTop": {} }</textarea>
+                <div class="small" id="meta"></div>
+                <h3 class="small" style="margin:14px 0 6px;color:var(--muted)">JSON (đã format)</h3>
+                <pre id="pretty"></pre>
+            </div>
+        </section>
+
+        <section class="panel result-panel">
+            <h2>Kết quả</h2>
+            <div class="body">
+                <div class="bar sticky" id="resultSearchBar">
+                    <div class="searchWrap">
+                        <input id="search" type="text" placeholder="🔎 Tìm khóa/giá trị" class="search" />
+                        <button id="btnClearSearch" class="clear-btn" title="Xoá tìm kiếm">×</button>
+                    </div>
+                    <div class="searchOptions">
+                        <button class="btn-mini" id="optCase">Aa</button>
+                        <button class="btn-mini" id="optWhole">🔍</button>
+                    </div>
+
+                    <span class="pill hide" id="resultCount"></span>
+                    <span class="pill hide" id="err"></span>
+                    <span class="pill hide" id="childInfo"></span>
+                    <div id="navHits" style="margin-left:auto; display:none; gap:8px; align-items:center">
+                        <button id="btnPrevHit" class="btn-mini">←</button>
+                        <button id="btnNextHit" class="btn-mini">→</button>
+                    </div>
+                </div>
+                <div id="tree" class="tree"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Hàng 2: Thống kê + Trích xuất -->
+    <div class="row" style="grid-template-columns: 1fr;">
+        <section class="panel">
+            <h2>Tổng quan & Trích xuất</h2>
+            <div class="body">
+                <div class="pills" id="statsPills"></div>
+
+                <div class="card" style="margin-top:8px">
+                    <header>
+                        <strong>Key không có giá trị con</strong>
+                    </header>
+                    <div class="list" id="keysList"></div>
+                </div>
+
+                <div class="card" style="margin-top:8px">
+                    <header>
+                        <strong>Giá trị theo loại</strong>
+                    </header>
+
+                    <div class="values-grid">
+                        <!-- Trên: Boolean -->
+                        <div class="valcol mini bool">
+                            <div class="valcol-head"><span id="headBool">Boolean</span></div>
+                            <div class="val-list" id="listBooleans"></div>
+                        </div>
+
+                        <!-- Trên: Null -->
+                        <div class="valcol mini null">
+                            <div class="valcol-head"><span id="headNull">Null</span></div>
+                            <div class="val-list" id="listNulls"></div>
+                        </div>
+
+                        <!-- Dưới: String -->
+                        <div class="valcol string">
+                            <div class="valcol-head">
+                                <span id="headString">String</span>
+                            </div>
+                            <div class="val-list" id="listStrings"></div>
+                        </div>
+
+                        <!-- Dưới: Number -->
+                        <div class="valcol number">
+                            <div class="valcol-head">
+                                <span id="headNumber">Number</span>
+                            </div>
+                            <div class="val-list" id="listNumbers"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <div id="searchFloat" class="search-float is-collapsed" aria-hidden="true">
+
+        <!-- CHỈ HIỆN KHI COLLAPSED -->
+        <button id="floatHandle" class="float-handle" title="Tìm kiếm">🔎</button>
+
+        <!-- CHỈ HIỆN KHI EXPANDED -->
+        <div class="float-body">
+            <!-- Dòng 1 -->
+            <div class="float-row float-row-input">
+                <input id="search2" type="text" placeholder="Tìm..." class="search" />
+                <button id="btnClearSearch2" class="clear-btn" title="Xoá">×</button>
+            </div>
+
+            <!-- Dòng 2 -->
+            <div class="float-row float-row-2">
+                <div class="searchOptions">
+                    <button class="btn-mini" id="optCase2">Aa</button>
+                    <button class="btn-mini" id="optWhole2">🔍</button>
+                </div>
+
+                <div class="float-nav">
+                    <button class="btn" id="floatPrev" title="Kết quả trước">↑</button>
+                    <div class="badge" id="floatCounter">0/0</div>
+                    <button class="btn" id="floatNext" title="Kết quả tiếp">↓</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+  <!-- Scripts (split for easier debugging) -->
+  <script src="./script/dom.js"></script>
+  <script src="./script/normalize.js"></script>
+  <script src="./script/tree.js"></script>
+  <script src="./script/search.js"></script>
+  <script src="./script/stats.js"></script>
+  <script src="./script/sort.js"></script>
+  <script src="./script/app.js"></script>
+</body>
+</html>
