@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="vi" data-theme="dark">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Text compare</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <header>
+    <div class="brand">📝 <span>Text Compare</span></div>
+    <div class="controls">
+      <button id="btnToggleTheme" title="Toggle theme">🌙</button>
+      <button id="btnCompare">🔍 So sánh</button>
+      <button id="btnExample">📋 Ví dụ</button>
+      <button id="btnExampleJson">📋 Ví dụ Json</button>
+      <button id="btnClearAll">🧹 Xóa tất cả</button>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8 max-w-full">
+    <div class="grid md:grid-cols-2 gap-6 mb-8">
+      <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+        <label for="text1" class="block text-sm font-medium mb-2" style="color: var(--text);">
+          Văn bản gốc
+        </label>
+
+        <div class="textarea-container">
+          <div id="lineNumbers1" class="line-numbers"></div>
+          <pre id="text1" class="textarea-with-lines" contenteditable="true"
+            data-placeholder="Nhập văn bản gốc tại đây..."></pre>
+        </div>
+      </div>
+
+      <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+        <label for="text2" class="block text-sm font-medium mb-2" style="color: var(--text);">
+          Văn bản so sánh
+        </label>
+
+        <div class="textarea-container">
+          <div id="lineNumbers2" class="line-numbers"></div>
+          <pre id="text2" class="textarea-with-lines" contenteditable="true"
+            data-placeholder="Nhập văn bản so sánh tại đây..."></pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-lg shadow-md p-4 mb-6" id="legend" style="display: none; background: var(--panel);">
+      <h3 class="text-lg font-semibold mb-3" style="color: var(--text);">Chú thích:</h3>
+      <div class="flex flex-wrap">
+        <div class="legend-item">
+          <div class="legend-color unchanged"></div>
+          <span class="text-sm" style="color: var(--text);">Nội dung không thay đổi</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color modified"></div>
+          <span class="text-sm" style="color: var(--text);">Nội dung đã thay đổi</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color added"></div>
+          <span class="text-sm" style="color: var(--text);">Nội dung được thêm</span>
+        </div>
+        <div class="legend-item">
+          <div class="legend-color removed"></div>
+          <span class="text-sm" style="color: var(--text);">Nội dung bị xóa (thiếu)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-6" id="results" style="display: none;">
+      <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+        <h3 class="text-lg font-semibold mb-4" style="color: var(--text);">Văn bản gốc (có đánh dấu)</h3>
+        <div class="textarea-container">
+          <div id="diffLineNumbers1" class="line-numbers"></div>
+          <div id="diff1" class="diff-container flex-1" style="background: var(--bg);"></div>
+        </div>
+      </div>
+
+      <div class="rounded-lg shadow-md p-6" style="background: var(--panel);">
+        <h3 class="text-lg font-semibold mb-4" style="color: var(--text);">Văn bản so sánh (có đánh dấu)</h3>
+        <div class="textarea-container">
+          <div id="diffLineNumbers2" class="line-numbers"></div>
+          <div id="diff2" class="diff-container flex-1" style="background: var(--bg);"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="rounded-lg shadow-md p-6 mt-6" id="stats" style="display: none; background: var(--panel);">
+      <h3 class="text-lg font-semibold mb-4" style="color: var(--text);">Thống kê sự khác biệt:</h3>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <div class="p-3 rounded stat modified">
+          <div class="text-2xl font-bold" id="modifiedCount">0</div>
+          <div class="text-sm">Nội dung đã thay đổi</div>
+        </div>
+
+        <div class="p-3 rounded stat added">
+          <div class="text-2xl font-bold" id="addedCount">0</div>
+          <div class="text-sm">Nội dung được thêm</div>
+        </div>
+
+        <div class="p-3 rounded stat removed">
+          <div class="text-2xl font-bold" id="removedCount">0</div>
+          <div class="text-sm">Nội dung bị xóa (thiếu)</div>
+        </div>
+
+        <div class="p-3 rounded stat similarity">
+          <div class="text-2xl font-bold" id="similarityPercent">0%</div>
+          <div class="text-sm">Độ tương đồng</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Load scripts in order (no ES modules to keep file:// compatible) -->
+  <script src="./script/dom.js"></script>
+  <script src="./script/similarity.js"></script>
+  <script src="./script/normalize.js"></script>
+  <script src="./script/line-numbers.js"></script>
+  <script src="./script/diff.js"></script>
+  <script src="./script/renderer.js"></script>
+  <script src="./script/compare.js"></script>
+  <script src="./script/examples.js"></script>
+  <script src="./script/theme.js"></script>
+  <script src="./script/app.js"></script>
+</body>
+
+</html>

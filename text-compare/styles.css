@@ -1,0 +1,348 @@
+:root {
+    --bg: #0a1326;
+    --panel: #0f254a;
+    --muted: #9aa4b2;
+    --text: #bfe0ff;
+    --accent: #1f72ff;
+    --accent2: #4fff77;
+    --warn: #ff6b6b;
+    --danger: #ff1a1a;
+    --mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    --border: rgba(255, 255, 255, .08);
+    --border-hover: rgba(255, 255, 255, .16);
+}
+
+[data-theme="light"] {
+    --bg: #f9fafb;
+    --panel: #fff;
+    --muted: #6b7280;
+    --text: #1f2937;
+    --accent: #1f72ff;
+    --accent2: #059669;
+    --warn: #dc2626;
+    --danger: #b91c1c;
+    --border: rgba(0, 0, 0, .12);
+    --border-hover: rgba(0, 0, 0, .24);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 16px/1.5 Inter, system-ui, Segoe UI, Roboto, sans-serif;
+    transition: background .3s, color .3s;
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    padding: 10px 16px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+}
+
+.brand {
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.controls button {
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: var(--panel);
+    color: var(--text);
+    transition: .2s;
+}
+
+.controls button:hover {
+    border-color: var(--border-hover);
+    filter: brightness(1.1);
+}
+
+/* --- Diff containers --- */
+.diff-container {
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre;
+    overflow-x: auto;
+    background: var(--panel);
+    border-radius: 8px;
+    padding: 8px 12px;
+    color: var(--text);
+}
+
+.diff-rows {
+    display: flex;
+    flex-direction: column;
+}
+
+.diff-row {
+    display: flex;
+    align-items: flex-start;
+    padding: 1px 0;
+    margin: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.diff-row .num {
+    width: 45px;
+    text-align: right;
+    color: var(--muted);
+    font-family: var(--mono);
+    font-size: 14px;
+    padding-right: 8px;
+    vertical-align: top;
+    user-select: none;
+}
+
+.diff-row .content {
+    flex: 1;
+    display: inline-block;
+    padding: 2px 8px 2px 8px;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    border-radius: 4px;
+}
+
+/* --- Colors --- */
+[data-theme="dark"] .added {
+    background: rgba(79, 250, 123, .15);
+    color: #b0ffb7;
+    border: 1px solid #81f871;
+}
+
+[data-theme="dark"] .removed {
+    background: rgba(255, 100, 100, .12);
+    color: #ffaaaa;
+    border: 1px solid #f87171;
+}
+
+[data-theme="dark"] .modified {
+    background: rgba(255, 209, 102, .15);
+    color: #ffd166;
+}
+
+[data-theme="dark"] .missing {
+    background: rgba(255, 100, 100, .1);
+    color: #ffb3b3;
+}
+
+[data-theme="dark"] .unchanged {
+    color: var(--text);
+}
+
+[data-theme="light"] .added {
+    background: #d1fae5;
+    color: #065f46;
+    border: 1px solid #5cc74d;
+}
+
+[data-theme="light"] .removed {
+    background: #fee2e2;
+    color: #991b1b;
+    border: 1px solid #ef4444;
+}
+
+[data-theme="light"] .modified {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+[data-theme="light"] .missing {
+    background: rgba(255, 100, 100, .1);
+    color: #ffb3b3;
+}
+
+[data-theme="light"] .unchanged {
+    color: #374151;
+}
+
+.legend-item {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 1rem;
+    margin-bottom: .5rem;
+}
+
+.legend-color {
+    width: 16px;
+    height: 16px;
+    margin-right: .5rem;
+    border-radius: 2px;
+}
+
+/* --- Light/dark legend backgrounds --- */
+[data-theme="dark"] .legend-color.unchanged {
+    background: rgba(191, 224, 255, .1);
+}
+
+[data-theme="dark"] .legend-color.modified {
+    background: rgba(255, 209, 102, .15);
+}
+
+[data-theme="dark"] .legend-color.added {
+    background: rgba(155, 255, 209, .15);
+}
+
+[data-theme="dark"] .legend-color.removed {
+    background: rgba(255, 155, 155, .15);
+}
+
+[data-theme="light"] .legend-color.unchanged {
+    background: #e5e7eb;
+}
+
+[data-theme="light"] .legend-color.modified {
+    background: #fde68a;
+}
+
+[data-theme="light"] .legend-color.added {
+    background: #bbf7d0;
+}
+
+[data-theme="light"] .legend-color.removed {
+    background: #fecaca;
+}
+
+/* --- Light/dark stat backgrounds --- */
+[data-theme="dark"] .stat.similarity {
+    background: rgba(31, 114, 255, 0.15);
+    color: #bfe0ff;
+    border: 1px solid rgba(31, 114, 255, 0.25);
+}
+
+[data-theme="light"] .stat.similarity {
+    background: #dbeafe;
+    color: #1f72ff;
+    border: 1px solid #93c5fd;
+}
+
+/* --- Textarea layout --- */
+.textarea-container {
+    position: relative;
+    display: flex;
+    border: 1px solid var(--border);
+    border-radius: .375rem;
+    background: var(--panel);
+    overflow-x: auto;
+    overflow-y: visible;
+}
+
+.line-numbers {
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    padding: .75rem .5rem;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--muted);
+    user-select: none;
+    min-width: 60px;
+    text-align: right;
+    position: sticky;
+    left: 0;
+    top: 0;
+}
+
+.textarea-with-lines {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: .75rem;
+    font-family: var(--mono);
+    font-size: 14px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    color: var(--text);
+    background: transparent;
+    max-height: 590px;
+    overflow-y: auto;
+}
+
+.textarea-with-lines:focus {
+    outline: none;
+    box-shadow: none;
+    border-color: var(--border-hover);
+}
+
+/* --- Effects --- */
+.error {
+    background: rgba(255, 155, 155, .15);
+    animation: shake .5s ease-in-out;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0)
+    }
+
+    25%,
+    75% {
+        transform: translateX(-5px)
+    }
+
+    50% {
+        transform: translateX(5px)
+    }
+}
+
+/* --- Misc --- */
+.stat.similarity {
+    background: var(--similarity-bg);
+    color: var(--similarity-text);
+}
+
+html {
+    scroll-padding-top: 80px;
+}
+
+#diffLineNumbers1,
+#diffLineNumbers2 {
+    display: none;
+}
+
+/* ==== Refactor additions ==== */
+/* Ensure input line-number columns behave like the editor scroll area */
+.line-numbers {
+    white-space: pre;
+}
+
+.textarea-container .line-numbers {
+    max-height: 590px;
+    overflow: hidden;
+    overflow-x: hidden;
+    scrollbar-width: none;
+}
+
+.textarea-container .line-numbers::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+}
+
+/* Simple placeholder for contenteditable (uses data-placeholder) */
+.textarea-with-lines:empty:before {
+    content: attr(data-placeholder);
+    color: var(--muted);
+}
