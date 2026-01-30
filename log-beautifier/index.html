@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>TypeORM SQL Log Beautifier</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="brand">
+        <span class="logo">🛠️</span>
+        <h1>TypeORM SQL Log Beautifier</h1>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <button id="btnSaveJson" class="btn secondary">💾 Save JSON</button>
+    </div>
+
+    <textarea id="input" placeholder="Paste TypeORM SQL logs here..." spellcheck="false"></textarea>
+    <div id="output" class="output"></div>
+  </div>
+
+  <!-- Core -->
+  <script defer src="./script/namespace.js"></script>
+  <script defer src="./script/dom.js"></script>
+  <script defer src="./script/string.js"></script>
+  <script defer src="./script/highlight.js"></script>
+  <script defer src="./script/format.js"></script>
+
+  <!-- Parsers -->
+  <script defer src="./script/parsers/select.js"></script>
+  <script defer src="./script/parsers/from.js"></script>
+  <script defer src="./script/parsers/where.js"></script>
+  <script defer src="./script/parsers/insert.js"></script>
+
+  <!-- Render helpers -->
+  <script defer src="./script/render/tables.js"></script>
+  <script defer src="./script/render/from-improved.js"></script>
+  <script defer src="./script/render/where-tree.js"></script>
+
+  <!-- Subquery modal -->
+  <script defer src="./script/modal.js"></script>
+
+  <!-- App -->
+  <script defer src="./script/app.js"></script>
+</body>
+
+</html>
