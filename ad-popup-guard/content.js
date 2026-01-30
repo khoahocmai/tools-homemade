@@ -24,12 +24,40 @@
     /s\.shopee\.vn\//i,
     /tiktok\.com\/view\/product/i,
     /doubleclick/i,
-    /tracking/i,
-    /\/ads\b/i,
-  ];
+    /tracking/i,];
 
+  // Track user gesture to avoid blocking legit user-initiated new tabs/windows
+  let __lastUserGestureAt = 0;
+  const __markGesture = () => { __lastUserGestureAt = Date.now(); };
+  document.addEventListener("click", __markGesture, true);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" || e.key === " ") __markGesture();
+  }, true);
+
+  function __isRecentGesture(ms = 800) {
+    return Date.now() - __lastUserGestureAt <= ms;
+  }
+
+  function __isCrossOrigin(href) {
+    try {
+      const u = new URL(href, location.href);
+      return u.origin !== location.origin;
+    } catch {
+      return true;
+    }
+  }
   function shouldBlockOpen(url) {
-    return !!url && BLOCK_OPEN_PATTERNS.some((r) => r.test(url));
+    const href = typeof url === "string" ? url : url?.toString?.();
+    if (!href) return false;
+
+    // If user just clicked/pressed Enter, don't block (likely legit navigation).
+    if (__isRecentGesture(800)) return false;
+
+    // Only block patterns if it looks like cross-origin popup/ad.
+    // Same-origin opens are usually legit.
+    if (!__isCrossOrigin(href)) return false;
+
+    return BLOCK_OPEN_PATTERNS.some((r) => r.test(href));
   }
 
   function logPopup(debug, ...args) {
@@ -110,7 +138,7 @@
   // redirectGuard.js (inlined)
   // -------------------------
   const PATCHED_REDIRECT = Symbol("redirect_guard_patched");
-  const BLOCK_PATTERNS = [/ads/i, /tracking/i, /doubleclick/i];
+  const BLOCK_PATTERNS = [/tracking/i, /doubleclick/i];
 
   function isBlockedUrl(url) {
     return BLOCK_PATTERNS.some((r) => r.test(url));

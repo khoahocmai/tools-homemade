@@ -1,6 +1,3 @@
-// src/background/service-worker.js
-// Converted from TypeScript -> plain JavaScript (no build step)
-
 /** ===== Config ===== */
 const RULE_IDS = [1001, 1002];
 
@@ -9,11 +6,13 @@ const BLOCKED_PATTERNS = [
   /s\.shopee\.vn\//i,
 ];
 
-const BLANK_URLS = new Set([
-  'about:blank',
-  'chrome://newtab/',
-  'edge://newtab/',
-]);
+// Only treat about:blank as "popup blank". Do NOT treat chrome://newtab as popup blank.
+function isAboutBlankLike(url) {
+  if (!url) return true; // empty is usually blank
+  if (url === "about:blank") return true;
+  if (url.startsWith("about:blank")) return true; // about:blank#...
+  return false;
+}
 
 const FIRST_URL_KEY = (tabId) => `first_url_${tabId}`;
 const LAST_GOOD_URL_KEY = (tabId) => `last_good_url_${tabId}`;
@@ -21,6 +20,11 @@ const RESTORE_AT_KEY = (tabId) => `last_restore_at_${tabId}`;
 
 /** ===== State ===== */
 let enabled = true;
+
+// windowId -> last active tabId (current)
+const lastActiveByWindow = new Map();
+// windowId -> previous active tabId (before last)
+const prevActiveByWindow = new Map();
 
 /** ===== Utils ===== */
 function isBlockedUrl(url) {
@@ -30,25 +34,17 @@ function isBlockedUrl(url) {
 
 function isGoodUrl(url) {
   if (!url) return false;
-  if (url === 'about:blank') return false;
+  if (url === "about:blank") return false;
   if (
-    url.startsWith('chrome://') ||
-    url.startsWith('edge://') ||
-    url.startsWith('about:') ||
-    url.startsWith('chrome-extension://')
+    url.startsWith("chrome://") ||
+    url.startsWith("edge://") ||
+    url.startsWith("about:") ||
+    url.startsWith("chrome-extension://")
   ) {
     return false;
   }
   if (isBlockedUrl(url)) return false;
   return true;
-}
-
-function isBlankLike(url) {
-  if (!url) return true;
-  if (BLANK_URLS.has(url)) return true;
-  // đôi khi Chrome trả về url rỗng hoặc chỉ "about:blank#..."
-  if (url.startsWith('about:blank')) return true;
-  return false;
 }
 
 async function getWindowTabCount(windowId) {
@@ -64,28 +60,80 @@ async function safeCloseTab(tabId) {
 
   // Tab cuối: không remove để tránh “cảm giác như tắt browser”
   if (count <= 1) {
-    await chrome.tabs.update(tabId, { url: 'chrome://newtab/' }).catch(() => { });
+    await chrome.tabs.update(tabId, { url: "chrome://newtab/" }).catch(() => { });
     return;
   }
 
   await chrome.tabs.remove(tabId).catch(() => {
     // fallback nếu remove fail
-    chrome.tabs.update(tabId, { url: 'chrome://newtab/' }).catch(() => { });
+    chrome.tabs.update(tabId, { url: "chrome://newtab/" }).catch(() => { });
   });
 }
 
-async function focusOpenerAndClosePopup(tabId) {
-  const tab = await chrome.tabs.get(tabId).catch(() => null);
-  if (!tab?.openerTabId) return;
+async function focusTab(tabId) {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    if (!tab?.windowId) return;
+    await chrome.windows.update(tab.windowId, { focused: true }).catch(() => { });
+    await chrome.tabs.update(tabId, { active: true }).catch(() => { });
+  } catch { }
+}
 
-  // focus lại tab gốc trước
-  await chrome.tabs.update(tab.openerTabId, { active: true }).catch(() => { });
-  // rồi đóng tab trắng
+async function getReturnTabId(tab) {
+  // Prefer real opener
+  let ret = tab?.openerTabId ?? null;
+
+  // Fallback: previous/last active tab in that window (works for noopener popups)
+  if (ret == null && tab?.windowId != null) {
+    ret = prevActiveByWindow.get(tab.windowId) ?? null;
+    if (ret == null) ret = lastActiveByWindow.get(tab.windowId) ?? null;
+
+    // Persisted fallback (service worker may sleep => Maps reset)
+    if (ret == null) {
+      const keyPrev = `pg_prev_active_${tab.windowId}`;
+      const keyLast = `pg_last_active_${tab.windowId}`;
+      const obj = await chrome.storage.session.get([keyPrev, keyLast]).catch(() => ({}));
+      ret = obj[keyPrev] ?? obj[keyLast] ?? null;
+    }
+  }
+
+  // Avoid focusing itself
+  if (ret != null && tab?.id != null && ret === tab.id) ret = null;
+  return ret;
+}
+
+async function focusReturnAndClose(tabId, reason) {
+  const tab = await chrome.tabs.get(tabId).catch(() => null);
+  if (!tab?.windowId) return;
+
+  let ret = await getReturnTabId(tab);
+
+  // Strong fallback: pick another recent tab in same window
+  if (ret == null) {
+    const tabs = await chrome.tabs.query({ windowId: tab.windowId }).catch(() => []);
+    const candidates = tabs
+      .filter((t) => t?.id != null && t.id !== tabId)
+      .filter((t) => {
+        const u = t.url || "";
+        if (!u) return false;
+        if (isAboutBlankLike(u)) return false;
+        if (u.startsWith("chrome://") || u.startsWith("edge://") || u.startsWith("about:") || u.startsWith("chrome-extension://")) return false;
+        return true;
+      })
+      .sort((a, b) => (b.lastAccessed || 0) - (a.lastAccessed || 0));
+
+    if (candidates[0]?.id != null) ret = candidates[0].id;
+  }
+
+  if (ret != null) {
+    await focusTab(ret);
+  }
+
   await safeCloseTab(tabId);
 }
 
+/** ===== DNR rules ===== */
 async function setRules(isOn) {
-  // Nếu tắt: remove rules
   if (!isOn) {
     await chrome.declarativeNetRequest.updateDynamicRules({
       removeRuleIds: [...RULE_IDS],
@@ -93,29 +141,28 @@ async function setRules(isOn) {
     return;
   }
 
-  // Nếu bật: add rules redirect -> about:blank
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [...RULE_IDS],
     addRules: [
       {
         id: 1001,
         priority: 1,
-        action: { type: 'redirect', redirect: { url: 'about:blank' } },
-        condition: { urlFilter: 'tiktok.com/view/product', resourceTypes: ['main_frame'] },
+        action: { type: "redirect", redirect: { url: "about:blank" } },
+        condition: { urlFilter: "tiktok.com/view/product", resourceTypes: ["main_frame"] },
       },
       {
         id: 1002,
         priority: 1,
-        action: { type: 'redirect', redirect: { url: 'about:blank' } },
-        condition: { urlFilter: 's.shopee.vn/', resourceTypes: ['main_frame'] },
+        action: { type: "redirect", redirect: { url: "about:blank" } },
+        condition: { urlFilter: "s.shopee.vn/", resourceTypes: ["main_frame"] },
       },
     ],
   });
 }
 
 async function loadEnabledFlag() {
-  const res = await chrome.storage.local.get(['enabled']);
-  enabled = typeof res.enabled === 'boolean' ? res.enabled : true;
+  const res = await chrome.storage.local.get(["enabled"]);
+  enabled = typeof res.enabled === "boolean" ? res.enabled : true;
 }
 
 /** ===== Bootstrap ===== */
@@ -123,53 +170,78 @@ chrome.runtime.onInstalled.addListener(() => {
   void loadEnabledFlag().then(() => setRules(enabled)).catch(() => { });
 });
 
-// onStartup exists on Chrome; optional chaining for other Chromium forks
 chrome.runtime.onStartup?.addListener(() => {
   void loadEnabledFlag().then(() => setRules(enabled)).catch(() => { });
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area !== 'local') return;
-  if (!('enabled' in changes)) return;
+  if (area !== "local") return;
+  if (!("enabled" in changes)) return;
 
-  enabled = typeof changes.enabled.newValue === 'boolean' ? changes.enabled.newValue : true;
+  enabled = typeof changes.enabled.newValue === "boolean" ? changes.enabled.newValue : true;
   void setRules(enabled).catch(() => { });
 });
 
-/** ===== Track first URL of newly created tab (to detect popup ads) ===== */
+/** ===== Track active tab order (needed for noopener popups) ===== */
+chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
+  const last = lastActiveByWindow.get(windowId);
+  if (last != null && last !== tabId) {
+    prevActiveByWindow.set(windowId, last);
+    chrome.storage.session.set({ [`pg_prev_active_${windowId}`]: last }).catch(() => { });
+  }
+  lastActiveByWindow.set(windowId, tabId);
+  chrome.storage.session.set({ [`pg_last_active_${windowId}`]: tabId }).catch(() => { });
+});
+
+/** ===== Track first URL of newly created tab (popup candidate) ===== */
 chrome.tabs.onCreated.addListener(async (tab) => {
-  if (!tab.id) return;
-  if (!tab.openerTabId) return;
+  if (!enabled) return;
+  if (!tab?.id) return;
 
-  const first = tab.pendingUrl || tab.url || '';
+  const first = tab.pendingUrl || tab.url || "";
 
-  // ✅ lưu lại first url để onCompleted() check popup bẩn
+  // Store first url for debugging / later checks
   try {
     await chrome.storage.session.set({ [FIRST_URL_KEY(tab.id)]: first });
   } catch { }
 
-  // nếu vừa tạo ra đã blank thì đóng luôn (nhanh gọn)
-  if (isBlankLike(first)) {
-    setTimeout(() => focusOpenerAndClosePopup(tab.id), 150);
+  // If a new tab is created already as about:blank -> likely popup redirected/blocked.
+  // Close it even when openerTabId is null (noopener), but only if we can return to some previous tab.
+  if (isAboutBlankLike(first)) {
+    setTimeout(() => {
+      focusReturnAndClose(tab.id, "created_about_blank").catch(() => { });
+    }, 150);
   }
 });
 
+/** ===== Track URL updates ===== */
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (!tab?.openerTabId) return;
-  if (!changeInfo.url) return;
+  if (!enabled) return;
 
-  // update first url nếu trước đó chưa có (best-effort)
-  if (changeInfo.url && !isBlankLike(changeInfo.url)) {
-    chrome.storage.session.get(FIRST_URL_KEY(tabId)).then((obj) => {
-      if (!obj?.[FIRST_URL_KEY(tabId)]) {
-        chrome.storage.session.set({ [FIRST_URL_KEY(tabId)]: changeInfo.url }).catch(() => { });
-      }
-    }).catch(() => { });
+  const url = changeInfo.url;
+
+  // Best-effort: if we never stored FIRST_URL and now we have a real URL, store it.
+  if (url && !isAboutBlankLike(url)) {
+    chrome.storage.session
+      .get(FIRST_URL_KEY(tabId))
+      .then((obj) => {
+        if (!obj?.[FIRST_URL_KEY(tabId)]) {
+          return chrome.storage.session.set({ [FIRST_URL_KEY(tabId)]: url }).catch(() => { });
+        }
+      })
+      .catch(() => { });
   }
 
-  if (isBlankLike(changeInfo.url)) {
+  // If it navigates to a blocked URL, close immediately.
+  if (url && isBlockedUrl(url)) {
+    focusReturnAndClose(tabId, "navigated_to_blocked").catch(() => { });
+    return;
+  }
+
+  // If it becomes about:blank, close (this is the main symptom you saw).
+  if (url && isAboutBlankLike(url)) {
     setTimeout(() => {
-      focusOpenerAndClosePopup(tabId);
+      focusReturnAndClose(tabId, "updated_to_about_blank").catch(() => { });
     }, 50);
   }
 });
@@ -198,8 +270,8 @@ chrome.webNavigation.onCompleted.addListener(async (d) => {
   if (!enabled) return;
   if (d.frameId !== 0) return;
 
-  const url = String(d.url || '');
-  if (!url.startsWith('about:blank')) return;
+  const url = String(d.url || "");
+  if (!url.startsWith("about:blank")) return;
 
   const tab = await chrome.tabs.get(d.tabId).catch(() => null);
   if (!tab) return;
@@ -210,25 +282,28 @@ chrome.webNavigation.onCompleted.addListener(async (d) => {
   const lastRestoreAt = restoreObj[RESTORE_AT_KEY(d.tabId)];
 
   if (lastRestoreAt && now - lastRestoreAt < 1200) {
-    await chrome.tabs.update(d.tabId, { url: 'chrome://newtab/' }).catch(() => { });
+    await chrome.tabs.update(d.tabId, { url: "chrome://newtab/" }).catch(() => { });
     return;
   }
   await chrome.storage.session.set({ [RESTORE_AT_KEY(d.tabId)]: now }).catch(() => { });
 
-  // Nếu là popup tab: check firstUrl có bị block không
-  if (tab.openerTabId) {
-    const firstObj = await chrome.storage.session.get(FIRST_URL_KEY(d.tabId)).catch(() => ({}));
-    const firstUrl = firstObj[FIRST_URL_KEY(d.tabId)];
+  // If this about:blank comes from a popup (opener OR we have a return tab), close and return.
+  const ret = await getReturnTabId(tab);
 
-    if (isBlockedUrl(firstUrl)) {
-      // focus lại tab gốc (best-effort)
-      void chrome.tabs.update(tab.openerTabId, { active: true }).catch(() => { });
-      await safeCloseTab(d.tabId);
-      return;
+  // If firstUrl indicates blocked, definitely treat as popup
+  const firstObj = await chrome.storage.session.get(FIRST_URL_KEY(d.tabId)).catch(() => ({}));
+  const firstUrl = firstObj[FIRST_URL_KEY(d.tabId)];
+
+  if (isBlockedUrl(firstUrl) || ret != null) {
+    // focus return first (best-effort)
+    if (ret != null) {
+      void focusTab(ret);
     }
+    await safeCloseTab(d.tabId);
+    return;
   }
 
-  // Không phải popup bẩn -> thử restore lastGood
+  // Not a popup case -> try restore lastGood
   const lastObj = await chrome.storage.session.get(LAST_GOOD_URL_KEY(d.tabId)).catch(() => ({}));
   const lastGood = lastObj[LAST_GOOD_URL_KEY(d.tabId)];
 
@@ -238,5 +313,5 @@ chrome.webNavigation.onCompleted.addListener(async (d) => {
   }
 
   // fallback
-  await chrome.tabs.update(d.tabId, { url: 'chrome://newtab/' }).catch(() => { });
+  await chrome.tabs.update(d.tabId, { url: "chrome://newtab/" }).catch(() => { });
 });
