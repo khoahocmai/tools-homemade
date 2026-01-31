@@ -15,37 +15,21 @@
         <span class="logo">🛡</span>
         <div class="title">
           <div class="name">Ad & Popup Guard</div>
-          <div class="sub" id="sub">Đang hoạt động</div>
+          <div class="sub" id="sub">Auto chặn đang bật</div>
         </div>
       </div>
     </div>
 
-    <div class="card">
-      <div class="row">
-        <div class="label">Chặn popup / redirect</div>
+    <div class="status" id="status">✅ Auto chặn đang bật</div>
 
-        <label class="switch" title="Bật / Tắt">
-          <input id="enabled" type="checkbox" />
-          <span class="slider"></span>
-        </label>
-      </div>
-
-      <div class="status" id="status">—</div>
-
-      <div class="actions">
-        <button id="saveUrl" class="btn">Lưu URL tab hiện tại</button>
-        <button id="clear" class="btn btn-ghost" title="Xoá status">Xoá</button>
-      </div>
-    </div>
-
+    <!-- Allowlist -->
     <div class="card">
       <div class="row" style="margin-bottom:8px;">
         <div class="label">Danh sách áp dụng</div>
-        <button id="clearSites" class="btn btn-ghost" title="Xoá toàn bộ danh sách">Xoá</button>
+        <button id="clearSites" class="btn btn-ghost" title="Xoá toàn bộ danh sách áp dụng">Xoá</button>
       </div>
 
-      <div class="hint" id="siteHint">Nếu danh sách rỗng: áp dụng cho mọi trang.</div>
-
+      <div class="hint" id="siteHint">Chỉ chặn popup/redirect trên các URL prefix trong danh sách này.</div>
       <div class="siteList" id="siteList"></div>
 
       <div class="inputRow">
@@ -56,6 +40,30 @@
       <div class="actions" style="margin-top:10px;">
         <button id="addCurrentHost" class="btn">+ Domain tab</button>
         <button id="addCurrentPath" class="btn">+ Path tab</button>
+      </div>
+    </div>
+
+    <!-- Blocklist -->
+    <div class="card">
+      <div class="row" style="margin-bottom:8px;">
+        <div class="label">Danh sách chặn</div>
+        <button id="clearBlocks" class="btn btn-ghost" title="Xoá toàn bộ danh sách chặn">Xoá</button>
+      </div>
+
+      <div class="hint" id="blockHint">
+        Chặn khi URL popup/redirect chứa chuỗi này (có thể dùng * wildcard). Ví dụ: s.shopee.vn/ hoặc *doubleclick*.
+      </div>
+
+      <div class="siteList" id="blockList"></div>
+
+      <div class="inputRow">
+        <input id="blockInput" class="input" placeholder="VD: s.shopee.vn/ hoặc https://example.com/ads" />
+        <button id="addBlock" class="btn btn-ghost" title="Thêm pattern chặn">Thêm</button>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button id="addBlockDomain" class="btn">+ Domain tab</button>
+        <button id="addBlockUrl" class="btn">+ URL tab</button>
       </div>
     </div>
   </div>

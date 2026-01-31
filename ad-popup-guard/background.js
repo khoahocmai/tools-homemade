@@ -1,10 +1,77 @@
 /** ===== Config ===== */
-const RULE_IDS = [1001, 1002];
+const LEGACY_RULE_IDS = [1001, 1002];
+const DNR_BASE_ID = 2000;
+const DNR_MAX_RULES = 60;
+const RULE_IDS = [...LEGACY_RULE_IDS, ...Array.from({ length: DNR_MAX_RULES }, (_, i) => DNR_BASE_ID + i)];
 
-const BLOCKED_PATTERNS = [
-  /tiktok\.com\/view\/product/i,
-  /s\.shopee\.vn\//i,
+const BLOCK_KEY = "block_patterns";
+
+// Nếu user không nhập gì thì vẫn có 1 ít default để bắt mấy popup phổ biến
+const DEFAULT_BLOCK_PATTERNS = [
+  "tiktok.com/view/product",
+  "s.shopee.vn/",
 ];
+
+let blockPatterns = [...DEFAULT_BLOCK_PATTERNS];
+let blockRegexes = [];
+
+function escapeRegex(s) {
+  return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+// Hỗ trợ:
+// - substring: "s.shopee.vn/"
+// - glob: "*doubleclick*"
+// - regex:  "re:<pattern>"
+function patternToRegex(p) {
+  const s0 = String(p || "").trim();
+  if (!s0) return null;
+
+  if (s0.startsWith("re:")) {
+    try {
+      return new RegExp(s0.slice(3), "i");
+    } catch {
+      return null;
+    }
+  }
+
+  if (s0.includes("*")) {
+    const re = "^" + s0.split("*").map(escapeRegex).join(".*") + "$";
+    try {
+      return new RegExp(re, "i");
+    } catch {
+      return null;
+    }
+  }
+
+  try {
+    return new RegExp(escapeRegex(s0), "i");
+  } catch {
+    return null;
+  }
+}
+
+function compileBlockRegexes(patterns) {
+  const out = [];
+  for (const p of Array.isArray(patterns) ? patterns : []) {
+    const r = patternToRegex(p);
+    if (r) out.push(r);
+  }
+  return out;
+}
+
+async function loadBlockPatterns() {
+  try {
+    const res = await chrome.storage.local.get([BLOCK_KEY]);
+    const user = Array.isArray(res[BLOCK_KEY]) ? res[BLOCK_KEY] : [];
+    blockPatterns = [...DEFAULT_BLOCK_PATTERNS, ...user].slice(0, 120);
+  } catch {
+    blockPatterns = [...DEFAULT_BLOCK_PATTERNS];
+  }
+  blockRegexes = compileBlockRegexes(blockPatterns);
+  return blockPatterns;
+}
+
 
 /** ===== Affect (Allowlist) ===== */
 const AFFECT_KEY = "affect_prefixes";
@@ -80,7 +147,6 @@ const LAST_GOOD_URL_KEY = (tabId) => `last_good_url_${tabId}`;
 const RESTORE_AT_KEY = (tabId) => `last_restore_at_${tabId}`;
 
 /** ===== State ===== */
-let enabled = true;
 
 // windowId -> last active tabId (current)
 const lastActiveByWindow = new Map();
@@ -90,7 +156,7 @@ const prevActiveByWindow = new Map();
 /** ===== Utils ===== */
 function isBlockedUrl(url) {
   if (!url) return false;
-  return BLOCKED_PATTERNS.some((r) => r.test(url));
+  return blockRegexes.some((r) => r.test(url));
 }
 
 function isGoodUrl(url) {
@@ -194,92 +260,87 @@ async function focusReturnAndClose(tabId, reason) {
 }
 
 /** ===== DNR rules ===== */
-async function setRules(isOn) {
-  // Nếu tắt global -> remove rules
-  if (!isOn) {
-    await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [...RULE_IDS] });
+async function setRules() {
+  // Nếu allowlist rỗng và AFFECT_EMPTY_MEANS_ALL=false => không apply ở đâu: remove toàn bộ rule
+  const initiators = getAffectInitiatorDomains(); // [] hoặc null
+  if (Array.isArray(initiators) && initiators.length === 0) {
+    await chrome.declarativeNetRequest.updateDynamicRules({
+      removeRuleIds: [...RULE_IDS],
+      addRules: [],
+    });
     return;
   }
 
-  // Nếu đang dùng allowlist strict mà list rỗng -> không set rule để tránh ảnh hưởng trang khác
-  const initiators = getAffectInitiatorDomains();
-  if (Array.isArray(initiators) && initiators.length === 0 && !AFFECT_EMPTY_MEANS_ALL) {
-    await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [...RULE_IDS] });
-    return;
-  }
+  // Build DNR rules từ blockPatterns (bỏ các pattern dạng re:)
+  const max = DNR_MAX_RULES;
+  const addRules = [];
+  for (const p of blockPatterns) {
+    const s = String(p || "").trim();
+    if (!s) continue;
+    if (s.startsWith("re:")) continue; // DNR không nhận regex
+    if (addRules.length >= max) break;
 
-  const cond = (urlFilter) => {
-    const condition = { urlFilter, resourceTypes: ["main_frame"] };
-    // Chỉ áp dụng rule khi navigation xuất phát từ các domain trong allowlist
-    if (Array.isArray(initiators) && initiators.length) {
+    const id = DNR_BASE_ID + addRules.length;
+    const condition = {
+      urlFilter: s,
+      resourceTypes: ["main_frame"],
+    };
+
+    // Nếu initiators=null => apply mọi nơi (khi AFFECT_EMPTY_MEANS_ALL=true)
+    // Nếu initiators=[...] => chỉ apply khi request xuất phát từ domain trong allowlist
+    if (initiators === null) {
+      // no initiatorDomains
+    } else if (Array.isArray(initiators) && initiators.length > 0) {
       condition.initiatorDomains = initiators;
     }
-    return condition;
-  };
+
+    addRules.push({
+      id,
+      priority: 1,
+      action: { type: "redirect", redirect: { url: "about:blank" } },
+      condition,
+    });
+  }
 
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [...RULE_IDS],
-    addRules: [
-      {
-        id: 1001,
-        priority: 1,
-        action: { type: "redirect", redirect: { url: "about:blank" } },
-        condition: cond("tiktok.com/view/product"),
-      },
-      {
-        id: 1002,
-        priority: 1,
-        action: { type: "redirect", redirect: { url: "about:blank" } },
-        condition: cond("s.shopee.vn/"),
-      },
-    ],
+    addRules,
   });
 }
 
 
-async function loadEnabledFlag() {
-  const res = await chrome.storage.local.get(["enabled"]);
-  enabled = typeof res.enabled === "boolean" ? res.enabled : true;
-}
 
 // Ensure latest settings are loaded whenever the service worker starts/wakes.
-void Promise.all([loadEnabledFlag(), loadAffectPrefixes()])
-  .then(() => setRules(enabled))
+void Promise.all([loadAffectPrefixes(), loadBlockPatterns()])
+  .then(() => setRules())
   .catch(() => { });
 
 /** ===== Bootstrap ===== */
 chrome.runtime.onInstalled.addListener(() => {
-  void Promise.all([loadEnabledFlag(), loadAffectPrefixes()])
-    .then(() => setRules(enabled))
+  void Promise.all([loadAffectPrefixes(), loadBlockPatterns()])
+    .then(() => setRules())
     .catch(() => { });
 });
 
 chrome.runtime.onStartup?.addListener(() => {
-  void Promise.all([loadEnabledFlag(), loadAffectPrefixes()])
-    .then(() => setRules(enabled))
+  void Promise.all([loadAffectPrefixes(), loadBlockPatterns()])
+    .then(() => setRules())
     .catch(() => { });
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
 
-  let needUpdateRules = false;
-
-  if ("enabled" in changes) {
-    enabled = typeof changes.enabled.newValue === "boolean" ? changes.enabled.newValue : true;
-    needUpdateRules = true;
+  if (AFFECT_KEY in changes) {
+    void loadAffectPrefixes()
+      .then(() => setRules())
+      .catch(() => { });
   }
 
-  if ("affect_prefixes" in changes) {
-    const v = changes.affect_prefixes.newValue;
-    affectPrefixes = Array.isArray(v)
-      ? v.filter((x) => typeof x === "string").map((x) => x.trim()).filter(Boolean).slice(0, 80)
-      : [];
-    needUpdateRules = true;
-  }
-
-  if (needUpdateRules) {
-    void setRules(enabled).catch(() => { });
+  if (BLOCK_KEY in changes) {
+    void loadBlockPatterns()
+      .then(() => setRules())
+      .catch(() => { });
   }
 });
 
@@ -296,7 +357,6 @@ chrome.tabs.onActivated.addListener(({ tabId, windowId }) => {
 
 /** ===== Track first URL of newly created tab (popup candidate) ===== */
 chrome.tabs.onCreated.addListener(async (tab) => {
-  if (!enabled) return;
   if (!tab?.id) return;
 
   const first = tab.pendingUrl || tab.url || "";
@@ -319,8 +379,6 @@ chrome.tabs.onCreated.addListener(async (tab) => {
 
 /** ===== Track URL updates ===== */
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (!enabled) return;
-
   const url = changeInfo.url;
 
   // Best-effort: if we never stored FIRST_URL and now we have a real URL, store it.
@@ -347,26 +405,22 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
 
 /** ===== Track last good URL per tab ===== */
 async function saveLastGoodUrl(tabId, url) {
-  if (!enabled) return;
   if (!isGoodUrl(url)) return;
   await chrome.storage.session.set({ [LAST_GOOD_URL_KEY(tabId)]: url });
 }
 
 chrome.webNavigation.onCommitted.addListener((d) => {
-  if (!enabled) return;
   if (d.frameId !== 0) return;
   if (isGoodUrl(d.url)) void saveLastGoodUrl(d.tabId, d.url).catch(() => { });
 });
 
 chrome.webNavigation.onHistoryStateUpdated.addListener((d) => {
-  if (!enabled) return;
   if (d.frameId !== 0) return;
   if (isGoodUrl(d.url)) void saveLastGoodUrl(d.tabId, d.url).catch(() => { });
 });
 
 /** ===== Core: handle about:blank redirected tabs ===== */
 chrome.webNavigation.onCompleted.addListener(async (d) => {
-  if (!enabled) return;
   if (d.frameId !== 0) return;
 
   const tab = await chrome.tabs.get(d.tabId).catch(() => null);

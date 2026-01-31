@@ -7,7 +7,7 @@
   // -------------------------
   // Host allow-list
   // -------------------------
-  const ALLOW_HOSTS = ["nhieutruyen.com", "metruyenchu.com"];
+  const ALLOW_HOSTS = ["nhieutruyen.com", "metruyenchu.com", "facebook.com"];
 
   // -------------------------
   // Affect (Allowlist) - chỉ chạy trên các URL prefix trong danh sách ở popup
@@ -35,6 +35,103 @@
     return prefixes.some((p) => location.href.startsWith(p));
   }
 
+  // -------------------------
+  // Blocklist (Danh sách chặn) - lấy từ popup (chrome.storage.local)
+  // -------------------------
+  const BLOCK_KEY = "block_patterns";
+
+  // Default để bắt popup/redirect phổ biến
+  const DEFAULT_OPEN_BLOCKS = [
+    "s.shopee.vn/",
+    "tiktok.com/view/product",
+  ];
+
+  const DEFAULT_REDIRECT_BLOCKS = [
+    "tracking",
+    "doubleclick",
+    ...DEFAULT_OPEN_BLOCKS,
+  ];
+
+  let blockOpenRegexes = [];
+  let blockRedirectRegexes = [];
+
+  function escapeRegex(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }
+
+  // Hỗ trợ:
+  // - substring: "s.shopee.vn/"
+  // - glob: "*doubleclick*"
+  // - regex:  "re:<pattern>"
+  function patternToRegex(p) {
+    const s0 = String(p || "").trim();
+    if (!s0) return null;
+
+    if (s0.startsWith("re:")) {
+      try {
+        return new RegExp(s0.slice(3), "i");
+      } catch {
+        return null;
+      }
+    }
+
+    if (s0.includes("*")) {
+      const re = "^" + s0.split("*").map(escapeRegex).join(".*") + "$";
+      try {
+        return new RegExp(re, "i");
+      } catch {
+        return null;
+      }
+    }
+
+    try {
+      return new RegExp(escapeRegex(s0), "i");
+    } catch {
+      return null;
+    }
+  }
+
+  function compileRegexes(list) {
+    const out = [];
+    const arr = Array.isArray(list) ? list : [];
+    for (const x of arr) {
+      const r = patternToRegex(x);
+      if (r) out.push(r);
+    }
+    return out;
+  }
+
+  function getBlockPatterns() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([BLOCK_KEY], (res) => {
+        const list = Array.isArray(res?.[BLOCK_KEY]) ? res[BLOCK_KEY] : [];
+        resolve(
+          list
+            .filter((x) => typeof x === "string")
+            .map((x) => x.trim())
+            .filter(Boolean)
+            .slice(0, 120)
+        );
+      });
+    });
+  }
+
+  function applyBlockPatterns(userList) {
+    const user = Array.isArray(userList) ? userList : [];
+    blockOpenRegexes = compileRegexes([...DEFAULT_OPEN_BLOCKS, ...user]);
+    blockRedirectRegexes = compileRegexes([...DEFAULT_REDIRECT_BLOCKS, ...user]);
+  }
+
+  // Live update (không cần reload tab)
+  chrome.storage.onChanged.addListener((changes, area) => {
+    if (area !== "local") return;
+    if (BLOCK_KEY in changes) {
+      const user = Array.isArray(changes[BLOCK_KEY].newValue) ? changes[BLOCK_KEY].newValue : [];
+      applyBlockPatterns(user);
+    }
+  });
+
+
 
   function isAllowedHost() {
     const h = location.hostname;
@@ -46,15 +143,14 @@
   const affect = await getAffectPrefixes();
   if (!isAffectedBy(affect)) return;
 
+  const userBlocks = await getBlockPatterns();
+  applyBlockPatterns(userBlocks);
+
   // -------------------------
   // popupBlocker.js (inlined)
   // -------------------------
   const PATCHED_POPUP = Symbol("ad_popup_guard_patched");
-  const BLOCK_OPEN_PATTERNS = [
-    /s\.shopee\.vn\//i,
-    /tiktok\.com\/view\/product/i,
-    /doubleclick/i,
-    /tracking/i,];
+  let BLOCK_OPEN_PATTERNS = blockOpenRegexes;
 
   // Track user gesture to avoid blocking legit user-initiated new tabs/windows
   let __lastUserGestureAt = 0;
@@ -87,7 +183,7 @@
     // Same-origin opens are usually legit.
     if (!__isCrossOrigin(href)) return false;
 
-    return BLOCK_OPEN_PATTERNS.some((r) => r.test(href));
+    return blockOpenRegexes.some((r) => r.test(href));
   }
 
   function logPopup(debug, ...args) {
@@ -168,10 +264,10 @@
   // redirectGuard.js (inlined)
   // -------------------------
   const PATCHED_REDIRECT = Symbol("redirect_guard_patched");
-  const BLOCK_PATTERNS = [/tracking/i, /doubleclick/i];
+  let BLOCK_PATTERNS = blockRedirectRegexes;
 
   function isBlockedUrl(url) {
-    return BLOCK_PATTERNS.some((r) => r.test(url));
+    return blockRedirectRegexes.some((r) => r.test(url));
   }
 
   function logRedirect(debug, ...args) {
