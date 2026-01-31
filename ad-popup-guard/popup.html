@@ -37,6 +37,27 @@
         <button id="clear" class="btn btn-ghost" title="Xoá status">Xoá</button>
       </div>
     </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:8px;">
+        <div class="label">Danh sách áp dụng</div>
+        <button id="clearSites" class="btn btn-ghost" title="Xoá toàn bộ danh sách">Xoá</button>
+      </div>
+
+      <div class="hint" id="siteHint">Nếu danh sách rỗng: áp dụng cho mọi trang.</div>
+
+      <div class="siteList" id="siteList"></div>
+
+      <div class="inputRow">
+        <input id="siteInput" class="input" placeholder="VD: https://nhieutruyen.com/truyen/" />
+        <button id="addSite" class="btn btn-ghost" title="Thêm prefix">Thêm</button>
+      </div>
+
+      <div class="actions" style="margin-top:10px;">
+        <button id="addCurrentHost" class="btn">+ Domain tab</button>
+        <button id="addCurrentPath" class="btn">+ Path tab</button>
+      </div>
+    </div>
   </div>
 
   <script type="module" src="./popup.js"></script>

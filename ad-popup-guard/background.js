@@ -6,6 +6,67 @@ const BLOCKED_PATTERNS = [
   /s\.shopee\.vn\//i,
 ];
 
+/** ===== Affect (Allowlist) ===== */
+const AFFECT_KEY = "affect_prefixes";
+// false = chỉ áp dụng cho các prefix trong danh sách (khuyến nghị để tránh ảnh hưởng site khác)
+// true  = nếu danh sách rỗng thì áp dụng cho mọi trang (giữ behavior cũ)
+const AFFECT_EMPTY_MEANS_ALL = false;
+
+let affectPrefixes = [];
+
+async function loadAffectPrefixes() {
+  try {
+    const res = await chrome.storage.local.get([AFFECT_KEY]);
+    const list = Array.isArray(res?.[AFFECT_KEY]) ? res[AFFECT_KEY] : [];
+    affectPrefixes = list
+      .filter((x) => typeof x === "string")
+      .map((x) => x.trim())
+      .filter(Boolean)
+      .slice(0, 80);
+  } catch {
+    affectPrefixes = [];
+  }
+  return affectPrefixes;
+}
+
+function isAffectedUrl(url) {
+  const s = String(url || "");
+  if (!s) return false;
+  if (!affectPrefixes.length) return AFFECT_EMPTY_MEANS_ALL;
+  return affectPrefixes.some((p) => s.startsWith(p));
+}
+
+function getAffectInitiatorDomains() {
+  if (!affectPrefixes.length) return AFFECT_EMPTY_MEANS_ALL ? null : [];
+  const set = new Set();
+  for (const p of affectPrefixes) {
+    try {
+      set.add(new URL(p).hostname);
+    } catch { }
+  }
+  return Array.from(set);
+}
+
+// Xác định “context” (tab nguồn) đã nằm trong vùng enable chưa
+async function shouldHandlePopupTab(tab) {
+  // Ưu tiên openerTabId
+  const openerId = tab?.openerTabId ?? null;
+  if (openerId != null) {
+    const opener = await chrome.tabs.get(openerId).catch(() => null);
+    if (opener?.url) return isAffectedUrl(opener.url);
+  }
+
+  // Fallback: dùng logic return tab sẵn có của bạn
+  const retId = await getReturnTabId(tab);
+  if (retId != null) {
+    const ret = await chrome.tabs.get(retId).catch(() => null);
+    if (ret?.url) return isAffectedUrl(ret.url);
+  }
+
+  return false;
+}
+
+
 // Only treat about:blank as "popup blank". Do NOT treat chrome://newtab as popup blank.
 function isAboutBlankLike(url) {
   if (!url) return true; // empty is usually blank
@@ -134,12 +195,27 @@ async function focusReturnAndClose(tabId, reason) {
 
 /** ===== DNR rules ===== */
 async function setRules(isOn) {
+  // Nếu tắt global -> remove rules
   if (!isOn) {
-    await chrome.declarativeNetRequest.updateDynamicRules({
-      removeRuleIds: [...RULE_IDS],
-    });
+    await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [...RULE_IDS] });
     return;
   }
+
+  // Nếu đang dùng allowlist strict mà list rỗng -> không set rule để tránh ảnh hưởng trang khác
+  const initiators = getAffectInitiatorDomains();
+  if (Array.isArray(initiators) && initiators.length === 0 && !AFFECT_EMPTY_MEANS_ALL) {
+    await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: [...RULE_IDS] });
+    return;
+  }
+
+  const cond = (urlFilter) => {
+    const condition = { urlFilter, resourceTypes: ["main_frame"] };
+    // Chỉ áp dụng rule khi navigation xuất phát từ các domain trong allowlist
+    if (Array.isArray(initiators) && initiators.length) {
+      condition.initiatorDomains = initiators;
+    }
+    return condition;
+  };
 
   await chrome.declarativeNetRequest.updateDynamicRules({
     removeRuleIds: [...RULE_IDS],
@@ -148,38 +224,63 @@ async function setRules(isOn) {
         id: 1001,
         priority: 1,
         action: { type: "redirect", redirect: { url: "about:blank" } },
-        condition: { urlFilter: "tiktok.com/view/product", resourceTypes: ["main_frame"] },
+        condition: cond("tiktok.com/view/product"),
       },
       {
         id: 1002,
         priority: 1,
         action: { type: "redirect", redirect: { url: "about:blank" } },
-        condition: { urlFilter: "s.shopee.vn/", resourceTypes: ["main_frame"] },
+        condition: cond("s.shopee.vn/"),
       },
     ],
   });
 }
+
 
 async function loadEnabledFlag() {
   const res = await chrome.storage.local.get(["enabled"]);
   enabled = typeof res.enabled === "boolean" ? res.enabled : true;
 }
 
+// Ensure latest settings are loaded whenever the service worker starts/wakes.
+void Promise.all([loadEnabledFlag(), loadAffectPrefixes()])
+  .then(() => setRules(enabled))
+  .catch(() => { });
+
 /** ===== Bootstrap ===== */
 chrome.runtime.onInstalled.addListener(() => {
-  void loadEnabledFlag().then(() => setRules(enabled)).catch(() => { });
+  void Promise.all([loadEnabledFlag(), loadAffectPrefixes()])
+    .then(() => setRules(enabled))
+    .catch(() => { });
 });
 
 chrome.runtime.onStartup?.addListener(() => {
-  void loadEnabledFlag().then(() => setRules(enabled)).catch(() => { });
+  void Promise.all([loadEnabledFlag(), loadAffectPrefixes()])
+    .then(() => setRules(enabled))
+    .catch(() => { });
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
   if (area !== "local") return;
-  if (!("enabled" in changes)) return;
 
-  enabled = typeof changes.enabled.newValue === "boolean" ? changes.enabled.newValue : true;
-  void setRules(enabled).catch(() => { });
+  let needUpdateRules = false;
+
+  if ("enabled" in changes) {
+    enabled = typeof changes.enabled.newValue === "boolean" ? changes.enabled.newValue : true;
+    needUpdateRules = true;
+  }
+
+  if ("affect_prefixes" in changes) {
+    const v = changes.affect_prefixes.newValue;
+    affectPrefixes = Array.isArray(v)
+      ? v.filter((x) => typeof x === "string").map((x) => x.trim()).filter(Boolean).slice(0, 80)
+      : [];
+    needUpdateRules = true;
+  }
+
+  if (needUpdateRules) {
+    void setRules(enabled).catch(() => { });
+  }
 });
 
 /** ===== Track active tab order (needed for noopener popups) ===== */
@@ -208,7 +309,9 @@ chrome.tabs.onCreated.addListener(async (tab) => {
   // If a new tab is created already as about:blank -> likely popup redirected/blocked.
   // Close it even when openerTabId is null (noopener), but only if we can return to some previous tab.
   if (isAboutBlankLike(first)) {
-    setTimeout(() => {
+    setTimeout(async () => {
+      const ok = await shouldHandlePopupTab(tab);
+      if (!ok) return; // <-- ngoài vùng enable thì không đụng
       focusReturnAndClose(tab.id, "created_about_blank").catch(() => { });
     }, 150);
   }
@@ -233,16 +336,12 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 
   // If it navigates to a blocked URL, close immediately.
-  if (url && isBlockedUrl(url)) {
-    focusReturnAndClose(tabId, "navigated_to_blocked").catch(() => { });
-    return;
-  }
-
-  // If it becomes about:blank, close (this is the main symptom you saw).
-  if (url && isAboutBlankLike(url)) {
-    setTimeout(() => {
-      focusReturnAndClose(tabId, "updated_to_about_blank").catch(() => { });
-    }, 50);
+  if (url && (isBlockedUrl(url) || isAboutBlankLike(url))) {
+    (async () => {
+      const ok = await shouldHandlePopupTab(tab);
+      if (!ok) return;
+      focusReturnAndClose(tabId, "updated_block_or_blank").catch(() => { });
+    })();
   }
 });
 
@@ -270,11 +369,14 @@ chrome.webNavigation.onCompleted.addListener(async (d) => {
   if (!enabled) return;
   if (d.frameId !== 0) return;
 
-  const url = String(d.url || "");
-  if (!url.startsWith("about:blank")) return;
-
   const tab = await chrome.tabs.get(d.tabId).catch(() => null);
   if (!tab) return;
+
+  const ok = await shouldHandlePopupTab(tab);
+  if (!ok) return;
+
+  const url = String(d.url || "");
+  if (!url.startsWith("about:blank")) return;
 
   // Loop guard: tránh restore liên tục
   const now = Date.now();

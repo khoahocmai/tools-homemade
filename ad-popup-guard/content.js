@@ -3,11 +3,38 @@
 // Includes: popupBlocker + redirectGuard + facebookCleaner
 // Converted from your JS modules into a classic content-script file.
 
-(() => {
+(async () => {
   // -------------------------
   // Host allow-list
   // -------------------------
-  const ALLOW_HOSTS = ["nhieutruyen.com", "metruyenchu.com", "facebook.com"];
+  const ALLOW_HOSTS = ["nhieutruyen.com", "metruyenchu.com"];
+
+  // -------------------------
+  // Affect (Allowlist) - chỉ chạy trên các URL prefix trong danh sách ở popup
+  // -------------------------
+  const AFFECT_KEY = "affect_prefixes";
+  const AFFECT_EMPTY_MEANS_ALL = false; // true = list rỗng thì áp dụng mọi trang (giữ behavior cũ)
+
+  function getAffectPrefixes() {
+    return new Promise((resolve) => {
+      chrome.storage.local.get([AFFECT_KEY], (res) => {
+        const list = Array.isArray(res?.[AFFECT_KEY]) ? res[AFFECT_KEY] : [];
+        resolve(
+          list
+            .filter((x) => typeof x === "string")
+            .map((x) => x.trim())
+            .filter(Boolean)
+            .slice(0, 80)
+        );
+      });
+    });
+  }
+
+  function isAffectedBy(prefixes) {
+    if (!Array.isArray(prefixes) || prefixes.length === 0) return AFFECT_EMPTY_MEANS_ALL;
+    return prefixes.some((p) => location.href.startsWith(p));
+  }
+
 
   function isAllowedHost() {
     const h = location.hostname;
@@ -15,6 +42,9 @@
   }
 
   if (!isAllowedHost()) return;
+
+  const affect = await getAffectPrefixes();
+  if (!isAffectedBy(affect)) return;
 
   // -------------------------
   // popupBlocker.js (inlined)
