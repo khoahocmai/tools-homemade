@@ -371,6 +371,21 @@ const CHATGPT_CONV_URLS = [
   "https://chat.openai.com/backend-api/conversation",
 ];
 
+// ---------- Gemini (web UI): detect start/done by network ----------
+// Gemini web UI often calls BardFrontendService StreamGenerate on gemini.google.com
+// Example URLs appear in DevTools network traces and unofficial clients.
+const GEMINI_CONV_URLS = [
+  "https://gemini.google.com/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate*",
+  "https://gemini.google.com/u/*/_/BardChatUi/data/assistant.lamda.BardFrontendService/StreamGenerate*",
+];
+
+async function resolveGeminiTabId(details) {
+  const tabId = details?.tabId;
+  if (typeof tabId === "number" && tabId >= 0) return tabId;
+  return null;
+}
+
+
 // Mark waiting from network too (không phụ thuộc content hook bắt được send)
 chrome.webRequest.onBeforeRequest.addListener(
   async (details) => {
@@ -451,6 +466,87 @@ chrome.webRequest.onErrorOccurred.addListener(
     } catch { }
   },
   { urls: CHATGPT_CONV_URLS }
+);
+
+
+
+// Mark waiting from network too for Gemini (không phụ thuộc content hook bắt được send)
+chrome.webRequest.onBeforeRequest.addListener(
+  async (details) => {
+    try {
+      const tabId = await resolveGeminiTabId(details);
+      if (tabId == null) return;
+
+      if ((details.method || "").toUpperCase() !== "POST") return;
+
+      const opts = await getOptions();
+      if (opts.enableBadge && opts.badgeShowWhileThinking) {
+        await setBadge(tabId, "•");
+      }
+
+      // Nếu chưa có waiting (content không bắt được), tạo waiting từ network
+      const existing = await getWaiting(tabId);
+      if (!existing) {
+        let title = "Gemini";
+        try {
+          const tab = await chrome.tabs.get(tabId);
+          title = tab?.title || title;
+        } catch { }
+        await setWaiting(tabId, {
+          startedAt: Date.now(),
+          site: "Gemini",
+          title,
+          networkSeen: true,
+        });
+      } else if (!existing.networkSeen) {
+        await setWaiting(tabId, { ...existing, networkSeen: true });
+      }
+    } catch { }
+  },
+  { urls: GEMINI_CONV_URLS }
+);
+
+// DONE when the request completes
+chrome.webRequest.onCompleted.addListener(
+  async (details) => {
+    try {
+      const tabId = await resolveGeminiTabId(details);
+      if (tabId == null) return;
+
+      if ((details.method || "").toUpperCase() !== "POST") return;
+
+      const waiting = await getWaiting(tabId);
+      if (!waiting) return;
+
+      const opts = await getOptions();
+      const minThinking = opts.minThinkingMs ?? 1200;
+      if (Date.now() - (waiting.startedAt || 0) < minThinking) return;
+
+      let title = waiting.title || "Gemini";
+      try {
+        const tab = await chrome.tabs.get(tabId);
+        title = tab?.title || title;
+      } catch { }
+
+      await handleDone(tabId, waiting.site || "Gemini", title);
+    } catch { }
+  },
+  { urls: GEMINI_CONV_URLS }
+);
+
+// If request aborted/errors, clear waiting (optional)
+chrome.webRequest.onErrorOccurred.addListener(
+  async (details) => {
+    try {
+      const tabId = await resolveGeminiTabId(details);
+      if (tabId == null) return;
+
+      if ((details.method || "").toUpperCase() !== "POST") return;
+
+      await clearWaiting(tabId);
+    } catch { }
+  },
+  { urls: GEMINI_CONV_URLS }
 );
 
 // Cleanup when tab closed

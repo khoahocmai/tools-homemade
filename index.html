@@ -2,172 +2,723 @@
 <html lang="vi">
 
 <head>
-    <meta charset="UTF-8">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" href="images/wrench-and-screwdriver-technical-repair-service-logo.-png_90008.jpg"
-        type="image/jpeg">
+        type="image/jpeg" />
     <title>Tools</title>
+
     <style>
+        :root {
+            --bg: #0b1220;
+            --bg2: #0f1b33;
+            --card: #0f203d;
+            --card2: #0c1a33;
+            --text: #e7eefc;
+            --muted: #9bb0d1;
+            --line: rgba(255, 255, 255, .10);
+            --brand: #3b82f6;
+            --brand2: #22c55e;
+            --shadow: 0 14px 40px rgba(0, 0, 0, .35);
+            --shadow2: 0 10px 26px rgba(0, 0, 0, .22);
+            --radius: 18px;
+            --ring: 0 0 0 3px rgba(59, 130, 246, .25);
+            --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+        }
+
+        /* Light mode variables */
+        :root[data-theme="light"] {
+            --bg: #f6f8fc;
+            --bg2: #eef3ff;
+            --card: #ffffff;
+            --card2: #f7f9ff;
+            --text: #0b1220;
+            --muted: #52627a;
+            --line: rgba(12, 18, 32, .10);
+            --shadow: 0 14px 40px rgba(10, 20, 45, .12);
+            --shadow2: 0 10px 26px rgba(10, 20, 45, .10);
+            --ring: 0 0 0 3px rgba(59, 130, 246, .22);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
         body {
-            font-family: 'Segoe UI', Arial, sans-serif;
+            height: 100%;
+        }
+
+        body {
             margin: 0;
-            padding: 0;
-            background: #f4f6f9;
-            color: #333;
+            font-family: var(--sans);
+            color: var(--text);
+            background:
+                radial-gradient(1200px 600px at 15% -10%, rgba(59, 130, 246, .35), transparent 55%),
+                radial-gradient(900px 500px at 90% 0%, rgba(34, 197, 94, .18), transparent 55%),
+                linear-gradient(180deg, var(--bg), var(--bg2));
         }
 
-        header {
-            background: #2563eb;
-            color: #fff;
-            padding: 20px;
-            text-align: center;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            background: linear-gradient(180deg, rgba(0, 0, 0, .25), rgba(0, 0, 0, .05));
+            border-bottom: 1px solid var(--line);
         }
 
-        header h1 {
-            margin: 0;
-            font-size: 28px;
+        :root[data-theme="light"] .topbar {
+            background: linear-gradient(180deg, rgba(255, 255, 255, .85), rgba(255, 255, 255, .65));
         }
 
-        .container {
-            max-width: 1000px;
-            margin: 40px auto;
-            padding: 0 20px;
+        .wrap {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 18px 18px;
         }
 
-        .intro {
-            text-align: center;
-            font-size: 18px;
-            margin-bottom: 30px;
-            color: #555;
-        }
-
-        .cards {
+        .bar {
             display: flex;
-            gap: 20px;
+            align-items: center;
+            gap: 14px;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 240px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            background:
+                radial-gradient(14px 14px at 30% 30%, rgba(255, 255, 255, .85), rgba(255, 255, 255, 0)),
+                linear-gradient(135deg, rgba(59, 130, 246, .9), rgba(34, 197, 94, .65));
+            box-shadow: var(--shadow2);
+            display: grid;
+            place-items: center;
+            border: 1px solid rgba(255, 255, 255, .14);
+        }
+
+        :root[data-theme="light"] .logo {
+            border: 1px solid rgba(12, 18, 32, .10);
+        }
+
+        .logo svg {
+            opacity: .95;
+        }
+
+        .titlebox {
+            line-height: 1.05;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 18px;
+            letter-spacing: .2px;
+            font-weight: 750;
+        }
+
+        .subtitle {
+            margin-top: 4px;
+            font-size: 12.5px;
+            color: var(--muted);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
             flex-wrap: wrap;
-            justify-content: center;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, .06);
+            color: var(--text);
+            padding: 10px 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            user-select: none;
+            transition: transform .12s ease, background .12s ease, box-shadow .12s ease, border-color .12s ease;
+            font-weight: 650;
+            font-size: 13px;
+            white-space: nowrap;
+        }
+
+        :root[data-theme="light"] .btn {
+            background: rgba(12, 18, 32, .04);
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow2);
+            border-color: rgba(59, 130, 246, .35);
+        }
+
+        .btn:focus {
+            outline: none;
+            box-shadow: var(--ring);
+        }
+
+        .btn .pill {
+            font-family: var(--mono);
+            font-size: 11px;
+            color: var(--muted);
+            border: 1px solid var(--line);
+            padding: 3px 8px;
+            border-radius: 999px;
+        }
+
+        .searchRow {
+            margin-top: 14px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .search {
+            flex: 1;
+            min-width: 260px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, .06);
+            box-shadow: 0 8px 18px rgba(0, 0, 0, .08);
+        }
+
+        :root[data-theme="light"] .search {
+            background: rgba(255, 255, 255, .9);
+        }
+
+        .search input {
+            width: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            color: var(--text);
+            font-size: 14px;
+        }
+
+        .search input::placeholder {
+            color: var(--muted);
+        }
+
+        .chips {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .chip {
+            padding: 10px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, .04);
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background .12s ease, transform .12s ease, border-color .12s ease;
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .chip:hover {
+            transform: translateY(-1px);
+            border-color: rgba(59, 130, 246, .32);
+        }
+
+        .chip.active {
+            background: rgba(59, 130, 246, .18);
+            border-color: rgba(59, 130, 246, .45);
+        }
+
+        main.wrap {
+            padding-top: 18px;
+            padding-bottom: 30px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 16px;
+            margin-top: 18px;
+        }
+
+        @media (max-width: 980px) {
+            .grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .brand {
+                min-width: auto;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                width: 100%;
+                justify-content: space-between;
+            }
         }
 
         .card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 25px 20px;
-            width: 280px;
-            text-align: center;
+            position: relative;
+            background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .03));
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 16px 16px;
             text-decoration: none;
-            color: #333;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            transition: transform 0.2s, box-shadow 0.2s;
+            color: var(--text);
+            box-shadow: var(--shadow2);
+            transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+            overflow: hidden;
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            min-height: 112px;
+        }
+
+        :root[data-theme="light"] .card {
+            background: linear-gradient(180deg, rgba(255, 255, 255, 1), rgba(250, 252, 255, 1));
         }
 
         .card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+            transform: translateY(-4px);
+            box-shadow: var(--shadow);
+            border-color: rgba(59, 130, 246, .45);
         }
 
-        .card-icon {
-            font-size: 40px;
-            margin-bottom: 15px;
-            color: #2563eb;
+        .card:focus {
+            outline: none;
+            box-shadow: var(--ring), var(--shadow);
         }
 
-        .card-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin-bottom: 10px;
+        .card::before {
+            content: "";
+            position: absolute;
+            inset: -2px;
+            background:
+                radial-gradient(240px 120px at 15% 15%, rgba(59, 130, 246, .24), transparent 60%),
+                radial-gradient(220px 120px at 90% 0%, rgba(34, 197, 94, .16), transparent 55%);
+            opacity: .85;
+            pointer-events: none;
         }
 
-        .card-desc {
-            font-size: 15px;
-            color: #666;
+        :root[data-theme="light"] .card::before {
+            opacity: .55;
+        }
+
+        .icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 14px;
+            background: rgba(59, 130, 246, .16);
+            border: 1px solid rgba(59, 130, 246, .28);
+            display: grid;
+            place-items: center;
+            flex: 0 0 auto;
+            margin-top: 2px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .icon.green {
+            background: rgba(34, 197, 94, .12);
+            border-color: rgba(34, 197, 94, .22);
+        }
+
+        .icon.orange {
+            background: rgba(249, 115, 22, .12);
+            border-color: rgba(249, 115, 22, .22);
+        }
+
+        .icon.purple {
+            background: rgba(168, 85, 247, .12);
+            border-color: rgba(168, 85, 247, .22);
+        }
+
+        .meta {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+        }
+
+        .meta h3 {
+            margin: 2px 0 6px;
+            font-size: 15.5px;
+            font-weight: 780;
+            letter-spacing: .2px;
+        }
+
+        .meta p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .tags {
+            margin-top: 10px;
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 11px;
+            padding: 4px 8px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            color: var(--muted);
+            background: rgba(255, 255, 255, .03);
+            font-family: var(--mono);
+        }
+
+        .statusRow {
+            margin-top: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            color: var(--muted);
+            font-size: 12.5px;
+        }
+
+        .count {
+            font-family: var(--mono);
+            border: 1px solid var(--line);
+            padding: 6px 10px;
+            border-radius: 999px;
+            background: rgba(255, 255, 255, .03);
+        }
+
+        .empty {
+            margin-top: 20px;
+            border: 1px dashed var(--line);
+            border-radius: 16px;
+            padding: 18px;
+            color: var(--muted);
+            text-align: center;
+            background: rgba(255, 255, 255, .03);
+        }
+
+        footer {
+            padding: 20px 18px 30px;
+            color: var(--muted);
+            text-align: center;
+            font-size: 12.5px;
+        }
+
+        kbd {
+            font-family: var(--mono);
+            font-size: 11px;
+            border: 1px solid var(--line);
+            border-bottom-width: 2px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            color: var(--text);
+            background: rgba(255, 255, 255, .04);
         }
     </style>
-    <!-- Thư viện icon (Font Awesome) -->
-    <script src="https://kit.fontawesome.com/yourkitid.js" crossorigin="anonymous"></script>
 </head>
 
 <body>
-    <header>
-        <h1>Tools</h1>
-    </header>
+    <div class="topbar">
+        <div class="wrap">
+            <div class="bar">
+                <div class="brand">
+                    <div class="logo" aria-hidden="true">
+                        <!-- Simple tool icon -->
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path
+                                d="M14.7 6.3a4 4 0 0 0-5.4 5.4l-6.3 6.3a2 2 0 0 0 2.8 2.8l6.3-6.3a4 4 0 0 0 5.4-5.4l-2 2-3-3 2-2z" />
+                        </svg>
+                    </div>
+                    <div class="titlebox">
+                        <h1>Tools</h1>
+                        <div class="subtitle">Chọn công cụ — tìm nhanh, lọc theo nhóm, hỗ trợ dark mode</div>
+                    </div>
+                </div>
 
-    <div class="container">
-        <p class="intro">Chọn chức năng mà bạn muốn sử dụng:</p>
+                <div class="controls">
+                    <button class="btn" id="btnTheme" type="button" title="Đổi giao diện">
+                        🌙 Theme <span class="pill" id="themeLabel">Auto</span>
+                    </button>
 
-        <div class="cards">
-            <a href="log-beautifier/index.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-terminal"></i></div>
-                <div class="card-title">Làm đẹp Log</div>
-                <div class="card-desc">Giúp format log dễ đọc, dễ phân tích hơn.</div>
-            </a>
+                    <button class="btn" id="btnNewTab" type="button" title="Mở tool ở tab mới hay cùng tab">
+                        ↗ Open <span class="pill" id="openLabel">New tab</span>
+                    </button>
 
-            <a href="pretty-json/index.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-code"></i></div>
-                <div class="card-title">Làm đẹp JSON</div>
-                <div class="card-desc">Format JSON gọn gàng, hỗ trợ copy dễ dàng.</div>
-            </a>
+                    <button class="btn" id="btnFocusSearch" type="button" title="Focus ô tìm kiếm (/)">
+                        🔎 Search <span class="pill">/</span>
+                    </button>
+                </div>
+            </div>
 
-            <a href="text-compare/index.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
-                <div class="card-title">So sánh Văn bản</div>
-                <div class="card-desc">So sánh 2 đoạn văn bản và highlight sự khác biệt.</div>
-            </a>
+            <div class="searchRow">
+                <div class="search" role="search">
+                    <span aria-hidden="true">🔎</span>
+                    <input id="q" type="text" placeholder="Tìm theo tên, mô tả, tag… (ví dụ: json, compare, sql, nasa)"
+                        autocomplete="off" />
+                </div>
 
-            <a href="json-compare.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
-                <div class="card-title">So sánh JSON</div>
-                <div class="card-desc">So sánh 2 đoạn JSON và liệt kê sự khác biệt.</div>
-            </a>
+                <div class="chips" id="chips" aria-label="Bộ lọc nhóm">
+                    <!-- chips injected -->
+                </div>
+            </div>
 
-            <a href="data-compare.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
-                <div class="card-title">So sánh Dữ liệu</div>
-                <div class="card-desc">So sánh 2 tập dữ liệu và hiển thị sự khác biệt.</div>
-            </a>
-
-            <a href="dto-to-json.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-database"></i></div>
-                <div class="card-title">Example JSON</div>
-                <div class="card-desc">Cung cấp Json mẫu cho DTO/Entity.</div>
-            </a>
-
-            <a href="weather.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-exchange-alt"></i></div>
-                <div class="card-title">Kiểm tra thời tiết</div>
-                <div class="card-desc">Xem thông tin thời tiết hiện tại cho một thành phố.</div>
-            </a>
-
-            <a href="nasa-explorer.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-nasa-explorer"></i></div>
-                <div class="card-title">Kiểm tra ảnh thiên văn NASA</div>
-                <div class="card-desc">Xem ảnh thiên văn các hành tinh của NASA.</div>
-            </a>
-
-            <a href="random-wheel.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-random"></i></div>
-                <div class="card-title">Vòng quay may mắn</div>
-                <div class="card-desc">Chọn ngẫu nhiên một mục từ danh sách của bạn.</div>
-            </a>
-
-            <a href="look-ups-vi.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-random"></i></div>
-                <div class="card-title">Tra cứu từ điển tiếng Việt</div>
-                <div class="card-desc">Tra cứu nghĩa và ví dụ của từ tiếng Việt.</div>
-            </a>
-
-            <a href="tsv-to-insert.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-random"></i></div>
-                <div class="card-title">Chuyển đổi tsv thành query</div>
-                <div class="card-desc">Chuyển đổi dữ liệu TSV thành câu lệnh INSERT SQL.</div>
-            </a>
-
-            <a href="curl-to-payload-json.html" target="_blank" class="card">
-                <div class="card-icon"><i class="fas fa-random"></i></div>
-                <div class="card-title">Chuyển đổi Curl thành query</div>
-                <div class="card-desc">Chuyển đổi lệnh Curl thành query dễ sử dụng.</div>
-            </a>
+            <div class="statusRow">
+                <div>Tip: nhấn <kbd>/</kbd> để focus search • <kbd>Esc</kbd> để clear</div>
+                <div class="count" id="count">0 tools</div>
+            </div>
         </div>
     </div>
+
+    <main class="wrap">
+        <div class="grid" id="grid" aria-label="Danh sách tools"></div>
+        <div class="empty" id="empty" style="display:none;">
+            Không tìm thấy tool phù hợp. Thử đổi từ khóa hoặc chuyển nhóm lọc.
+        </div>
+    </main>
+
+    <footer>
+        Gợi ý: nếu mở local bằng <span style="font-family:var(--mono);">file://</span> vẫn chạy bình thường (không phụ
+        thuộc CDN).
+    </footer>
+
+    <script>
+        // ===== Data =====
+        const TOOLS = [
+            { title: "Làm đẹp Log", href: "log-beautifier/index.html", group: "Formatters", tags: ["log", "sql", "query", "format"], desc: "Format log dễ đọc, dễ phân tích hơn.", icon: "terminal" },
+            { title: "Làm đẹp JSON", href: "pretty-json/index.html", group: "Formatters", tags: ["json", "viewer", "format"], desc: "Format JSON gọn gàng, hỗ trợ copy dễ dàng.", icon: "code" },
+
+            { title: "So sánh Văn bản", href: "text-compare/index.html", group: "Compare", tags: ["diff", "text", "compare"], desc: "So sánh 2 đoạn văn bản và highlight sự khác biệt.", icon: "compare" },
+            { title: "So sánh JSON", href: "json-compare.html", group: "Compare", tags: ["json", "diff", "compare"], desc: "So sánh 2 JSON và liệt kê sự khác biệt.", icon: "compare" },
+            { title: "So sánh Dữ liệu", href: "data-compare.html", group: "Compare", tags: ["data", "diff", "compare"], desc: "So sánh 2 tập dữ liệu và hiển thị sự khác biệt.", icon: "compare" },
+
+            { title: "Example JSON", href: "dto-to-json.html", group: "Dev Utils", tags: ["dto", "entity", "json", "sample"], desc: "Cung cấp JSON mẫu cho DTO/Entity.", icon: "db" },
+            { title: "Kiểm tra thời tiết", href: "weather.html", group: "Fun & Info", tags: ["weather", "city"], desc: "Xem thông tin thời tiết hiện tại cho một thành phố.", icon: "weather" },
+            { title: "NASA Explorer", href: "nasa-explorer.html", group: "Fun & Info", tags: ["nasa", "space", "image"], desc: "Xem ảnh thiên văn theo ngày / hành tinh.", icon: "planet" },
+            { title: "Vòng quay may mắn", href: "random-wheel.html", group: "Fun & Info", tags: ["random", "wheel"], desc: "Chọn ngẫu nhiên một mục từ danh sách của bạn.", icon: "wheel" },
+
+            { title: "Tra cứu từ điển tiếng Việt", href: "look-ups-vi.html", group: "Dev Utils", tags: ["dictionary", "vi"], desc: "Tra cứu nghĩa và ví dụ của từ tiếng Việt.", icon: "book" },
+            { title: "TSV → INSERT SQL", href: "tsv-to-insert.html", group: "Dev Utils", tags: ["tsv", "sql", "insert"], desc: "Chuyển đổi dữ liệu TSV thành câu lệnh INSERT.", icon: "table" },
+            { title: "cURL → Payload/Query", href: "curl-to-payload-json.html", group: "Dev Utils", tags: ["curl", "http", "payload"], desc: "Chuyển lệnh cURL thành payload/query dễ dùng.", icon: "curl" },
+        ];
+
+        const GROUPS = ["All", "Formatters", "Compare", "Dev Utils", "Fun & Info"];
+
+        // ===== Icons (inline SVG, no CDN) =====
+        function iconSvg(name) {
+            const base = (paths) => `
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        ${paths}
+      </svg>`;
+            switch (name) {
+                case "terminal": return base(`<path d="M4 17l6-6-6-6"/><path d="M12 19h8"/>`);
+                case "code": return base(`<path d="M16 18l6-6-6-6"/><path d="M8 6l-6 6 6 6"/><path d="M14 4l-4 16"/>`);
+                case "compare": return base(`<path d="M10 3H5a2 2 0 0 0-2 2v5"/><path d="M14 21h5a2 2 0 0 0 2-2v-5"/><path d="M7 17l-4-4 4-4"/><path d="M17 7l4 4-4 4"/>`);
+                case "db": return base(`<ellipse cx="12" cy="5" rx="8" ry="3"/><path d="M4 5v6c0 1.7 3.6 3 8 3s8-1.3 8-3V5"/><path d="M4 11v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/>`);
+                case "weather": return base(`<path d="M20 16.5a4.5 4.5 0 0 0-3.7-4.4A6 6 0 1 0 6 15"/><path d="M8 19h8"/><path d="M10 23h4"/>`);
+                case "planet": return base(`<circle cx="12" cy="12" r="4"/><path d="M2 12c3-6 17-6 20 0"/><path d="M2 12c3 6 17 6 20 0"/>`);
+                case "wheel": return base(`<circle cx="12" cy="12" r="9"/><path d="M12 3v18"/><path d="M3 12h18"/><path d="M6.5 6.5l11 11"/><path d="M17.5 6.5l-11 11"/>`);
+                case "book": return base(`<path d="M4 19a2 2 0 0 0 2 2h12"/><path d="M6 2h12v16H6a2 2 0 0 0-2 2V4a2 2 0 0 1 2-2z"/>`);
+                case "table": return base(`<path d="M3 3h18v18H3z"/><path d="M3 9h18"/><path d="M9 21V3"/>`);
+                case "curl": return base(`<path d="M4 7h10a4 4 0 0 1 0 8H10"/><path d="M10 15H4"/><path d="M18 9h2"/><path d="M18 15h2"/>`);
+                default: return base(`<circle cx="12" cy="12" r="9"/>`);
+            }
+        }
+
+        // ===== Helpers =====
+        const $ = (q) => document.querySelector(q);
+        const el = (tag, attrs = {}, children = []) => {
+            const n = document.createElement(tag);
+            for (const [k, v] of Object.entries(attrs)) {
+                if (k === "class") n.className = v;
+                else if (k === "html") n.innerHTML = v;
+                else if (k.startsWith("data-")) n.setAttribute(k, v);
+                else n.setAttribute(k, v);
+            }
+            children.forEach(c => n.appendChild(c));
+            return n;
+        };
+
+        // ===== State =====
+        let state = {
+            q: "",
+            group: "All",
+            openNewTab: true,
+            theme: "auto", // auto | dark | light
+        };
+
+        // ===== Theme =====
+        function applyTheme() {
+            const root = document.documentElement;
+            if (state.theme === "auto") {
+                root.removeAttribute("data-theme");
+                $("#themeLabel").textContent = "Auto";
+                return;
+            }
+            root.setAttribute("data-theme", state.theme);
+            $("#themeLabel").textContent = state.theme[0].toUpperCase() + state.theme.slice(1);
+        }
+
+        function cycleTheme() {
+            // auto -> dark -> light -> auto
+            state.theme = state.theme === "auto" ? "dark" : state.theme === "dark" ? "light" : "auto";
+            localStorage.setItem("tools_theme", state.theme);
+            applyTheme();
+        }
+
+        // ===== Chips =====
+        function renderChips() {
+            const chips = $("#chips");
+            chips.innerHTML = "";
+            GROUPS.forEach(g => {
+                const c = el("button", {
+                    class: "chip" + (state.group === g ? " active" : ""),
+                    type: "button",
+                    "data-group": g
+                });
+                c.textContent = g;
+                c.addEventListener("click", () => {
+                    state.group = g;
+                    renderChips();
+                    renderGrid();
+                });
+                chips.appendChild(c);
+            });
+        }
+
+        // ===== Grid =====
+        function cardIconClass(group) {
+            if (group === "Formatters") return "icon";
+            if (group === "Compare") return "icon orange";
+            if (group === "Dev Utils") return "icon purple";
+            return "icon green";
+        }
+
+        function renderGrid() {
+            const grid = $("#grid");
+            const q = state.q.trim().toLowerCase();
+            const group = state.group;
+
+            const filtered = TOOLS.filter(t => {
+                const inGroup = group === "All" ? true : (t.group === group);
+                if (!inGroup) return false;
+                if (!q) return true;
+                const hay = (t.title + " " + t.desc + " " + (t.tags || []).join(" ")).toLowerCase();
+                return hay.includes(q);
+            });
+
+            grid.innerHTML = "";
+            filtered.forEach(t => {
+                const a = el("a", {
+                    class: "card",
+                    href: t.href,
+                    target: state.openNewTab ? "_blank" : "_self",
+                    rel: "noopener noreferrer",
+                    "data-group": t.group,
+                    "aria-label": t.title
+                });
+
+                const icon = el("div", { class: cardIconClass(t.group), html: iconSvg(t.icon) });
+                const meta = el("div", { class: "meta" });
+                const h3 = el("h3"); h3.textContent = t.title;
+                const p = el("p"); p.textContent = t.desc;
+
+                const tags = el("div", { class: "tags" });
+                const tag1 = el("span", { class: "tag" }); tag1.textContent = t.group;
+                tags.appendChild(tag1);
+                (t.tags || []).slice(0, 3).forEach(x => {
+                    const tg = el("span", { class: "tag" }); tg.textContent = x;
+                    tags.appendChild(tg);
+                });
+
+                meta.appendChild(h3);
+                meta.appendChild(p);
+                meta.appendChild(tags);
+
+                a.appendChild(icon);
+                a.appendChild(meta);
+
+                grid.appendChild(a);
+            });
+
+            $("#empty").style.display = filtered.length ? "none" : "block";
+            $("#count").textContent = `${filtered.length} tools`;
+        }
+
+        // ===== Init =====
+        function init() {
+            // restore prefs
+            state.openNewTab = (localStorage.getItem("tools_openNewTab") ?? "1") === "1";
+            state.theme = localStorage.getItem("tools_theme") || "auto";
+
+            $("#openLabel").textContent = state.openNewTab ? "New tab" : "Same tab";
+
+            applyTheme();
+            renderChips();
+            renderGrid();
+
+            $("#q").addEventListener("input", (e) => {
+                state.q = e.target.value || "";
+                renderGrid();
+            });
+
+            $("#btnTheme").addEventListener("click", cycleTheme);
+
+            $("#btnNewTab").addEventListener("click", () => {
+                state.openNewTab = !state.openNewTab;
+                localStorage.setItem("tools_openNewTab", state.openNewTab ? "1" : "0");
+                $("#openLabel").textContent = state.openNewTab ? "New tab" : "Same tab";
+                renderGrid();
+            });
+
+            $("#btnFocusSearch").addEventListener("click", () => $("#q").focus());
+
+            // keyboard shortcuts: / focus search, Esc clear
+            window.addEventListener("keydown", (ev) => {
+                if (ev.key === "/" && document.activeElement !== $("#q")) {
+                    ev.preventDefault();
+                    $("#q").focus();
+                }
+                if (ev.key === "Escape") {
+                    if ($("#q").value) {
+                        $("#q").value = "";
+                        state.q = "";
+                        renderGrid();
+                    } else {
+                        $("#q").blur();
+                    }
+                }
+            });
+        }
+
+        init();
+    </script>
 </body>
 
 </html>

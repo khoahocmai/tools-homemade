@@ -74,6 +74,67 @@
   const now = () => Date.now();
   const safeText = (el) => (el?.innerText || el?.textContent || "").trim();
 
+
+
+  // ---------- Deep DOM query (supports open Shadow DOM) ----------
+  function deepQuerySelectorAll(selector, root = document) {
+    const results = [];
+    const seen = new Set();
+
+    const start =
+      root instanceof Document
+        ? root.documentElement || root.body
+        : root instanceof ShadowRoot
+          ? root
+          : root;
+
+    const stack = [start].filter(Boolean);
+    let steps = 0;
+    const MAX_STEPS = 12000; // safety bound
+
+    while (stack.length && steps++ < MAX_STEPS) {
+      const node = stack.pop();
+      if (!node) continue;
+      if (seen.has(node)) continue;
+      seen.add(node);
+
+      // ShadowRoot
+      if (node instanceof ShadowRoot) {
+        const kids = node.children ? Array.from(node.children) : [];
+        for (let i = kids.length - 1; i >= 0; i--) stack.push(kids[i]);
+        continue;
+      }
+
+      // Element
+      if (node.nodeType === 1) {
+        try {
+          if (node.matches && node.matches(selector)) results.push(node);
+        } catch { }
+
+        const kids = node.children ? Array.from(node.children) : [];
+        for (let i = kids.length - 1; i >= 0; i--) stack.push(kids[i]);
+
+        if (node.shadowRoot) stack.push(node.shadowRoot);
+      }
+    }
+
+    // de-dup preserving order
+    const uniq = [];
+    const seenEl = new Set();
+    for (const el of results) {
+      if (!seenEl.has(el)) {
+        seenEl.add(el);
+        uniq.push(el);
+      }
+    }
+    return uniq;
+  }
+
+  function deepQuerySelector(selector, root = document) {
+    const all = deepQuerySelectorAll(selector, root);
+    return all.length ? all[0] : null;
+  }
+
   function isChatGPT() {
     return location.host.includes("chatgpt.com") || location.host.includes("chat.openai.com");
   }
@@ -210,9 +271,13 @@
       'button[aria-label*="stop"]',
       'button[aria-label*="Dừng"]',
       'button[aria-label*="dừng"]',
+      'button[title*="Stop"]',
+      'button[title*="stop"]',
+      '[data-testid*="stop"]',
+      '[data-test-id*="stop"]',
     ];
     for (const s of selectors) {
-      if (document.querySelector(s)) return true;
+      if (deepQuerySelector(s)) return true;
     }
 
     const btns = document.querySelectorAll("button");
@@ -240,31 +305,41 @@
     return false;
   }
 
-  // ---------- Gemini conversation root ----------
-  function getGeminiConversationRoot() {
-    const main = document.querySelector("main,[role='main']");
-    if (!main) return null;
+  // ---------- Gemini helpers (DOM selectors) ----------
+  // Gemini web app often uses custom elements like <message-content> inside #chat-history.
+  // We intentionally keep this logic isolated so ChatGPT flow is unaffected.
+  function getGeminiChatHistoryRoot() {
+    // Gemini often renders inside open Shadow DOM; use deep query.
+    return (
+      deepQuerySelector("#chat-history") ||
+      deepQuerySelector("main,[role='main']") ||
+      document.body ||
+      document.documentElement
+    );
+  }
 
-    const children = Array.from(main.children || []);
-    let best = null;
-    let bestLen = -1;
+  function getGeminiAssistantNodes() {
+    const root = getGeminiChatHistoryRoot();
+    if (!root) return [];
 
-    for (const el of children) {
-      // skip composer/input-like blocks
-      if (
-        el.querySelector(
-          'textarea,[contenteditable="true"],[role="textbox"],input[type="text"],input[type="search"]'
-        )
-      ) {
-        continue;
-      }
-      const t = safeText(el);
-      if (t.length > bestLen) {
-        bestLen = t.length;
-        best = el;
-      }
+    // Primary: assistant message blocks
+    let nodes = deepQuerySelectorAll("message-content", root);
+
+    // Fallbacks for some layouts (extended response / panels)
+    if (!nodes.length) {
+      nodes = deepQuerySelectorAll("message-content");
     }
-    return best || main;
+    if (!nodes.length) {
+      nodes = deepQuerySelectorAll("extended-response-panel response-container, response-container");
+    }
+
+    // Keep only nodes that actually have some text or are visible containers.
+    return nodes.filter(Boolean);
+  }
+
+  function getGeminiActiveAssistantEl() {
+    const nodes = getGeminiAssistantNodes();
+    return nodes.length ? nodes[nodes.length - 1] : null;
   }
 
   // ---------- Assistant nodes ----------
@@ -278,8 +353,7 @@
       );
     }
     if (isGemini()) {
-      const root = getGeminiConversationRoot();
-      return root ? [root] : [];
+      return getGeminiAssistantNodes();
     }
     return [];
   }
@@ -345,8 +419,7 @@
     notified = false;
     sessionStartAt = now();
 
-    // singleContainerMode = isGemini();
-    singleContainerMode = false;
+    singleContainerMode = isGemini();
     resetSessionVars();
 
     // snapshot nodes count
@@ -355,7 +428,7 @@
 
     if (singleContainerMode) {
       // Gemini: we don't wait for a "new node"
-      activeAssistantEl = getGeminiConversationRoot() || getLastAssistantNode();
+      activeAssistantEl = getGeminiActiveAssistantEl() || getLastAssistantNode();
       baselineText = getAssistantContentText(activeAssistantEl);
       lastText = baselineText;
       awaitingAssistant = false;
@@ -428,8 +501,11 @@
         if (e.key !== "Enter") return;
         if (e.shiftKey) return;
         if (e.isComposing) return;
-        const target = e.target || document.activeElement;
-        if (!isEditableTarget(target)) return;
+        const path = (typeof e.composedPath === 'function' ? e.composedPath() : []) || [];
+        const target = path[0] || e.target || document.activeElement;
+        // In Shadow DOM, retargeting may hide the real editable; scan composedPath.
+        const editable = isEditableTarget(target) || path.some((n) => isEditableTarget(n));
+        if (!editable) return;
 
         log("HOOK", "keydown Enter -> startSession", { targetTag: target?.tagName, site: getSiteName() });
         startSession("enter_send");
@@ -441,7 +517,8 @@
     document.addEventListener(
       "click",
       (e) => {
-        const btn = e.target?.closest?.("button");
+        const path = (typeof e.composedPath === 'function' ? e.composedPath() : []) || [];
+        const btn = path.find((n) => n && n.tagName === 'BUTTON') || e.target?.closest?.('button');
         if (!btn) return;
         if (!looksLikeSendButton(btn)) return;
 
@@ -508,10 +585,30 @@
         });
       }
 
-      // Gemini: refresh root reference (DOM may re-render)
+      // Gemini: refresh active response reference (DOM may re-render)
       if (singleContainerMode) {
-        const root = getGeminiConversationRoot();
-        if (root) activeAssistantEl = root;
+        const nodes = getGeminiAssistantNodes();
+
+        // If a new assistant node appears, switch to it and reset baseline (prevents picking whole-page root).
+        if (nodes.length && nodes.length > assistantCountAtStart) {
+          assistantCountAtStart = nodes.length;
+          activeAssistantEl = nodes[nodes.length - 1];
+
+          baselineText = getAssistantContentText(activeAssistantEl);
+          lastText = baselineText;
+          lastChangeAt = now();
+          awaitingOutput = true;
+          hasAssistantOutput = false;
+
+          log("FLOW", "Gemini: new assistant node detected", {
+            assistantCountAtStart,
+            baselineLen: baselineText.length,
+            baselinePreview: baselineText.slice(0, 80),
+          });
+        } else {
+          const el = nodes.length ? nodes[nodes.length - 1] : null;
+          if (el) activeAssistantEl = el;
+        }
       }
 
       // Recover element if re-rendered
@@ -565,9 +662,10 @@
         if (!text) return;
 
         if (singleContainerMode) {
-          // Gemini: output = clear growth from baseline
+          // Gemini: don't rely on "longer than baseline" (Gemini may reuse/replace containers).
+          // Treat output as started when the active assistant element has non-empty text different from baseline.
+          if (!text) return;
           if (text === baselineText) return;
-          if (text.length <= baselineText.length + (opts.singleGrowthThreshold ?? 10)) return;
         }
 
         awaitingOutput = false;
