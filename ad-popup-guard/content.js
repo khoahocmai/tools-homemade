@@ -5,11 +5,6 @@
 
 (async () => {
   // -------------------------
-  // Host allow-list
-  // -------------------------
-  const ALLOW_HOSTS = ["nhieutruyen.com", "metruyenchu.com", "facebook.com"];
-
-  // -------------------------
   // Affect (Allowlist) - chỉ chạy trên các URL prefix trong danh sách ở popup
   // -------------------------
   const AFFECT_KEY = "affect_prefixes";
@@ -125,24 +120,32 @@
   // Live update (không cần reload tab)
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== "local") return;
+
     if (BLOCK_KEY in changes) {
       const user = Array.isArray(changes[BLOCK_KEY].newValue) ? changes[BLOCK_KEY].newValue : [];
       applyBlockPatterns(user);
     }
-  });
 
+    if (AFFECT_KEY in changes) {
+      // allowlist đổi -> cập nhật enable theo tab URL hiện tại
+      void refreshEnabled();
+    }
+  });// Enable/Disable theo URL của TAB (top-level), không theo frame URL.
+  // Background sẽ check allowlist prefix (affect_prefixes) đúng theo path mà user nhập.
+  let enabled = false;
 
-
-  function isAllowedHost() {
-    const h = location.hostname;
-    return ALLOW_HOSTS.some((x) => h === x || h.endsWith(`.${x}`));
+  async function refreshEnabled() {
+    try {
+      const res = await chrome.runtime.sendMessage({ type: "pg_is_affected" });
+      enabled = !!res?.ok;
+    } catch {
+      enabled = false;
+    }
   }
 
-  if (!isAllowedHost()) return;
-
-  const affect = await getAffectPrefixes();
-  if (!isAffectedBy(affect)) return;
-
+  // init
+  await refreshEnabled();
+  if (!enabled) return;
   const userBlocks = await getBlockPatterns();
   applyBlockPatterns(userBlocks);
 
@@ -173,6 +176,7 @@
     }
   }
   function shouldBlockOpen(url) {
+    if (!enabled) return false;
     const href = typeof url === "string" ? url : url?.toString?.();
     if (!href) return false;
 
@@ -267,6 +271,7 @@
   let BLOCK_PATTERNS = blockRedirectRegexes;
 
   function isBlockedUrl(url) {
+    if (!enabled) return false;
     return blockRedirectRegexes.some((r) => r.test(url));
   }
 
@@ -305,13 +310,19 @@
     const origPushState = history.pushState.bind(history);
     const origReplaceState = history.replaceState.bind(history);
 
+    const scheduleRefreshEnabled = () => setTimeout(() => void refreshEnabled(), 0);
+    window.addEventListener("popstate", scheduleRefreshEnabled);
+    window.addEventListener("hashchange", scheduleRefreshEnabled);
+
     history.pushState = function (state, unused, url) {
       const s = url?.toString?.() ?? "";
       if (s && isBlockedUrl(s)) {
         logRedirect(debug, "blocked pushState:", s);
         return;
       }
-      return origPushState(state, unused, url);
+      const ret = origPushState(state, unused, url);
+      scheduleRefreshEnabled();
+      return ret;
     };
 
     history.replaceState = function (state, unused, url) {
@@ -320,7 +331,9 @@
         logRedirect(debug, "blocked replaceState:", s);
         return;
       }
-      return origReplaceState(state, unused, url);
+      const ret = origReplaceState(state, unused, url);
+      scheduleRefreshEnabled();
+      return ret;
     };
 
     logRedirect(debug, "Redirect guard installed");
@@ -332,6 +345,7 @@
   const PATCHED_FB = Symbol("fb_cleaner_patched");
 
   function cleanFacebook() {
+    if (!enabled) return;
     const w = window;
     if (w[PATCHED_FB]) return;
     w[PATCHED_FB] = true;

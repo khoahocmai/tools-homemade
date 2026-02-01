@@ -103,27 +103,55 @@ function isAffectedUrl(url) {
   return affectPrefixes.some((p) => s.startsWith(p));
 }
 
+/** ===== Content script helper: check if current TAB is affected ===== */
+chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  if (msg && msg.type === "pg_is_affected") {
+    const tabUrl = sender?.tab?.url || "";
+    sendResponse({ ok: isAffectedUrl(tabUrl) });
+    return true;
+  }
+});
+
 function getAffectInitiatorDomains() {
   if (!affectPrefixes.length) return AFFECT_EMPTY_MEANS_ALL ? null : [];
+
+  // ⚠️ DNR chỉ filter theo "initiatorDomains" (domain) chứ không filter theo path.
+  // Vì vậy nếu user chỉ allow theo path (vd: https://site.com/truyen/),
+  // mà mình vẫn add hostname vào initiatorDomains thì rule sẽ áp dụng cho TOÀN BỘ domain đó.
+  // => gây cảm giác "không nằm trong affect list mà vẫn bị chặn".
+  //
+  // Giải pháp: chỉ bật DNR khi prefix là level-domain (origin + "/"), tức pathname === "/".
   const set = new Set();
   for (const p of affectPrefixes) {
     try {
-      set.add(new URL(p).hostname);
+      const u = new URL(p);
+      if (u.pathname === "/") set.add(u.hostname);
     } catch { }
   }
   return Array.from(set);
 }
 
+
 // Xác định “context” (tab nguồn) đã nằm trong vùng enable chưa
 async function shouldHandlePopupTab(tab) {
-  // Ưu tiên openerTabId
+  // 1) openerTabId (best)
   const openerId = tab?.openerTabId ?? null;
   if (openerId != null) {
     const opener = await chrome.tabs.get(openerId).catch(() => null);
     if (opener?.url) return isAffectedUrl(opener.url);
   }
 
-  // Fallback: dùng logic return tab sẵn có của bạn
+  // 2) navigation source captured by webNavigation.onCreatedNavigationTarget
+  if (tab?.id != null) {
+    const obj = await chrome.storage.session.get(NAV_SOURCE_KEY(tab.id)).catch(() => ({}));
+    const srcId = obj?.[NAV_SOURCE_KEY(tab.id)];
+    if (srcId != null) {
+      const src = await chrome.tabs.get(srcId).catch(() => null);
+      if (src?.url) return isAffectedUrl(src.url);
+    }
+  }
+
+  // 3) about:blank popup fallback (ONLY for blank-born tabs)
   const retId = await getReturnTabId(tab);
   if (retId != null) {
     const ret = await chrome.tabs.get(retId).catch(() => null);
@@ -132,7 +160,6 @@ async function shouldHandlePopupTab(tab) {
 
   return false;
 }
-
 
 // Only treat about:blank as "popup blank". Do NOT treat chrome://newtab as popup blank.
 function isAboutBlankLike(url) {
@@ -145,6 +172,7 @@ function isAboutBlankLike(url) {
 const FIRST_URL_KEY = (tabId) => `first_url_${tabId}`;
 const LAST_GOOD_URL_KEY = (tabId) => `last_good_url_${tabId}`;
 const RESTORE_AT_KEY = (tabId) => `last_restore_at_${tabId}`;
+const NAV_SOURCE_KEY = (tabId) => `nav_source_${tabId}`;
 
 /** ===== State ===== */
 
@@ -210,17 +238,31 @@ async function getReturnTabId(tab) {
   // Prefer real opener
   let ret = tab?.openerTabId ?? null;
 
-  // Fallback: previous/last active tab in that window (works for noopener popups)
-  if (ret == null && tab?.windowId != null) {
-    ret = prevActiveByWindow.get(tab.windowId) ?? null;
-    if (ret == null) ret = lastActiveByWindow.get(tab.windowId) ?? null;
+  // Prefer webNavigation source (works even when openerTabId is null due to noopener)
+  if (ret == null && tab?.id != null) {
+    const obj = await chrome.storage.session.get(NAV_SOURCE_KEY(tab.id)).catch(() => ({}));
+    const src = obj?.[NAV_SOURCE_KEY(tab.id)];
+    if (src != null) ret = src;
+  }
 
-    // Persisted fallback (service worker may sleep => Maps reset)
-    if (ret == null) {
-      const keyPrev = `pg_prev_active_${tab.windowId}`;
-      const keyLast = `pg_last_active_${tab.windowId}`;
-      const obj = await chrome.storage.session.get([keyPrev, keyLast]).catch(() => ({}));
-      ret = obj[keyPrev] ?? obj[keyLast] ?? null;
+  // Fallback: only when the tab was born as about:blank (typical popup redirected/blocked)
+  // This prevents false positives when the user intentionally opens a blocked site in a new tab.
+  if (ret == null && tab?.id != null && tab?.windowId != null) {
+    const firstObj = await chrome.storage.session.get(FIRST_URL_KEY(tab.id)).catch(() => ({}));
+    const first = firstObj?.[FIRST_URL_KEY(tab.id)] || "";
+    const mayBePopup = isAboutBlankLike(first) || first === "";
+
+    if (mayBePopup) {
+      ret = prevActiveByWindow.get(tab.windowId) ?? null;
+      if (ret == null) ret = lastActiveByWindow.get(tab.windowId) ?? null;
+
+      // Persisted fallback (service worker may sleep => Maps reset)
+      if (ret == null) {
+        const keyPrev = `pg_prev_active_${tab.windowId}`;
+        const keyLast = `pg_last_active_${tab.windowId}`;
+        const obj2 = await chrome.storage.session.get([keyPrev, keyLast]).catch(() => ({}));
+        ret = obj2[keyPrev] ?? obj2[keyLast] ?? null;
+      }
     }
   }
 
@@ -401,6 +443,15 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
       focusReturnAndClose(tabId, "updated_block_or_blank").catch(() => { });
     })();
   }
+});
+
+
+/** ===== Track navigation source for new tabs (better than lastActive fallback) ===== */
+chrome.webNavigation.onCreatedNavigationTarget.addListener((d) => {
+  if (d?.tabId == null || d?.sourceTabId == null) return;
+  chrome.storage.session
+    .set({ [NAV_SOURCE_KEY(d.tabId)]: d.sourceTabId })
+    .catch(() => { });
 });
 
 /** ===== Track last good URL per tab ===== */
