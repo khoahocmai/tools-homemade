@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dự báo thời tiết</title>
+  <link rel="stylesheet" href="weather.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='75' font-size='75'>🌤️</text></svg>">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <h1 class="logo">Weather</h1>
+        <div class="header-controls">
+          <button class="temp-toggle" id="tempToggle" title="Chuyển đổi C°/F°">°C</button>
+          <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
+            <span class="icon-sun">☀️</span>
+            <span class="icon-moon">🌙</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="container">
+      <!-- Search Section -->
+      <div class="search-section">
+        <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm thành phố..." autocomplete="off">
+        <button id="searchBtn" class="search-btn">Tìm</button>
+        <button id="geoBtn" class="geo-btn" title="Vị trí hiện tại">📍</button>
+      </div>
+
+      <!-- Current Weather -->
+      <section class="current-weather">
+        <div class="loading-skeleton" id="currentLoading">
+          <div class="skeleton-box"></div>
+        </div>
+        <div id="currentWeatherCard" class="weather-card" style="display: none;">
+          <div class="weather-header">
+            <div>
+              <h2 id="cityName" class="city-name">--</h2>
+              <p id="lastUpdate" class="last-update">--</p>
+            </div>
+            <img id="weatherIcon" class="weather-icon" src="" alt="Weather icon">
+          </div>
+          <div class="temperature-display">
+            <span id="temperature" class="temperature">--</span>
+            <span class="unit">°C</span>
+          </div>
+          <p id="weatherDesc" class="weather-desc">--</p>
+
+          <div class="weather-details">
+            <div class="detail-item">
+              <span class="detail-label">Cảm giác</span>
+              <span id="feelsLike" class="detail-value">--°C</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Độ ẩm</span>
+              <span id="humidity" class="detail-value">--%</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Gió</span>
+              <span id="windSpeed" class="detail-value">-- km/h</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Khí áp</span>
+              <span id="pressure" class="detail-value">-- mb</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Tầm nhìn</span>
+              <span id="visibility" class="detail-value">-- km</span>
+            </div>
+            <div class="detail-item">
+              <span class="detail-label">Tia UV</span>
+              <span id="uvIndex" class="detail-value">--</span>
+            </div>
+          </div>
+
+          <div class="astronomy-section">
+            <div class="astro-item">
+              <span class="astro-label">🌅 Mặt trời mọc</span>
+              <span id="sunrise" class="astro-value">--:--</span>
+            </div>
+            <div class="astro-item">
+              <span class="astro-label">🌇 Mặt trời lặn</span>
+              <span id="sunset" class="astro-value">--:--</span>
+            </div>
+          </div>
+        </div>
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+      </section>
+
+      <!-- Hourly Forecast -->
+      <section class="forecast-section">
+        <h3 class="section-title">Dự báo theo giờ</h3>
+        <div class="loading-skeleton" id="hourlyLoading">
+          <div class="skeleton-box"></div>
+        </div>
+        <div id="hourlyForecast" class="hourly-forecast" style="display: none;"></div>
+      </section>
+
+      <!-- 5-Day Forecast -->
+      <section class="forecast-section">
+        <h3 class="section-title">Dự báo 5 ngày</h3>
+        <div class="loading-skeleton" id="dailyLoading">
+          <div class="skeleton-box"></div>
+        </div>
+        <div id="dailyForecast" class="daily-forecast" style="display: none;"></div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Data from WeatherAPI.com | © 2025 Weather App</p>
+    </footer>
+  </div>
+
+  <script src="weather.js"></script>
+</body>
+
+</html>
