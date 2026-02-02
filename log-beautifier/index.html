@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="light">
 
 <head>
   <meta charset="UTF-8" />
@@ -12,13 +12,23 @@
   <div class="container">
     <div class="header">
       <div class="brand">
-        <span class="logo">🛠️</span>
-        <h1>TypeORM SQL Log Beautifier</h1>
+        <span class="logo" aria-hidden="true">🛠️</span>
+        <div class="brand-text">
+          <h1>TypeORM SQL Log Beautifier</h1>
+          <div class="subtitle">Paste logs → get readable blocks (Select / From / Where / Order)</div>
+        </div>
+      </div>
+
+      <div class="header-actions">
+        <button id="btnThemeToggle" class="btn ghost" type="button" title="Toggle theme">
+          <span class="btn-ico" aria-hidden="true">🌙</span>
+          <span class="btn-text">Theme</span>
+        </button>
       </div>
     </div>
 
     <div class="toolbar">
-      <button id="btnSaveJson" class="btn secondary">💾 Save JSON</button>
+      <button id="btnSaveJson" class="btn primary" type="button">💾 Save JSON</button>
     </div>
 
     <textarea id="input" placeholder="Paste TypeORM SQL logs here..." spellcheck="false"></textarea>
@@ -48,6 +58,48 @@
 
   <!-- App -->
   <script defer src="./script/app.js"></script>
+
+  <!-- Theme (no layout re-wiring; keep your original DOM/rendering) -->
+  <script>
+    (function () {
+      const root = document.documentElement;
+      const key = 'tools_theme';
+
+      function getSystemTheme() {
+        return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      }
+
+      function applyTheme(theme) {
+        root.setAttribute('data-theme', theme);
+        const btn = document.getElementById('btnThemeToggle');
+        if (btn) {
+          const ico = btn.querySelector('.btn-ico');
+          if (ico) ico.textContent = theme === 'dark' ? '🌙' : '☀️';
+        }
+      }
+
+      const saved = localStorage.getItem(key);
+      applyTheme(saved || getSystemTheme());
+
+      document.addEventListener('click', (e) => {
+        const btn = e.target && (e.target.closest ? e.target.closest('#btnThemeToggle') : null);
+        if (!btn) return;
+        const cur = root.getAttribute('data-theme') || getSystemTheme();
+        const next = cur === 'dark' ? 'light' : 'dark';
+        localStorage.setItem(key, next);
+        applyTheme(next);
+      });
+
+      if (!saved && window.matchMedia) {
+        const mq = window.matchMedia('(prefers-color-scheme: dark)');
+        const handler = () => {
+          if (localStorage.getItem(key)) return;
+          applyTheme(getSystemTheme());
+        };
+        try { mq.addEventListener('change', handler); } catch { mq.addListener(handler); }
+      }
+    })();
+  </script>
 </body>
 
 </html>
