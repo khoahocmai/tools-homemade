@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tra Cứu Từ Điển</title>
+  <link rel="stylesheet" href="look-ups-vi.css">
+  <script src="https://unpkg.com/lucide@latest" defer></script>
+</head>
+
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="header-content">
+        <div class="header-title">
+          <h1>Từ Điển Việt</h1>
+          <p>Khám phá ý nghĩa từ ngữ tiếng Việt</p>
+        </div>
+        <button id="themeToggle" class="theme-toggle" title="Đổi chế độ tối/sáng">
+          <i data-lucide="sun" id="sunIcon" class="icon hidden"></i>
+          <i data-lucide="moon" id="moonIcon" class="icon"></i>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <div class="content-wrapper">
+        <!-- Left Column: Search & Suggestions & History -->
+        <aside class="left-column">
+          <!-- Search Section -->
+          <section class="search-section">
+            <div class="search-wrapper">
+              <div class="search-input-group">
+                <i data-lucide="search" class="search-icon"></i>
+                <input type="text" id="searchInput" placeholder="Nhập từ cần tìm..." autocomplete="off"
+                  class="search-input" />
+                <div id="loadingIndicator" class="loading-spinner hidden"></div>
+              </div>
+
+              <ul id="suggestions" class="suggestions-list hidden"></ul>
+
+              <!-- History Section -->
+              <div id="historyContainer" class="history-container hidden">
+                <div class="history-header">
+                  <span class="history-label">Gần đây</span>
+                  <button id="clearHistory" class="clear-btn">Xóa sạch</button>
+                </div>
+                <div id="historyList" class="history-list"></div>
+              </div>
+            </div>
+          </section>
+        </aside>
+
+        <!-- Right Column: Result Section -->
+        <section class="right-column">
+          <div id="result" class="result-section">
+            <div id="initialState" class="initial-state">
+              <div class="initial-icon">
+                <i data-lucide="feather"></i>
+              </div>
+              <p>Bắt đầu nhập từ để khám phá</p>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <p>Dữ liệu từ <strong>minhqnd.com</strong></p>
+    </footer>
+  </div>
+
+  <script src="look-ups-vi.js"></script>
+</body>
+
+</html>
