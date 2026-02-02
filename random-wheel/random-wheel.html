@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Vòng Quay May Mắn - Lucky Spin</title>
+  <link rel="stylesheet" href="random-wheel.css" />
+</head>
+
+<body>
+  <!-- Header -->
+  <header class="header">
+    <div class="header-content">
+      <div class="header-title">
+        <h1>✨ Vòng Quay May Mắn</h1>
+        <p class="subtitle">Quay để tìm ra người may mắn</p>
+      </div>
+      <button class="toggle-btn" id="toggleBtn" aria-label="Toggle sidebar">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M15 18l-6-6 6-6" />
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <div class="container">
+    <!-- Wheel Section -->
+    <div class="wheel-section">
+      <div class="wheel-wrapper">
+        <div class="wheel-container">
+          <div class="arrow"></div>
+          <canvas id="wheel" width="700" height="700"></canvas>
+          <div class="spin-text" id="spinText">🎯 Nhấn để quay!</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sidebar Panel -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-content">
+        <h2 class="sidebar-title">📝 Danh sách mục</h2>
+        <p class="sidebar-info">Nhập mỗi mục trên một dòng. Vòng quay sẽ tự động cập nhật!</p>
+
+        <textarea id="inputList" class="input-list"
+          placeholder="Nhập các mục (mỗi dòng một mục):&#10;&#10;Ví dụ:&#10;Người 1&#10;Người 2&#10;Người 3&#10;Người 4&#10;Người 5">
+        </textarea>
+
+        <button class="btn-clear" onclick="clearList()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+          </svg>
+          Xóa danh sách
+        </button>
+
+        <div class="item-count" id="itemCount">Chưa có mục nào</div>
+
+        <!-- History Section -->
+        <div class="history-section">
+          <h3 class="history-title">📜 Lịch sử kết quả</h3>
+          <div class="history-container">
+            <ul class="history-list" id="historyList"></ul>
+          </div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <!-- Result Modal -->
+  <div class="modal" id="resultModal">
+    <div class="modal-overlay" onclick="closeOverlay()"></div>
+    <div class="modal-content">
+      <div class="modal-winner">
+        <h2 id="winnerName"></h2>
+        <p class="winner-label">Người may mắn trong lượt này!</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-primary" onclick="closeOverlay()">Tiếp tục quay</button>
+        <button class="btn btn-danger" onclick="deleteWinner()">Loại bỏ khỏi danh sách</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="random-wheel.js"></script>
+</body>
+
+</html>
