@@ -26,11 +26,11 @@
   --ghost-bg: rgba(12, 18, 32, .04);
   --ghost-bg-hover: rgba(12, 18, 32, .08);
 
-  --code-surface: #0f172a;
-  --kw: #66d9ef;
-  --str: #e6db74;
-  --num: #ae81ff;
-  --entity: #93c5fd;
+  --code-surface: #f1f5f9;
+  --kw: #1d4ed8;
+  --str: #b45309;
+  --num: #7c3aed;
+  --entity: #0f766e;
 }
 
 :root[data-theme="dark"] {
@@ -368,4 +368,179 @@ pre {
   color: var(--muted);
   font-weight: 750;
   font-size: 12px;
+}
+
+/* ===== Compatibility patch (ported from log-beautifier.html) =====
+   This restores UI behaviors that exist in JS (modal/subquery/where-tree)
+   but were missing from the split zip stylesheet. */
+
+/* 🔍 Subquery row */
+.subquery-cell {
+  padding: 8px;
+  cursor: pointer;
+  color: var(--brand);
+  font-weight: 750;
+  border-bottom: 1px solid var(--border);
+  background: transparent;
+}
+
+.subquery-cell:hover {
+  background: var(--ghost-bg-hover);
+}
+
+/* Wrap long alias text in SELECT columns & JOIN alias cells */
+.alias-cell {
+  white-space: normal;
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
+
+/* WHERE tree inside subquery modal */
+ul.where-tree {
+  list-style: none;
+  padding-left: 14px;
+  margin: 0;
+}
+
+ul.where-tree li {
+  padding: 4px 0;
+}
+
+/* Token highlights used by highlight.js */
+.undef {
+  color: #fca5a5;
+  font-weight: 800;
+}
+
+.defaultv {
+  color: #6ddd2c;
+  font-weight: 800;
+}
+
+/* Sticky header + safer wrapping for renderer tables */
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--panel-2);
+}
+
+.table td {
+  word-break: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* ===== Subquery Modal (ported from log-beautifier.html) ===== */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  padding: 18px;
+  background: rgba(0, 0, 0, .55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  overflow: auto;
+  backdrop-filter: blur(6px);
+}
+
+.modal {
+  width: min(1800px, 94vw);
+  max-height: 90vh;
+  overflow: auto;
+  background: var(--panel);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 16px 14px;
+  box-shadow: var(--shadow);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.modal-header h3 {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.modal-copy {
+  padding: 7px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--ghost-bg);
+  color: var(--text);
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.modal-copy:hover {
+  background: var(--ghost-bg-hover);
+}
+
+/* ===== Modal colors per theme (fix light mode) ===== */
+
+/* DARK: keep your “black modal” style */
+:root[data-theme="dark"] .modal-overlay {
+  background: #000;
+  backdrop-filter: none;
+}
+
+:root[data-theme="dark"] .modal {
+  background: #0b0f14;
+  border-color: rgba(255, 255, 255, .10);
+  color: rgba(255, 255, 255, .92);
+}
+
+:root[data-theme="dark"] .modal .table thead th {
+  background: #0f1722;
+}
+
+:root[data-theme="dark"] .modal .table tbody tr {
+  background: #0b0f14;
+}
+
+:root[data-theme="dark"] .modal .table tbody tr:nth-child(even) {
+  background: #0d141f;
+}
+
+:root[data-theme="dark"] .modal .table td,
+:root[data-theme="dark"] .modal .table th {
+  border-color: rgba(255, 255, 255, .08);
+}
+
+/* LIGHT: modal sáng đúng nghĩa */
+:root[data-theme="light"] .modal-overlay {
+  background: rgba(0, 0, 0, .35);
+  backdrop-filter: none;
+}
+
+:root[data-theme="light"] .modal {
+  background: #fff;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+:root[data-theme="light"] .modal .table thead th {
+  background: #f3f6ff;
+}
+
+:root[data-theme="light"] .modal .table tbody tr {
+  background: #fff;
+}
+
+:root[data-theme="light"] .modal .table tbody tr:nth-child(even) {
+  background: #f7f9ff;
+}
+
+:root[data-theme="light"] .modal .table td,
+:root[data-theme="light"] .modal .table th {
+  border-color: var(--border);
 }
