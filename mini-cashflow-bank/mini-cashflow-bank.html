@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mini Cashflow Bank — Quản lý chi tiêu (Offline)</title>
+  <link rel="stylesheet" href="mini-cashflow-bank.css">
+</head>
+
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <section class="card" id="sidebar">
+      <div class="hd">
+        <div class="title">
+          💸 Mini Cashflow Bank
+          <span class="badge" id="storageBadge">offline</span>
+        </div>
+      </div>
+      <div class="bd col">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="label">Tổng số dư</div>
+            <div class="value mono" id="kpiTotal">0</div>
+            <div class="sub" id="kpiTotalSub">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Net tháng này</div>
+            <div class="value mono" id="kpiNetMonth">0</div>
+            <div class="sub" id="kpiNetMonthSub">Thu − Chi</div>
+          </div>
+        </div>
+
+        <div class="kpi">
+          <div class="label">Tài khoản (Accounts)</div>
+          <div id="accountsList" class="col" style="gap:8px"></div>
+        </div>
+
+        <div class="kpi" id="kpiMonthByAccount">
+          <div class="label">Dòng tiền tháng (theo account)</div>
+          <div class="sub muted" style="margin-bottom:8px">In/Out có tính cả chuyển khoản. Bấm 1 account để lọc giao
+            dịch.</div>
+          <div id="monthByAccountList" class="col" style="gap:8px"></div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row" style="flex-wrap:wrap">
+          <button class="btn primary icon" id="btnAddTx">➕ Thêm giao dịch</button>
+        </div>
+
+        <div class="hint" id="storageHint">
+          Tip: Dùng <span class="kbd">Tag</span> và <span class="kbd">Mục đích</span> để phân tích dòng tiền.
+          Mọi thứ lưu trong trình duyệt của bạn (không gửi đi đâu).
+        </div>
+      </div>
+    </section>
+
+    <!-- Main -->
+    <section class="card">
+      <div class="hd">
+        <div class="tabs" id="tabs">
+          <div class="tab active" data-tab="tx">Transactions</div>
+          <div class="tab" data-tab="bud">Budgets</div>
+          <div class="tab" data-tab="acc">Accounts</div>
+          <div class="tab" data-tab="ins">Insights</div>
+          <div class="tab" data-tab="set">Settings</div>
+        </div>
+        <div class="row">
+          <button class="btn small icon" id="btnTheme" title="Đổi theme (Dark/Light)">☀️</button>
+          <input class="input" id="globalSearch" placeholder="Tìm kiếm (note/tag/mục đích/account)..."
+            style="width:min(420px, 48vw)" />
+        </div>
+      </div>
+
+      <div class="bd" id="tab_tx">
+        <div class="grid3">
+          <div class="field">
+            <label>Tháng</label>
+            <input class="input" type="month" id="filterMonth" />
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select id="filterType">
+              <option value="">Tất cả</option>
+              <option value="income">Income</option>
+              <option value="expense">Expense</option>
+              <option value="transfer">Transfer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Account</label>
+            <select id="filterAccount">
+              <option value="">Tất cả</option>
+            </select>
+          </div>
+        </div>
+        <div class="grid3" style="margin-top:10px">
+          <div class="field">
+            <label>Mục đích (Category)</label>
+            <select id="filterCategory"></select>
+          </div>
+          <div class="field">
+            <label>Tag chứa</label>
+            <input class="input" id="filterTag" placeholder="vd: cafe, projectX, travel..." />
+          </div>
+          <div class="row" style="align-items:flex-end">
+            <button class="btn" id="btnClearFilters">🧼 Clear</button>
+            <div class="right pill" id="txCountPill">0 giao dịch</div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div style="overflow:auto">
+          <table class="table" id="txTable">
+            <thead>
+              <tr>
+                <th style="min-width:110px">Date</th>
+                <th style="min-width:90px">Type</th>
+                <th style="min-width:160px">Account</th>
+                <th style="min-width:140px">Mục đích</th>
+                <th style="min-width:140px">Amount</th>
+                <th style="min-width:240px">Tags</th>
+                <th style="min-width:260px">Note</th>
+                <th style="min-width:140px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="txTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bd" id="tab_bud" style="display:none">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="label">Budget tháng</div>
+            <div class="value mono" id="budMonthLabel">—</div>
+            <div class="sub muted">Thiết lập budget theo Category để kiểm soát chi tiêu.</div>
+          </div>
+          <div class="row" style="justify-content:flex-end; flex-wrap:wrap; gap:10px">
+            <input class="input" type="month" id="budgetMonth" style="max-width:240px" title="Chọn tháng budget" />
+            <select id="budgetScope" style="max-width:220px"
+              title="Scope budget: All accounts hoặc theo account"></select>
+            <select id="budgetAddCat" style="max-width:240px" title="Chọn category để thêm budget"></select>
+            <button class="btn" id="btnAddBudgetCat" title="Thêm category vào danh sách budget">➕ Thêm mục</button>
+            <button class="btn primary" id="btnInitBudgets"
+              title="Tạo budget mặc định (Ăn uống, Lương/Thu nhập, Khác)">✨ Budget mặc định</button>
+            <button class="btn" id="btnCopyAllToScope" title="Copy budget từ All accounts sang account đang chọn"
+              style="display:none">📋 Copy từ All</button>
+          </div>
+          <div class="row" id="budgetScopePills"
+            style="justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-top:10px"></div>
+          <div class="hint" id="budgetScopeHelp" style="text-align:right; margin-top:6px"></div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div id="budgetList" class="col" style="gap:12px"></div>
+      </div>
+
+      <div class="bd" id="tab_acc" style="display:none">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="label">Danh sách Accounts</div>
+            <div class="value" style="font-size:16px">Quản lý ví / ngân hàng / quỹ</div>
+            <div class="sub muted">Số dư = tổng income − expense (+ chuyển khoản vào/ra).</div>
+          </div>
+          <div class="row" style="justify-content:flex-end; flex-wrap:wrap">
+            <button class="btn primary" id="btnAddAccount">➕ Thêm account</button>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div style="overflow:auto">
+          <table class="table">
+            <thead>
+              <tr>
+                <th style="min-width:200px">Name</th>
+                <th style="min-width:160px">Opening Balance</th>
+                <th style="min-width:160px">Current Balance</th>
+                <th style="min-width:220px">Note</th>
+                <th style="min-width:140px">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="accTbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="bd" id="tab_ins" style="display:none">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="label">Biểu đồ Net theo ngày (tháng chọn)</div>
+            <div class="value mono" id="insMonthLabel">—</div>
+            <div class="sub muted">Dương: thu nhiều hơn chi. Âm: chi vượt thu.</div>
+          </div>
+          <div class="kpi">
+            <div class="label">Top chi theo Category (tháng chọn)</div>
+            <div class="value" style="font-size:16px" id="topCatLabel">—</div>
+            <div class="sub muted" id="topCatSub">—</div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="canvasWrap">
+          <canvas id="insCanvas" width="1000" height="240"></canvas>
+          <div class="hint">Gợi ý: muốn xịn hơn thì thêm stacked bars theo category, hoặc đường cumulative balance.
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="grid2">
+          <div class="kpi">
+            <div class="label">Gợi ý “chốt sổ”</div>
+            <div class="sub" id="insTips" style="color:var(--text)"></div>
+          </div>
+          <div class="kpi">
+            <div class="label">Tags hay dùng</div>
+            <div class="chips" id="insTags"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bd" id="tab_set" style="display:none">
+        <div class="grid2">
+          <div class="kpi">
+            <div class="label">Storage</div>
+            <div class="value" style="font-size:18px" id="settingsDbTitle">—</div>
+            <div class="sub" id="settingsDbSub">—</div>
+          </div>
+          <div class="kpi">
+            <div class="label">DB file & Import</div>
+            <div class="row" style="flex-wrap:wrap">
+              <button class="btn icon" id="btnDbFile">💾 DB file</button>
+              <button class="btn icon" id="btnImport">⬆️ Import</button>
+            </div>
+            <div class="hint" id="settingsDbHint" style="margin-top:10px">—</div>
+          </div>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="dangerZone">
+          <div class="dzTitle">⚠️ Khu vực nguy hiểm (Danger zone)</div>
+          <div class="muted" style="margin:6px 0 12px">
+            Reset sẽ xoá toàn bộ dữ liệu (accounts, transactions, budgets). Nếu đang dùng DB file, app sẽ tự ghi đè file
+            đó.
+          </div>
+          <div class="row" style="flex-wrap:wrap">
+            <button class="btn danger icon" id="btnReset">🧨 Reset</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Transaction Modal -->
+  <div class="modal" id="txModal" role="dialog" aria-modal="true">
+    <div class="box">
+      <div class="hd">
+        <div class="title" id="txModalTitle">➕ Thêm giao dịch</div>
+        <button class="btn small ghost" id="btnCloseTxModal">✖</button>
+      </div>
+      <div class="bd">
+        <div class="grid3">
+          <div class="field">
+            <label>Date</label>
+            <input class="input" type="date" id="txDate" />
+          </div>
+          <div class="field">
+            <label>Type</label>
+            <select id="txType">
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
+              <option value="transfer">Transfer</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Amount (VND)</label>
+            <input class="input" id="txAmount" inputmode="numeric" placeholder="vd: 120000" />
+          </div>
+        </div>
+
+        <div class="grid3" style="margin-top:10px">
+          <div class="field" id="fieldAccountFrom">
+            <label>Account</label>
+            <select id="txAccount"></select>
+          </div>
+          <div class="field" id="fieldTransferFrom" style="display:none">
+            <label>From</label>
+            <select id="txFrom"></select>
+          </div>
+          <div class="field" id="fieldTransferTo" style="display:none">
+            <label>To</label>
+            <select id="txTo"></select>
+          </div>
+
+          <div class="field">
+            <label>Mục đích (Category)</label>
+            <select id="txCategory"></select>
+          </div>
+          <div class="field">
+            <label>Tags (phân tách bằng dấu phẩy)</label>
+            <input class="input" id="txTags" placeholder="vd: cafe, meeting, projectX" />
+          </div>
+          <div class="field">
+            <label>Receipt/Ref (tuỳ chọn)</label>
+            <input class="input" id="txRef" placeholder="vd: bill#123, momo, vcb..." />
+          </div>
+        </div>
+
+        <div class="field" style="margin-top:10px">
+          <label>Note</label>
+          <textarea id="txNote" placeholder="Ghi chú chi tiết..."></textarea>
+        </div>
+
+        <div class="sep"></div>
+
+        <div class="row" style="justify-content:flex-end; flex-wrap:wrap">
+          <button class="btn" id="btnDuplicateTx" style="display:none">🧬 Duplicate</button>
+          <button class="btn danger" id="btnDeleteTx" style="display:none">🗑️ Delete</button>
+          <button class="btn" id="btnCancelTx">Cancel</button>
+          <button class="btn primary" id="btnSaveTx">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Account Modal -->
+  <div class="modal" id="accModal" role="dialog" aria-modal="true">
+    <div class="box">
+      <div class="hd">
+        <div class="title" id="accModalTitle">🏦 Thêm account</div>
+        <button class="btn small ghost" id="btnCloseAccModal">✖</button>
+      </div>
+      <div class="bd">
+        <div class="grid2">
+          <div class="field">
+            <label>Name</label>
+            <input class="input" id="accName" placeholder="vd: Cash, VCB, Momo..." />
+          </div>
+          <div class="field">
+            <label>Opening Balance (VND)</label>
+            <input class="input" id="accOpening" inputmode="numeric" placeholder="vd: 500000" />
+          </div>
+        </div>
+        <div class="field" style="margin-top:10px">
+          <label>Note</label>
+          <input class="input" id="accNote" placeholder="vd: ví tiền mặt / ngân hàng..." />
+        </div>
+        <div class="sep"></div>
+        <div class="row" style="justify-content:flex-end; flex-wrap:wrap">
+          <button class="btn danger" id="btnDeleteAcc" style="display:none">🗑️ Delete</button>
+          <button class="btn" id="btnCancelAcc">Cancel</button>
+          <button class="btn primary" id="btnSaveAcc">Save</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hidden file input for import -->
+  <input type="file" id="fileImport" accept="application/json" style="display:none" />
+
+  <div class="toast" id="toast">
+    <div class="t" id="toastTitle">OK</div>
+    <div class="d" id="toastDesc"></div>
+  </div>
+
+  <script src="mini-cashflow-bank.js"></script>
+</body>
+
+</html>

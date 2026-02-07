@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "categories": [
+    "Ăn uống",
+    "Di chuyển",
+    "Nhà cửa",
+    "Điện nước",
+    "Mua sắm",
+    "Sức khoẻ",
+    "Giải trí",
+    "Giáo dục",
+    "Gia đình",
+    "Đầu tư",
+    "Lương/Thu nhập",
+    "Khác"
+  ],
+  "accounts": [
+    {
+      "id": "8c402479-bc6a-4bd3-b737-40aa78542e62",
+      "name": "Vietinbank",
+      "opening": 24705325,
+      "note": "Ngân hàng Vietinbank",
+      "createdAt": "2026-02-07T03:53:33.185Z"
+    },
+    {
+      "id": "b1c901ea-2e10-48e7-8659-aeac642f8f4a",
+      "name": "OCB",
+      "opening": 8778922,
+      "note": "Ngân hàng OCB",
+      "createdAt": "2026-02-07T03:54:36.498Z"
+    },
+    {
+      "id": "30182bfb-958e-4beb-b758-d3565dba286d",
+      "name": "Cash",
+      "opening": 948000,
+      "note": "Ví tiền mặt",
+      "createdAt": "2026-02-07T03:55:57.680Z"
+    }
+  ],
+  "tx": [],
+  "budgets": {
+    "2026-02": {}
+  },
+  "budgetsV2": {
+    "2026-02": {
+      "__all__": {
+        "Ăn uống": 2000000
+      },
+      "8c402479-bc6a-4bd3-b737-40aa78542e62": {}
+    }
+  },
+  "budgetVisible": {
+    "2026-02": {
+      "__all__": [
+        "Ăn uống",
+        "Lương/Thu nhập",
+        "Khác"
+      ],
+      "8c402479-bc6a-4bd3-b737-40aa78542e62": [
+        "Ăn uống",
+        "Lương/Thu nhập",
+        "Khác"
+      ]
+    }
+  }
+}
