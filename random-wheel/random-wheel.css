@@ -92,7 +92,7 @@ body {
    ============================================ */
 .container {
   display: flex;
-  height: calc(100vh - 96px);
+  height: calc(100vh - 120px);
   gap: 0;
   position: relative;
 }
@@ -105,9 +105,9 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 2rem;
+  padding: 1rem;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  overflow: auto;
+  overflow: hidden;
 }
 
 .wheel-wrapper {
@@ -118,8 +118,8 @@ body {
 
 .wheel-container {
   position: relative;
-  width: 100%;
-  max-width: 650px;
+  width: min(70vmin, 600px);
+  height: min(70vmin, 600px);
   aspect-ratio: 1;
   transform: rotate(90deg);
   transform-origin: 50% 50%;
@@ -127,7 +127,7 @@ body {
 
 .arrow {
   position: absolute;
-  top: -18px;
+  top: -14px;
   left: 50%;
   transform: translateX(-50%) rotate(90deg);
   width: 80px;
@@ -141,8 +141,6 @@ body {
 canvas {
   width: 100%;
   height: 100%;
-  max-width: 650px;
-  max-height: 650px;
   background: linear-gradient(135deg, #f5f7ff 0%, #e0e7ff 100%);
   border-radius: 50%;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);

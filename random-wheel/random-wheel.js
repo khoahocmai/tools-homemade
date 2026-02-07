@@ -115,7 +115,6 @@ function drawWheel() {
     ctx.font = `${size * 0.04}px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('Nhập danh sách mục', centerX, centerY);
     return;
   }
 
@@ -267,6 +266,7 @@ function hideModal() {
 
 function closeOverlay() {
   commitHistoryIfNeeded();
+  shuffleItems();
   hideModal();
   isSpinning = false;
   updateUI();
@@ -286,8 +286,7 @@ function deleteWinner() {
 
   if (idx >= 0) {
     items.splice(idx, 1);
-    inputList.value = items.join('\n');
-    generateWheel();
+    shuffleItems();
   }
 
   // Mark in history as removed
@@ -391,3 +390,16 @@ document.addEventListener('keydown', (e) => {
     closeOverlay();
   }
 });
+
+function shuffleItems() {
+  for (let i = items.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+
+  // Sync lại textarea
+  inputList.value = items.join('\n');
+
+  // Vẽ lại wheel
+  generateWheel();
+}
