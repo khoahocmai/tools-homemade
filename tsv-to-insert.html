@@ -224,7 +224,17 @@
       <div class="body">
         <div>
           <label>Table Name</label>
-          <input type="text" id="tableName" placeholder="Ví dụ: qsr_orders_orders -> 'public'.'qsr_orders_orders'">
+          <div style="display:flex; gap:8px;">
+            <input type="text" id="tableName" placeholder="Ví dụ: qsr_orders_orders" style="flex:1;">
+            <button class="btn-mini" onclick="saveTableName()">💾</button>
+          </div>
+
+          <div style="margin-top:6px;">
+            <select id="savedTables" onchange="selectSavedTable()"
+              style="width:100%; padding:8px; border-radius:8px; background:var(--input-bg); color:var(--text); border:1px solid var(--border);">
+              <option value="">-- Chọn table đã lưu --</option>
+            </select>
+          </div>
         </div>
 
         <div style="flex: 1; display: flex; flex-direction: column;">
@@ -303,6 +313,10 @@
         if (!line.trim()) return;
 
         const values = line.split('\t');
+        // Đảm bảo số lượng value luôn bằng số header
+        while (values.length < headers.length) {
+          values.push("");
+        }
 
         let sql = `INSERT INTO "public"."${tableName}" (\n`;
         sql += headers.map(h => `  "${h}"`).join(',\n');
@@ -348,6 +362,52 @@
         alert('Đã copy!');
       }
     }
+
+    const SAVED_TABLE_KEY = "sql_generator_saved_tables";
+
+    function getSavedTables() {
+      return JSON.parse(localStorage.getItem(SAVED_TABLE_KEY) || "[]");
+    }
+
+    function saveTables(tables) {
+      localStorage.setItem(SAVED_TABLE_KEY, JSON.stringify(tables));
+    }
+
+    function renderSavedTables() {
+      const select = document.getElementById("savedTables");
+      const tables = getSavedTables();
+
+      select.innerHTML = `<option value="">-- Chọn table đã lưu --</option>`;
+      tables.forEach(t => {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = t;
+        select.appendChild(opt);
+      });
+    }
+
+    function saveTableName() {
+      const tableName = tableNameInput.value.trim();
+      if (!tableName) return;
+
+      let tables = getSavedTables();
+      if (!tables.includes(tableName)) {
+        tables.push(tableName);
+        saveTables(tables);
+        renderSavedTables();
+      }
+    }
+
+    function selectSavedTable() {
+      const select = document.getElementById("savedTables");
+      if (select.value) {
+        tableNameInput.value = select.value;
+        generateSQL();
+      }
+    }
+
+    window.addEventListener("DOMContentLoaded", renderSavedTables);
+
   </script>
 </body>
 
