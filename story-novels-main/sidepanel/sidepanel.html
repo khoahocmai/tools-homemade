@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Story Novels Panel</title>
+    <link rel="stylesheet" href="sidepanel.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header class="header">
+            <div class="header-top">
+                <h1 class="app-title">📚 Story Novels</h1>
+                <div class="header-actions">
+                    <button id="btnCacheImages" class="icon-btn" title="Lưu tất cả ảnh xuống máy">💾</button>
+                    <button id="btnImport" class="icon-btn" title="Nhập danh sách từ CSV">📂</button>
+                    <button id="btnClear" class="icon-btn danger" title="Xóa toàn bộ dữ liệu">🗑️</button>
+                    <input type="file" id="fileInput" accept=".csv" style="display: none;" />
+                </div>
+            </div>
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Tìm kiếm truyện..." />
+                <span class="search-icon">🔍</span>
+            </div>
+        </header>
+
+        <div class="stats-bar">
+            <span id="totalStories">0 truyện</span>
+            <span id="foundStories" class="highlight">0 đã tìm thấy</span>
+        </div>
+
+        <div id="scanProgress" class="scan-progress hidden">
+            <div class="scan-status-info">
+                <span id="scanStatusText">Đang chuẩn bị...</span>
+                <span id="scanCountText">0 truyện</span>
+            </div>
+            <div class="progress-bar-container">
+                <div id="scanProgressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            <div class="scan-tab-info" id="scanTabText">Tab: --</div>
+            <button id="btnStopScanSide" class="btn-stop-mini">Dừng Quét</button>
+        </div>
+
+        <main class="story-list" id="storyList">
+            <!-- Story items will be injected here -->
+            <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <p>Danh sách trống</p>
+                <p class="small-text"> Quét trang https://metruyencv.com/tai-khoan/tu-truyen</p>
+                <svg viewBox="0 0 1320 300">
+                    <text x="50%" y="50%" dy=".35em" text-anchor="middle" class="webstoryboy" style="font-size: 15rem;">
+                        NHTS
+                    </text>
+                </svg>
+                <img src="../Untitled image.ico" style="width: 50px; height: 50px;" class="nhts-icon margin-top: 10px;"
+                    alt="NHTS Icon">
+            </div>
+        </main>
+
+        <footer class="footer">
+            <button id="btnScan" class="btn secondary">Quét Trang-Lấy truyện</button>
+            <button id="btnAutoFindAll" class="btn accent">🔍 Tìm Tất Cả</button>
+            <button id="btnExport" class="btn primary">Xuất CSV Mới</button>
+        </footer>
+
+        <div class="nhts-container">
+            <span class="power-by">Power by</span>
+            <div class="effect-liquid">NHTS</div>
+            <img src="../Untitled image.ico" class="nhts-icon" alt="NHTS Icon">
+        </div>
+    </div>
+
+    <template id="storyTemplate">
+        <div class="story-card">
+            <div class="story-cover-wrapper">
+                <img src="" alt="Cover" class="story-cover" onerror="this.src='../icons/placeholder.png'">
+                <div class="story-status-badge">Mới</div>
+            </div>
+            <div class="story-content">
+                <h3 class="story-title">Tên Truyện</h3>
+                <div class="author-info">Tác giả</div>
+                <div class="story-meta">
+                    <span class="chapter-info">Chương 0/0</span>
+                    <span class="domain-info">Chưa có nguồn</span>
+                </div>
+                <div class="story-actions">
+                    <button class="btn-action find" title="Tìm nhà mới trên Google">🔍 Tìm</button>
+                    <a href="#" target="_blank" class="btn-action open-new hidden" title="Mở link mới">🚀 Đọc</a>
+                    <button class="btn-action delete-story" title="Xóa truyện này">🗑️</button>
+                </div>
+            </div>
+            <div class="found-links hidden"></div>
+            <div class="manual-link-input hidden">
+                <input type="text" placeholder="Dán link mới..." class="input-link" />
+            </div>
+        </div>
+    </template>
+
+    <script src="sidepanel.js"></script>
+</body>
+
+</html>

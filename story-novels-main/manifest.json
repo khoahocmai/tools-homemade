@@ -1,0 +1,83 @@
+{
+    "manifest_version": 3,
+    "name": "Story Novels Side Panel",
+    "version": "1.0.0",
+    "description": "Quét tủ truyện, gom đa tab, và hỗ trợ tìm nhà mới ngay trong Side Panel.",
+    "icons": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+    },
+    "permissions": [
+        "storage",
+        "tabs",
+        "scripting",
+        "activeTab",
+        "downloads",
+        "sidePanel"
+    ],
+    "host_permissions": [
+        "<all_urls>"
+    ],
+    "action": {
+        "default_title": "Story Novels"
+    },
+    "background": {
+        "service_worker": "service_worker.js",
+        "type": "module"
+    },
+    "side_panel": {
+        "default_path": "sidepanel/sidepanel.html"
+    },
+    "content_scripts": [
+        {
+            "matches": [
+                "*://*.metruyencv.com/*"
+            ],
+            "js": [
+                "content_scripts/metruycv_adapter.js"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "*://*.metruyencv.com/*"
+            ],
+            "js": [
+                "content_scripts/api_interceptor.js"
+            ],
+            "run_at": "document_start",
+            "world": "MAIN"
+        },
+        {
+            "matches": [
+                "*://*.google.com/search*",
+                "*://*.google.com.vn/search*"
+            ],
+            "js": [
+                "content_scripts/google_search.js"
+            ],
+            "run_at": "document_idle"
+        },
+        {
+            "matches": [
+                "*://*.truyenfull.vn/*",
+                "*://*.wikidich.com/*",
+                "*://*.sangtacviet.vip/*",
+                "*://*.bachngocsach.com.vn/*",
+                "*://*.tangthuvien.vn/*",
+                "*://*.sstruyen.vn/*",
+                "*://*.dtruyen.com/*",
+                "*://*.truyenyy.vn/*",
+                "*://*.metruyenchu.com/*",
+                "*://*.sangtacviet.app/*",
+                "*://*.tiemtruyenchu.com/*",
+                "*://*.chivi.app/*"
+            ],
+            "js": [
+                "content_scripts/auto_finder.js"
+            ],
+            "run_at": "document_idle"
+        }
+    ]
+}
