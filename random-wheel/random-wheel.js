@@ -10,6 +10,9 @@ const sidebar = document.getElementById('sidebar');
 const toggleBtn = document.getElementById('toggleBtn');
 const resultModal = document.getElementById('resultModal');
 const winnerName = document.getElementById('winnerName');
+const spinDurationSec = document.getElementById('spinDurationSec');
+const spinDurationRange = document.getElementById('spinDurationRange');
+const spinRandomize = document.getElementById('spinRandomize');
 
 // ============================================
 // STATE
@@ -41,6 +44,22 @@ window.addEventListener('load', () => {
 
   // Set up canvas
   resizeCanvas();
+
+  // init + sync speed controls
+  if (spinDurationSec && spinDurationRange) {
+    syncSpinControls(6);
+
+    spinDurationSec.addEventListener('input', () => {
+      const v = clamp(parseFloat(spinDurationSec.value) || 6, 1, 20);
+      syncSpinControls(v);
+    });
+
+    spinDurationRange.addEventListener('input', () => {
+      const v = clamp(parseFloat(spinDurationRange.value) || 6, 1, 20);
+      syncSpinControls(v);
+    });
+  }
+
   window.addEventListener('resize', resizeCanvas);
 });
 
@@ -181,13 +200,13 @@ function spin() {
 
   spinAngleStart = randomFloat(10, 30);
   spinTime = 0;
-  spinTimeTotal = randomFloat(4000, 8000);
+  spinTimeTotal = getSpinDurationMs();
 
   rotateWheel();
 }
 
 function rotateWheel() {
-  spinTime += 30;
+  spinTime += TICK_MS;
 
   if (spinTime >= spinTimeTotal) {
     stopRotateWheel();
@@ -198,7 +217,7 @@ function rotateWheel() {
   startAngle += (spinAngle * Math.PI) / 180;
 
   drawWheel();
-  spinTimeout = setTimeout(rotateWheel, 30);
+  spinTimeout = setTimeout(rotateWheel, TICK_MS);
 }
 
 function stopRotateWheel() {
@@ -402,4 +421,35 @@ function shuffleItems() {
 
   // Vẽ lại wheel
   generateWheel();
+}
+
+const TICK_MS = 30;
+const SPIN_JITTER = 0.2; // ±20%
+
+function clamp(n, min, max) {
+  return Math.min(max, Math.max(min, n));
+}
+
+function getSpinDurationMs() {
+  // fallback về cơ chế cũ nếu UI chưa có
+  if (!spinDurationSec || !spinDurationRange) {
+    return randomFloat(4000, 8000);
+  }
+
+  const secRaw = parseFloat(spinDurationSec.value);
+  const sec = clamp(Number.isFinite(secRaw) ? secRaw : 6, 1, 20);
+
+  let ms = sec * 1000;
+
+  const jitterOn = !!(spinRandomize && spinRandomize.checked);
+  if (jitterOn) {
+    ms = randomFloat(ms * (1 - SPIN_JITTER), ms * (1 + SPIN_JITTER));
+  }
+
+  return ms;
+}
+
+function syncSpinControls(valueSec) {
+  if (spinDurationSec) spinDurationSec.value = String(valueSec);
+  if (spinDurationRange) spinDurationRange.value = String(valueSec);
 }

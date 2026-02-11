@@ -641,3 +641,71 @@ canvas:active {
     height: 160px;
   }
 }
+
+/* ============================================
+   SPEED CONTROLS
+   ============================================ */
+.speed-card {
+  margin: 1rem 0 1.25rem;
+  padding: 1rem;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+}
+
+.speed-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 0.75rem;
+}
+
+.speed-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.speed-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #444;
+}
+
+.speed-input {
+  width: 110px;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+  border-radius: 10px;
+  background: white;
+  font: inherit;
+}
+
+.speed-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.speed-range {
+  width: 100%;
+  margin: 0.25rem 0 0.75rem;
+}
+
+.speed-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #444;
+  user-select: none;
+  margin-bottom: 0.5rem;
+}
+
+.speed-hint {
+  font-size: 0.8rem;
+  color: #777;
+  line-height: 1.4;
+}

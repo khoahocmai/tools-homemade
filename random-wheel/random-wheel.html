@@ -60,6 +60,27 @@
           🎲 Trộn ngẫu nhiên
         </button>
 
+        <!-- Speed Controls -->
+        <div class="speed-card">
+          <h3 class="speed-title">⏱ Tốc độ quay</h3>
+
+          <div class="speed-row">
+            <label class="speed-label" for="spinDurationSec">Thời gian (giây)</label>
+            <input id="spinDurationSec" class="speed-input" type="number" min="1" max="20" step="0.5" value="6" />
+          </div>
+
+          <input id="spinDurationRange" class="speed-range" type="range" min="1" max="20" step="0.5" value="6" />
+
+          <label class="speed-check">
+            <input id="spinRandomize" type="checkbox" checked />
+            Random ±20%
+          </label>
+
+          <p class="speed-hint">
+            Chỉnh số này để nhanh/chậm có kết quả (mặc định cũ: 4–8 giây).
+          </p>
+        </div>
+
         <div class="item-count" id="itemCount">Chưa có mục nào</div>
 
         <!-- History Section -->
