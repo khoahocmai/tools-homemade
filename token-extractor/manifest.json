@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Token Extractor",
+  "version": "0.2.0",
+  "description": "Auto extract and retrieve token from project QSR",
+  "permissions": [
+    "tabs",
+    "activeTab",
+    "storage",
+    "webRequest"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "action": {
+    "default_popup": "option.html"
+  },
+  "host_permissions": [
+    "http://localhost:3000/*",
+    "http://localhost:3030/*",
+    "https://admin.qsrecom.vuigroup.com.vn/*",
+    "https://admin.qsr.vuigroup.com.vn/*",
+    "https://api.qsr.vuigroup.com.vn/*",
+    "https://api.qsrecom.vuigroup.com.vn/*"
+  ]
+}
