@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <title>CHAOS CIPHER TERMINAL</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+  <canvas id="matrix"></canvas>
+
+  <div class="scanline"></div>
+
+  <div class="terminal">
+    <h1>☠ CHAOS CIPHER v2.0</h1>
+
+    <label>> SELECT DATE</label>
+    <input type="date" id="dateInput">
+
+    <label>> SECRET KEY</label>
+    <input type="text" id="keyInput" placeholder="ENTER KEY...">
+
+    <label>> INPUT TEXT</label>
+    <textarea id="inputText"></textarea>
+
+    <div class="buttons">
+      <button onclick="encrypt()">ENCRYPT</button>
+      <button onclick="decrypt()">DECRYPT</button>
+    </div>
+
+    <label>> OUTPUT</label>
+    <textarea id="outputText"></textarea>
+  </div>
+
+  <script src="cipher.js"></script>
+</body>
+
+</html>
