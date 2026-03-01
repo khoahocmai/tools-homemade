@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Purchase Calculator - Auto Format</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --bg: #f3f4f6;
+      --card: #ffffff;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--bg);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: var(--card);
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 1.5rem;
+    }
+
+    .input-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: #4b5563;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      box-sizing: border-box;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+      margin-top: 1rem;
+    }
+
+    button:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    #result-box {
+      margin-top: 2rem;
+      padding: 1.5rem;
+      background: #eef2ff;
+      border-radius: 10px;
+      display: none;
+      text-align: center;
+    }
+
+    .cpu-value {
+      font-size: 1.5rem;
+      color: var(--primary);
+      font-weight: 800;
+      display: block;
+      margin: 10px 0;
+    }
+
+    .verdict {
+      font-weight: 600;
+      color: #374151;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+    <h2>💰 Mắc hay Rẻ?</h2>
+
+    <div class="input-group">
+      <label>Tên món đồ</label>
+      <input type="text" id="itemName" placeholder="Ví dụ: Balo đi làm">
+    </div>
+
+    <div class="input-group">
+      <label>Giá tiền (VNĐ)</label>
+      <input type="text" id="price" placeholder="1.000.000" oninput="formatMoney(this)">
+    </div>
+
+    <div class="input-group">
+      <label>Dự kiến dùng trong mấy năm?</label>
+      <input type="number" id="years" placeholder="10">
+    </div>
+
+    <div class="input-group">
+      <label>Tần suất dùng (lần/tuần)</label>
+      <input type="number" id="frequency" placeholder="7">
+    </div>
+
+    <button onclick="calculateCPU()">Tính toán ngay</button>
+
+    <div id="result-box">
+      <div id="summaryText"></div>
+      <span class="cpu-value" id="cpuResult"></span>
+      <div class="verdict" id="verdictText"></div>
+    </div>
+  </div>
+
+  <script>
+    // Hàm tự động thêm dấu chấm khi nhập liệu
+    function formatMoney(input) {
+      // Xóa tất cả ký tự không phải số
+      let value = input.value.replace(/\D/g, "");
+
+      // Thêm dấu chấm phân cách hàng nghìn
+      value = value.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+
+      input.value = value;
+    }
+
+    function calculateCPU() {
+      const name = document.getElementById('itemName').value || "Món đồ này";
+
+      // Lấy giá trị chuỗi, xóa dấu chấm để chuyển về số thuần túy
+      const priceRaw = document.getElementById('price').value.replace(/\./g, "");
+      const price = parseFloat(priceRaw);
+
+      const years = parseFloat(document.getElementById('years').value);
+      const freq = parseFloat(document.getElementById('frequency').value);
+
+      if (!price || !years || !freq) {
+        alert("Vui lòng nhập đầy đủ thông tin!");
+        return;
+      }
+
+      const totalUses = freq * 52 * years;
+      const cpu = Math.round(price / totalUses);
+
+      const resultBox = document.getElementById('result-box');
+      resultBox.style.display = 'block';
+
+      document.getElementById('summaryText').innerHTML = `Chi phí mỗi lần sử dụng <b>${name}</b> là:`;
+      document.getElementById('cpuResult').innerHTML = cpu.toLocaleString('vi-VN') + " đ / lần";
+
+      let verdict = "";
+      if (cpu < 5000) verdict = "✅ Quá hời! Rẻ hơn cả cốc trà đá.";
+      else if (cpu < 20000) verdict = "👌 Đầu tư hợp lý, đáng đồng tiền.";
+      else if (cpu < 100000) verdict = "🧐 Hơi cao, hãy cố gắng dùng nó nhiều hơn!";
+      else verdict = "💸 Khá là 'chát', cân nhắc kỹ nha!";
+
+      document.getElementById('verdictText').innerHTML = verdict;
+    }
+  </script>
+
+</body>
+
+</html>
