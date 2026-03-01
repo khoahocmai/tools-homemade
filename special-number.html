@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Special Number Detector</title>
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+    }
+
+    body {
+      margin: 0;
+      background: #0b1220;
+      color: #e8eefc;
+    }
+
+    .wrap {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .card {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 14px;
+      padding: 18px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 22px;
+    }
+
+    p {
+      margin: 6px 0 0;
+      color: rgba(232, 238, 252, 0.8);
+      line-height: 1.45;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    @media (min-width: 860px) {
+      .row {
+        grid-template-columns: 1.2fr 0.8fr;
+      }
+    }
+
+    .inputRow {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 12px;
+    }
+
+    input[type="text"] {
+      flex: 1 1 260px;
+      min-width: 220px;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.06);
+      color: #e8eefc;
+      outline: none;
+    }
+
+    button {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(115, 158, 255, 0.22);
+      color: #e8eefc;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: rgba(115, 158, 255, 0.32);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(255, 255, 255, 0.06);
+      margin: 4px 6px 0 0;
+      font-size: 13px;
+    }
+
+    .muted {
+      color: rgba(232, 238, 252, 0.75);
+    }
+
+    .grid2 {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    @media (min-width: 860px) {
+      .grid2 {
+        grid-template-columns: 1fr 1fr;
+      }
+    }
+
+    .kpi {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px dashed rgba(255, 255, 255, 0.18);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .kpi b {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .list {
+      margin-top: 12px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .item {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .item h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .item div {
+      margin-top: 6px;
+      color: rgba(232, 238, 252, 0.8);
+      line-height: 1.45;
+      font-size: 14px;
+    }
+
+    .error {
+      color: #ffd1d1;
+      background: rgba(255, 0, 0, 0.08);
+      border: 1px solid rgba(255, 0, 0, 0.20);
+      padding: 10px 12px;
+      border-radius: 12px;
+      margin-top: 10px;
+    }
+
+    .hint {
+      font-size: 13px;
+      color: rgba(232, 238, 252, 0.72);
+      margin-top: 10px;
+    }
+
+    .samples {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+    }
+
+    .samples button {
+      padding: 8px 10px;
+      font-size: 13px;
+    }
+
+    footer {
+      margin-top: 16px;
+      color: rgba(232, 238, 252, 0.6);
+      font-size: 12px;
+    }
+
+    code.inline {
+      background: rgba(255, 255, 255, 0.08);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>🔎 Special Number Detector</h1>
+      <p>
+        Nhập một <b>số nguyên dương</b> → hệ thống sẽ phân tích thừa số nguyên tố + các kiểm tra nhanh
+        (chính phương, tam giác, Armstrong, Smith, Happy, …) để suy ra các “nhãn” số đặc biệt.
+      </p>
+
+      <div class="inputRow">
+        <input id="nInput" type="text" inputmode="numeric" placeholder="Ví dụ: 28, 153, 220, 666, 1331..." />
+        <button id="btnDetect">Phát hiện</button>
+        <button id="btnClear">Xóa</button>
+      </div>
+
+      <div class="samples">
+        <button data-s="28">28 (Perfect)</button>
+        <button data-s="153">153 (Armstrong)</button>
+        <button data-s="220">220 (Amicable)</button>
+        <button data-s="666">666 (Smith)</button>
+        <button data-s="19">19 (Happy)</button>
+        <button data-s="1331">1331 (Palindrome)</button>
+      </div>
+
+      <div id="msg"></div>
+
+      <div class="row">
+        <div class="card" style="padding:14px; margin-top:14px;">
+          <b>Kết quả phát hiện</b>
+          <div id="resultPills" style="margin-top:8px;"></div>
+          <div id="resultList" class="list"></div>
+        </div>
+
+        <div class="card" style="padding:14px; margin-top:14px;">
+          <b>Thông tin tính nhanh</b>
+          <div class="grid2">
+            <div class="kpi">
+              <b>n</b>
+              <div id="kpiN" class="muted">—</div>
+            </div>
+            <div class="kpi">
+              <b>Phân tích thừa số</b>
+              <div id="kpiFactors" class="muted">—</div>
+            </div>
+            <div class="kpi">
+              <b>Tổng ước số dương (không gồm n)</b>
+              <div id="kpiSPD" class="muted">—</div>
+            </div>
+            <div class="kpi">
+              <b>Tổng chữ số</b>
+              <div id="kpiDigitSum" class="muted">—</div>
+            </div>
+          </div>
+
+          <div class="hint">
+            Gợi ý: thuật toán phân tích thừa số ở đây dùng chia thử đến <code class="inline">sqrt(n)</code>,
+            nên nếu bạn nhập số cực lớn (gần 10^12 trở lên) có thể chậm.
+          </div>
+        </div>
+      </div>
+
+      <footer>
+        Giới hạn: chạy tốt trong phạm vi <code class="inline">Number.MAX_SAFE_INTEGER</code> (≈ 9e15). Nếu bạn muốn hỗ
+        trợ BigInt (siêu lớn),
+        mình có thể nâng cấp phiên bản dùng integer-sqrt.
+      </footer>
+    </div>
+  </div>
+
+  <script>
+    /* =========================
+       Helpers
+    ========================= */
+    function parsePositiveInt(str) {
+      const cleaned = String(str).trim().replace(/[, _]/g, "");
+      if (!/^\d+$/.test(cleaned)) throw new Error("Vui lòng nhập một số nguyên dương (chỉ gồm chữ số 0-9).");
+      const n = Number(cleaned);
+      if (!Number.isFinite(n) || !Number.isInteger(n) || n <= 0) throw new Error("Vui lòng nhập một số nguyên dương hợp lệ.");
+      if (!Number.isSafeInteger(n)) throw new Error("Số quá lớn (vượt quá Number.MAX_SAFE_INTEGER).");
+      return n;
+    }
+
+    function digitsOf(n) { return String(n).split("").map(c => c.charCodeAt(0) - 48); }
+    function digitSum(n) { return digitsOf(n).reduce((a, b) => a + b, 0); }
+    function isPalindrome(n) { const s = String(n); return s === s.split("").reverse().join(""); }
+    function isPerfectSquare(n) { if (n < 0) return false; const r = Math.floor(Math.sqrt(n)); return r * r === n; }
+    function isPerfectCube(n) { if (n < 0) return false; const r = Math.round(Math.cbrt(n)); return r * r * r === n; }
+    function isPowerOfTwo(n) { return n > 0 && (n & (n - 1)) === 0; }
+
+    /* =========================
+       Number theory core
+    ========================= */
+    function isPrime(n) {
+      if (n < 2) return false;
+      if (n === 2) return true;
+      if (n % 2 === 0) return false;
+      for (let p = 3; p * p <= n; p += 2) if (n % p === 0) return false;
+      return true;
+    }
+
+    function primeFactorization(n) {
+      const factors = new Map();
+      let x = n;
+
+      let c = 0;
+      while (x % 2 === 0) { x = Math.floor(x / 2); c++; }
+      if (c > 0) factors.set(2, c);
+
+      for (let p = 3; p * p <= x; p += 2) {
+        c = 0;
+        while (x % p === 0) { x = Math.floor(x / p); c++; }
+        if (c > 0) factors.set(p, c);
+      }
+      if (x > 1) factors.set(x, 1);
+      return factors;
+    }
+
+    function sumOfDivisorsFromFactors(factors) {
+      // sigma(n) = Π (1 + p + p^2 + ... + p^k)
+      let sigma = 1;
+      for (const [p, k] of factors.entries()) {
+        let term = 1, pk = 1;
+        for (let i = 0; i < k; i++) { pk *= p; term += pk; }
+        sigma *= term;
+      }
+      return sigma;
+    }
+
+    function sumProperDivisors(n) {
+      if (n === 1) return 0;
+      const fac = primeFactorization(n);
+      const sigma = sumOfDivisorsFromFactors(fac);
+      return sigma - n;
+    }
+
+    /* =========================
+       Special number tests
+    ========================= */
+    function isHappy(n) {
+      const seen = new Set();
+      let x = n;
+      while (x !== 1 && !seen.has(x)) {
+        seen.add(x);
+        x = digitsOf(x).reduce((s, d) => s + d * d, 0);
+      }
+      return x === 1;
+    }
+
+    function isArmstrong(n) {
+      const ds = digitsOf(n);
+      const k = ds.length;
+      const sum = ds.reduce((s, d) => s + Math.pow(d, k), 0);
+      return sum === n;
+    }
+
+    // Triangular: 8n+1 is perfect square
+    function isTriangular(n) { return isPerfectSquare(8 * n + 1); }
+
+    // Powerful: every prime exponent >= 2 (n=1 thường coi là powerful)
+    function isPowerful(n) {
+      if (n === 1) return true;
+      const fac = primeFactorization(n);
+      for (const [, k] of fac.entries()) if (k < 2) return false;
+      return true;
+    }
+
+    // Smith: composite, digit sum equals digit sum of prime factors (multiplicity)
+    function isSmith(n) {
+      if (n < 4) return false;
+      if (isPrime(n)) return false;
+      const fac = primeFactorization(n);
+      let sumFactorDigits = 0;
+      for (const [p, k] of fac.entries()) {
+        for (let i = 0; i < k; i++) sumFactorDigits += digitSum(p);
+      }
+      return digitSum(n) === sumFactorDigits;
+    }
+
+    // Amicable: m = s(n), m != n, s(m) = n
+    function amicablePartner(n) {
+      const m = sumProperDivisors(n);
+      if (m !== n && m > 0 && Number.isSafeInteger(m)) {
+        if (sumProperDivisors(m) === n) return m;
+      }
+      return null;
+    }
+
+    // Harshad/Niven: n divisible by digit sum
+    function isHarshad(n) {
+      const s = digitSum(n);
+      return s !== 0 && n % s === 0;
+    }
+
+    // Automorphic: n^2 ends with n
+    function isAutomorphic(n) {
+      const sq = n * n;
+      return String(sq).endsWith(String(n));
+    }
+
+    // Perfect power: n = a^b (a>1, b>=2)
+    function isPerfectPower(n) {
+      if (n <= 3) return false;
+      const maxB = Math.floor(Math.log2(n));
+      for (let b = 2; b <= maxB; b++) {
+        const a = Math.round(Math.pow(n, 1 / b));
+        if (a > 1) {
+          let p = 1;
+          for (let i = 0; i < b; i++) p *= a;
+          if (p === n) return true;
+        }
+      }
+      return false;
+    }
+
+    // Mersenne: n = 2^p - 1  <=>  n+1 power of two
+    function isMersenne(n) { return n > 0 && isPowerOfTwo(n + 1); }
+
+    // Fibonacci: 5n^2 ± 4 is perfect square
+    function isFibonacci(n) {
+      const a = 5 * n * n + 4;
+      const b = 5 * n * n - 4;
+      return isPerfectSquare(a) || isPerfectSquare(b);
+    }
+
+    // Pronic: n = k(k+1)
+    function isPronic(n) {
+      const k = Math.floor(Math.sqrt(n));
+      return k * (k + 1) === n || (k - 1) * k === n;
+    }
+
+    // Squarefree: no prime exponent >= 2
+    function isSquarefree(n) {
+      if (n === 1) return true;
+      const fac = primeFactorization(n);
+      for (const [, k] of fac.entries()) if (k >= 2) return false;
+      return true;
+    }
+
+    // Semiprime: product of exactly two primes (multiplicity)
+    function isSemiprime(n) {
+      if (n < 4) return false;
+      const fac = primeFactorization(n);
+      let cnt = 0;
+      for (const [, k] of fac.entries()) cnt += k;
+      return cnt === 2;
+    }
+
+    // Factorial number: n = k!
+    function isFactorialNumber(n) {
+      let x = 1;
+      for (let k = 1; x <= n; k++) {
+        x *= k;
+        if (x === n) return true;
+      }
+      return n === 1; // 1 = 1! (và 0!)
+    }
+
+    /* =========================
+       Detector
+    ========================= */
+    function detectSpecial(n) {
+      const fac = primeFactorization(n);
+      const spd = sumProperDivisors(n);
+      const ds = digitSum(n);
+
+      const factorStr = [...fac.entries()]
+        .sort((a, b) => a[0] - b[0])
+        .map(([p, k]) => k === 1 ? `${p}` : `${p}^${k}`)
+        .join(" × ") || String(n);
+
+      const results = [];
+
+      // Parity
+      results.push({ type: (n % 2 === 0) ? "Số chẵn" : "Số lẻ", detail: `n % 2 = ${n % 2}` });
+
+      // Prime/composite
+      const prime = isPrime(n);
+      if (prime) results.push({ type: "Số nguyên tố (Prime)", detail: "Chỉ có 2 ước: 1 và chính nó." });
+      else results.push({ type: "Số hợp (Composite)", detail: "Có hơn 2 ước." });
+
+      // Perfect/Abundant/Deficient via sum proper divisors
+      if (n === 1) results.push({ type: "Trường hợp đặc biệt", detail: "n = 1: tổng ước riêng = 0." });
+      else if (spd === n) results.push({ type: "Số hoàn hảo (Perfect)", detail: `Tổng ước riêng = ${spd}.` });
+      else if (spd > n) results.push({ type: "Số dư dả (Abundant)", detail: `Tổng ước riêng = ${spd} > ${n}.` });
+      else results.push({ type: "Số thiếu (Deficient)", detail: `Tổng ước riêng = ${spd} < ${n}.` });
+
+      // Amicable
+      const partner = amicablePartner(n);
+      if (partner !== null) results.push({ type: "Số thân thiện (Amicable)", detail: `Bạn cặp với ${partner} vì s(n)=${partner} và s(${partner})=${n}.` });
+
+      // Armstrong / Happy / Triangular
+      if (isArmstrong(n)) {
+        const k = String(n).length;
+        results.push({ type: "Số Armstrong / Narcissistic", detail: `${n} = Σ(d^${k}) với d là từng chữ số.` });
+      }
+      if (isHappy(n)) results.push({ type: "Số hạnh phúc (Happy)", detail: "Lặp tổng bình phương chữ số cuối cùng về 1." });
+      if (isTriangular(n)) results.push({ type: "Số tam giác (Triangular)", detail: "8n + 1 là số chính phương." });
+
+      // Squares/Cubes/Palindrome/Powerful/Smith
+      if (isPerfectSquare(n)) results.push({ type: "Số chính phương (Perfect square)", detail: "√n là số nguyên." });
+      if (isPerfectCube(n)) results.push({ type: "Số lập phương (Perfect cube)", detail: "∛n là số nguyên." });
+      if (isPalindrome(n)) results.push({ type: "Số đối xứng (Palindromic)", detail: "Đọc xuôi/ngược giống nhau." });
+      if (isPowerful(n)) results.push({ type: "Số mạnh mẽ (Powerful)", detail: "Mọi thừa số nguyên tố có số mũ ≥ 2." });
+      if (isSmith(n)) results.push({ type: "Số Smith", detail: "Tổng chữ số = tổng chữ số của thừa số nguyên tố (có lặp)." });
+
+      // Extra types
+      if (isHarshad(n)) results.push({ type: "Số Harshad / Niven", detail: `n chia hết cho tổng chữ số (${ds}).` });
+      if (isAutomorphic(n)) results.push({ type: "Số Automorphic", detail: "n² kết thúc bằng chính n." });
+      if (isPerfectPower(n)) results.push({ type: "Số lũy thừa hoàn hảo (Perfect power)", detail: "Có thể viết dạng a^b, b ≥ 2." });
+      if (isMersenne(n)) results.push({ type: "Số Mersenne (2^p − 1)", detail: "n + 1 là lũy thừa của 2." });
+      if (isFibonacci(n)) results.push({ type: "Số Fibonacci", detail: "5n² ± 4 là số chính phương." });
+      if (isPronic(n)) results.push({ type: "Số Pronic (k(k+1))", detail: "Tích của hai số tự nhiên liên tiếp." });
+      if (isSquarefree(n)) results.push({ type: "Số square-free", detail: "Không chia hết cho bình phương số nguyên tố nào." });
+      if (isSemiprime(n)) results.push({ type: "Số bán nguyên tố (Semiprime)", detail: "Tích của đúng 2 số nguyên tố (tính cả lặp)." });
+      if (isFactorialNumber(n)) results.push({ type: "Số giai thừa (Factorial number)", detail: "Bằng k! với k nguyên." });
+
+      return { n, factorStr, spd, digitSum: ds, results };
+    }
+
+    /* =========================
+       UI rendering
+    ========================= */
+    const $ = (id) => document.getElementById(id);
+
+    function clearUI() {
+      $("msg").innerHTML = "";
+      $("resultPills").innerHTML = "";
+      $("resultList").innerHTML = "";
+      $("kpiN").textContent = "—";
+      $("kpiFactors").textContent = "—";
+      $("kpiSPD").textContent = "—";
+      $("kpiDigitSum").textContent = "—";
+    }
+
+    function showError(text) {
+      $("msg").innerHTML = `<div class="error">❗ ${escapeHtml(text)}</div>`;
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[c]));
+    }
+
+    function render(out) {
+      $("kpiN").textContent = String(out.n);
+      $("kpiFactors").textContent = out.factorStr;
+      $("kpiSPD").textContent = String(out.spd);
+      $("kpiDigitSum").textContent = String(out.digitSum);
+
+      // Pills (just names)
+      $("resultPills").innerHTML = out.results
+        .map(r => `<span class="pill">🏷️ ${escapeHtml(r.type)}</span>`)
+        .join("");
+
+      // Detail cards
+      $("resultList").innerHTML = out.results
+        .map(r => `
+      <div class="item">
+        <h3>${escapeHtml(r.type)}</h3>
+        <div>${escapeHtml(r.detail)}</div>
+      </div>
+    `).join("");
+    }
+
+    function onDetect() {
+      clearUI();
+      try {
+        const n = parsePositiveInt($("nInput").value);
+        const out = detectSpecial(n);
+        render(out);
+      } catch (e) {
+        showError(e.message || String(e));
+      }
+    }
+
+    /* =========================
+       Bind events
+    ========================= */
+    $("btnDetect").addEventListener("click", onDetect);
+    $("btnClear").addEventListener("click", () => { $("nInput").value = ""; clearUI(); });
+
+    $("nInput").addEventListener("keydown", (ev) => {
+      if (ev.key === "Enter") onDetect();
+    });
+
+    document.querySelectorAll("button[data-s]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        $("nInput").value = btn.getAttribute("data-s");
+        onDetect();
+      });
+    });
+  </script>
+</body>
+
+</html>
