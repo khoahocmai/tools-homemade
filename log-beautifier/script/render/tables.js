@@ -133,4 +133,20 @@
     pre.innerHTML = LB.highlightSQL(conds.join("\nAND "));
     return pre;
   };
+
+  // UPDATE SET table
+  LB.createSetTable = function createSetTable(sets) {
+    const table = document.createElement("table");
+    table.className = "table mono";
+    table.innerHTML = `<thead><tr><th style="width:40%">Column</th><th>Value</th></tr></thead><tbody></tbody>`;
+    const tbody = table.querySelector("tbody");
+
+    (sets || []).forEach((s) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td>${LB.highlightSQL(s.col || "")}</td><td>${LB.highlightSQL(s.value || "")}</td>`;
+      tbody.appendChild(tr);
+    });
+
+    return table;
+  };
 })();

@@ -86,7 +86,7 @@
 
       const formatted = LB.beautifySQL(q);
       const insertInfo = LB.extractInsertInfo(q);
-      results.push({ formatted, insertInfo });
+      results.push({ raw: q, formatted, insertInfo });
     }
 
     LB.render(results);
@@ -96,6 +96,104 @@
   LB.render = function render(results) {
     const outputDiv = LB.$("#output");
     outputDiv.innerHTML = "";
+
+    function addGroup(parentCol, title, contentNode, open = true) {
+      if (!contentNode) return;
+      const det = document.createElement("details");
+      det.className = "group";
+      det.open = open;
+      const sum = document.createElement("summary");
+      sum.textContent = title;
+      det.appendChild(sum);
+      det.appendChild(contentNode);
+      parentCol.appendChild(det);
+    }
+
+    function renderSelect(sqlFormatted, left, right) {
+      const { distinct, cols } = LB.parseSelect(sqlFormatted);
+      const tables = LB.parseFrom(sqlFormatted).map((t) => {
+        if (t.isSubquery) {
+          return {
+            type: t.type,
+            alias: t.alias,
+            isSubquery: true,
+            innerSQL: t.innerSQL,
+            table: "(subquery)",
+            on: t.on,
+          };
+        }
+        return t;
+      });
+
+      const conds = LB.parseWhere(sqlFormatted);
+      const orderBy = LB.parseOrderBy(sqlFormatted);
+      const limit = LB.parseLimit(sqlFormatted);
+
+      if (cols && cols.length) {
+        addGroup(left, distinct ? "Select Distinct Columns" : "Select Columns", LB.createSelectTable(cols), true);
+      }
+      if (tables.length) {
+        addGroup(right, "From / Joins", LB.createFromTableImproved(tables), true);
+      }
+      if (conds.length) {
+        addGroup(right, "Where", LB.createWhereBlock(conds), true);
+      }
+      if (orderBy.length) {
+        addGroup(right, "Order By", LB.createOrderByTable(orderBy), true);
+      }
+      if (limit) {
+        right.appendChild(LB.createLimitGroup(limit));
+      }
+    }
+
+    function renderInsert(r, sqlFormatted, left, right) {
+      const info = r.insertInfo || LB.extractInsertInfo(r.raw || sqlFormatted) || LB.extractInsertInfo(sqlFormatted);
+      if (!info) return;
+      left.appendChild(LB.createInsertInspector(info));
+      if (info.returning) {
+        right.appendChild(LB.createReturningGroup(info.returning));
+      }
+    }
+
+    function renderUpdate(sqlFormatted, left, right) {
+      const info = LB.parseUpdate(sqlFormatted);
+      if (!info) return;
+
+      const head = document.createElement("pre");
+      head.innerHTML = LB.highlightSQL(`UPDATE ${info.table}${info.alias ? " " + info.alias : ""}`);
+      addGroup(left, "Update Target", head, true);
+
+      addGroup(left, "Set", LB.createSetTable(info.sets), true);
+
+      if (info.fromTables && info.fromTables.length) {
+        addGroup(right, "From / Joins", LB.createFromTableImproved(info.fromTables), true);
+      }
+      if (info.whereConds && info.whereConds.length) {
+        addGroup(right, "Where", LB.createWhereBlock(info.whereConds), true);
+      }
+      if (info.returning) {
+        right.appendChild(LB.createReturningGroup(info.returning));
+      }
+    }
+
+    function renderDelete(sqlFormatted, left, right) {
+      const info = LB.parseDelete(sqlFormatted);
+      if (!info) return;
+
+      const head = document.createElement("pre");
+      head.innerHTML = LB.highlightSQL(`DELETE FROM ${info.table}${info.alias ? " " + info.alias : ""}`);
+      addGroup(left, "Delete Target", head, true);
+
+      if (info.usingTables && info.usingTables.length) {
+        addGroup(right, "Using", LB.createFromTableImproved(info.usingTables), true);
+      }
+      if (info.whereConds && info.whereConds.length) {
+        addGroup(right, "Where", LB.createWhereBlock(info.whereConds), true);
+      }
+      if (info.returning) {
+        right.appendChild(LB.createReturningGroup(info.returning));
+      }
+    }
 
     results.forEach((r, idx) => {
       const block = document.createElement("div");
@@ -119,81 +217,46 @@
       const right = document.createElement("div");
       right.className = "col-right";
 
-      if (/^\s*SELECT\b/i.test(r.formatted)) {
-        const { distinct, cols } = LB.parseSelect(r.formatted);
-        const tables = LB.parseFrom(r.formatted).map((t) => {
-          if (t.isSubquery) {
-            return {
-              type: t.type,
-              alias: t.alias,
-              isSubquery: true,
-              innerSQL: t.innerSQL,
-              table: "(subquery)",
-              on: t.on,
-            };
-          }
-          return t;
-        });
-
-        const conds = LB.parseWhere(r.formatted);
-        const orderBy = LB.parseOrderBy(r.formatted);
-        const limit = LB.parseLimit(r.formatted);
-
-        if (cols && cols.length) {
-          const det = document.createElement("details");
-          det.className = "group";
-          det.open = true;
-
-          const sum = document.createElement("summary");
-          sum.textContent = distinct ? "Select Distinct Columns" : "Select Columns";
-          det.appendChild(sum);
-
-          det.appendChild(LB.createSelectTable(cols));
-          left.appendChild(det);
+      // WITH: render CTEs, then render main statement
+      let sqlToRender = r.formatted;
+      if (/^\s*WITH\b/i.test(r.raw || r.formatted)) {
+        const w = LB.parseWith(r.raw || r.formatted);
+        if (w && w.ctes && w.ctes.length) {
+          const table = document.createElement("table");
+          table.className = "table mono";
+          table.innerHTML = `<thead><tr><th>CTE</th><th>Columns</th><th>View</th></tr></thead><tbody></tbody>`;
+          const tbody = table.querySelector("tbody");
+          w.ctes.forEach((cte) => {
+            const tr = document.createElement("tr");
+            const cols = (cte.columns || "").trim();
+            tr.innerHTML = `
+              <td>${LB.highlightSQL(cte.name)}</td>
+              <td class="alias-cell">${LB.escapeHtml(cols)}</td>
+              <td class="subquery-cell">🔍 View</td>
+            `;
+            tr.querySelector(".subquery-cell").onclick = () => LB.showSubqueryModal(cte.sql, `CTE: ${cte.name}`);
+            tbody.appendChild(tr);
+          });
+          addGroup(left, w.recursive ? "CTEs (RECURSIVE)" : "CTEs", table, true);
         }
-
-        if (tables.length) {
-          const det = document.createElement("details");
-          det.className = "group";
-          det.open = true;
-          const sum = document.createElement("summary");
-          sum.textContent = "From / Joins";
-          det.appendChild(sum);
-
-          det.appendChild(LB.createFromTableImproved(tables));
-          right.appendChild(det);
+        if (w && w.mainSQL) {
+          sqlToRender = LB.beautifySQL(w.mainSQL);
         }
+      }
 
-        if (conds.length) {
-          const det = document.createElement("details");
-          det.className = "group";
-          det.open = true;
-          const sum = document.createElement("summary");
-          sum.textContent = "Where";
-          det.appendChild(sum);
-          det.appendChild(LB.createWhereBlock(conds));
-          right.appendChild(det);
-        }
-
-        if (orderBy.length) {
-          const det = document.createElement("details");
-          det.className = "group";
-          det.open = true;
-          const sum = document.createElement("summary");
-          sum.textContent = "Order By";
-          det.appendChild(sum);
-          det.appendChild(LB.createOrderByTable(orderBy));
-          right.appendChild(det);
-        }
-
-        if (limit) {
-          right.appendChild(LB.createLimitGroup(limit));
-        }
-      } else if (/^\s*INSERT\b/i.test(r.formatted) && r.insertInfo) {
-        left.appendChild(LB.createInsertInspector(r.insertInfo));
-        if (r.insertInfo.returning) {
-          right.appendChild(LB.createReturningGroup(r.insertInfo.returning));
-        }
+      if (/^\s*SELECT\b/i.test(sqlToRender)) {
+        renderSelect(sqlToRender, left, right);
+      } else if (/^\s*INSERT\b/i.test(sqlToRender)) {
+        renderInsert(r, sqlToRender, left, right);
+      } else if (/^\s*UPDATE\b/i.test(sqlToRender)) {
+        renderUpdate(sqlToRender, left, right);
+      } else if (/^\s*DELETE\b/i.test(sqlToRender)) {
+        renderDelete(sqlToRender, left, right);
+      } else {
+        // fallback: just show formatted SQL
+        const pre = document.createElement("pre");
+        pre.innerHTML = LB.highlightSQL(sqlToRender);
+        addGroup(left, "SQL", pre, true);
       }
 
       groupsWrap.appendChild(left);
