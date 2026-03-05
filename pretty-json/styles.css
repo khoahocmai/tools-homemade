@@ -15,6 +15,11 @@
     --val-num: #b4ffb4;
     --val-bool: #ffb3c7;
     --val-null: #aaa;
+    --ui-zoom: 1;
+}
+
+#app {
+    zoom: var(--ui-zoom);
 }
 
 [data-theme="light"] {
@@ -358,7 +363,7 @@ mark.mark {
 
 .bar.sticky {
     position: sticky;
-    top: calc(var(--headerH, 0px)+8px);
+    top: var(--stickyTopOffset, 0px);
     z-index: 15;
     margin: calc(-1*var(--pad)) calc(-1*var(--pad)) 10px;
     padding: 12px 14px;

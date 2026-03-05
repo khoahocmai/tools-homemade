@@ -46,6 +46,9 @@
     fileInput: $("#fileInput"),
     btnSample: $("#btnSample"),
     btnCopy: $("#btnCopy"),
+    btnZoomIn: $("#btnZoomIn"),
+    btnZoomOut: $("#btnZoomOut"),
+    btnZoomReset: $("#btnZoomReset"),
     btnToggleAll: $("#btnToggleAll"),
     btnToggleQuotes: $("#btnToggleQuotes"),
     btnSortAZ: $("#btnSortAZ"),
@@ -71,6 +74,21 @@
   PJ.ctx = ctx;
   PJ.state = state;
 
+  const UI_ZOOM_KEY = "pj_ui_zoom";
+  const UI_ZOOM_MIN = 0.8;
+  const UI_ZOOM_MAX = 1.4;
+  const UI_ZOOM_STEP = 0.1;
+
+  function setUiZoom(z) {
+    const zoom = Math.max(UI_ZOOM_MIN, Math.min(UI_ZOOM_MAX, Number(z) || 1));
+    document.documentElement.style.setProperty("--ui-zoom", String(zoom));
+    localStorage.setItem(UI_ZOOM_KEY, String(zoom));
+    if (ctx.btnZoomReset) ctx.btnZoomReset.textContent = `${Math.round(zoom * 100)}%`;
+
+    // vì bạn có sticky offset theo header height, nên update lại cho chuẩn
+    updateStickyOffset();
+  }
+
   function removeQuotesFromKeys(txt) {
     return txt.replace(/^(\s*)"(.*?)"\s*:(\s)/gm, "$1$2:$3");
   }
@@ -85,9 +103,20 @@
     ctx.btnToggleAll.textContent = state.isCollapsedView ? "⤢ Expand all" : "⤡ Collapse all";
   }
 
+  function getUiZoom() {
+    const v = getComputedStyle(document.documentElement).getPropertyValue("--ui-zoom").trim();
+    const z = Number(v);
+    return Number.isFinite(z) && z > 0 ? z : 1;
+  }
+
   function updateStickyOffset() {
-    const h = document.querySelector("header")?.offsetHeight || 0;
-    document.documentElement.style.setProperty("--headerH", h + "px");
+    const headerH = document.querySelector("header")?.offsetHeight || 0;
+    const zoom = getUiZoom();
+
+    // 8px là khoảng cách bạn đang cộng thêm trong CSS trước đây
+    const topPx = (headerH + 8) / zoom;
+
+    document.documentElement.style.setProperty("--stickyTopOffset", `${topPx}px`);
   }
 
   function analyze() {
@@ -150,6 +179,21 @@
   PJ.app = { analyze, removeQuotesFromKeys };
 
   /* ===== Init & events ===== */
+  // init zoom
+  setUiZoom(localStorage.getItem(UI_ZOOM_KEY) || 1);
+
+  // events
+  ctx.btnZoomIn?.addEventListener("click", () => {
+    const cur = Number(localStorage.getItem(UI_ZOOM_KEY) || 1);
+    setUiZoom(cur + UI_ZOOM_STEP);
+  });
+
+  ctx.btnZoomOut?.addEventListener("click", () => {
+    const cur = Number(localStorage.getItem(UI_ZOOM_KEY) || 1);
+    setUiZoom(cur - UI_ZOOM_STEP);
+  });
+
+  ctx.btnZoomReset?.addEventListener("click", () => setUiZoom(1));
 
   // theme: default dark
   document.body.setAttribute("data-theme", "dark");
