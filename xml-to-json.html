@@ -1,0 +1,715 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>XML to JSON Converter</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #a78bfa;
+      --primary-dark: #7c3aed;
+      --bg: #f9fafb;
+      --bg-card: #ffffff;
+      --text: #1f2937;
+      --text-muted: #6b7280;
+      --border: #e5e7eb;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+    }
+
+    html.dark {
+      --bg: #0f172a;
+      --bg-card: #1e293b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #334155;
+      --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.5);
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      background: linear-gradient(135deg, var(--bg) 0%, var(--bg) 100%);
+      color: var(--text);
+      min-height: 100vh;
+      transition: background 0.3s ease;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 20px;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .header-content h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-content p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-size: 20px;
+    }
+
+    .theme-toggle:hover {
+      background: var(--primary);
+      color: white;
+      transform: scale(1.05);
+    }
+
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .main-content {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: var(--shadow);
+      transition: all 0.3s ease;
+    }
+
+    .panel:hover {
+      box-shadow: var(--shadow-lg);
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .textarea {
+      width: 100%;
+      height: 400px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.6;
+      resize: vertical;
+      transition: border 0.3s ease;
+    }
+
+    .textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.1);
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 32px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      background: var(--bg);
+      margin-bottom: 16px;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.dragover {
+      border-color: var(--primary);
+      background: rgba(167, 139, 250, 0.05);
+    }
+
+    .drop-zone-text {
+      color: var(--text-muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .drop-zone-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .controls {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+
+    button {
+      flex: 1;
+      min-width: 120px;
+      padding: 12px 20px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(167, 139, 250, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--bg);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: var(--bg-card);
+      border-color: var(--primary);
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+      transform: translateY(-2px);
+    }
+
+    .output-container {
+      position: relative;
+      height: 400px;
+    }
+
+    .output-code {
+      height: 100%;
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    pre {
+      height: 100%;
+      overflow: auto;
+      padding: 16px;
+      margin: 0;
+      background: var(--bg) !important;
+    }
+
+    code {
+      color: var(--text) !important;
+    }
+
+    .hljs {
+      background: var(--bg) !important;
+      color: var(--text) !important;
+    }
+
+    .hljs-attr {
+      color: var(--primary) !important;
+    }
+
+    .hljs-string {
+      color: #10b981 !important;
+    }
+
+    .hljs-number {
+      color: #f59e0b !important;
+    }
+
+    .hljs-literal {
+      color: var(--primary) !important;
+    }
+
+    .copy-btn-floating {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      padding: 8px 12px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 10;
+    }
+
+    .copy-btn-floating:hover {
+      background: var(--primary-dark);
+      transform: scale(1.05);
+    }
+
+    .message {
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: 13px;
+      margin-bottom: 16px;
+      display: none;
+      animation: slideDown 0.3s ease;
+    }
+
+    @keyframes slideDown {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.show {
+      display: block;
+    }
+
+    .message.success {
+      background: #d1fae5;
+      color: #065f46;
+      border: 1px solid #a7f3d0;
+    }
+
+    .message.error {
+      background: #fee2e2;
+      color: #7f1d1d;
+      border: 1px solid #fecaca;
+    }
+
+    .dark .message.success {
+      background: rgba(16, 185, 129, 0.2);
+      color: #86efac;
+      border-color: rgba(16, 185, 129, 0.3);
+    }
+
+    .dark .message.error {
+      background: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.3);
+    }
+
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 20px;
+    }
+
+    .empty-icon {
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    .hljs-string {
+      color: #a78bfa !important;
+    }
+
+    html.dark code {
+      color: #e2e8f0 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-content">
+        <h1>XML to JSON</h1>
+        <p>Chuyển đổi XML sang JSON một cách nhanh chóng và dễ dàng</p>
+      </div>
+      <button class="theme-toggle" id="themeToggle" title="Chuyển đổi chế độ sáng/tối">
+        <span id="themeIcon">🌙</span>
+      </button>
+    </div>
+
+    <div id="successMessage" class="message success"></div>
+    <div id="errorMessage" class="message error"></div>
+
+    <div class="main-content">
+      <!-- Input Panel -->
+      <div class="panel">
+        <div class="panel-title">📝 Đầu vào XML</div>
+
+        <div class="drop-zone" id="dropZone">
+          <div class="drop-zone-text">Kéo file XML vào đây hoặc nhấn để chọn</div>
+          <div class="drop-zone-hint">Hỗ trợ các file .xml</div>
+          <input type="file" id="fileInput" accept=".xml" style="display: none;">
+        </div>
+
+        <textarea id="xmlInput" class="textarea" placeholder="Dán XML của bạn ở đây..."></textarea>
+
+        <div class="controls">
+          <button class="btn-primary" id="convertBtn">
+            <span>⚡</span> Chuyển đổi
+          </button>
+          <button class="btn-secondary" id="clearBtn">
+            <span>🗑️</span> Xóa
+          </button>
+        </div>
+      </div>
+
+      <!-- Output Panel -->
+      <div class="panel">
+        <div class="panel-title">✨ Đầu ra JSON</div>
+
+        <div class="output-container">
+          <div id="outputCode" class="output-code">
+            <div class="empty-state">
+              <div class="empty-icon">📦</div>
+              <div>Kết quả sẽ hiển thị ở đây</div>
+            </div>
+          </div>
+          <button class="copy-btn-floating" id="copyBtn" style="display: none;">
+            <span>📋</span> Copy
+          </button>
+        </div>
+
+        <div class="controls" style="margin-top: 16px;">
+          <button class="btn-secondary" id="downloadBtn" style="display: none;">
+            <span>⬇️</span> Tải xuống
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    const html = document.documentElement;
+
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    if (savedTheme === 'dark') {
+      html.classList.add('dark');
+      themeIcon.textContent = '☀️';
+    }
+
+    themeToggle.addEventListener('click', () => {
+      html.classList.toggle('dark');
+      const isDark = html.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      themeIcon.textContent = isDark ? '☀️' : '🌙';
+    });
+
+    // XML to JSON Converter
+    function xmlToJson(xml) {
+      try {
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(xml, "text/xml");
+
+        if (doc.getElementsByTagName("parsererror").length > 0) {
+          throw new Error("XML không hợp lệ");
+        }
+
+        return parseNode(doc.documentElement);
+      } catch (error) {
+        throw new Error("Lỗi phân tích XML: " + error.message);
+      }
+    }
+
+    function parseNode(node) {
+
+      // TEXT NODE
+      if (node.nodeType === 3) {
+        const text = node.nodeValue.trim();
+        return text || null;
+      }
+
+      const obj = {};
+
+      // ATTRIBUTES
+      if (node.attributes && node.attributes.length > 0) {
+
+        for (let i = 0; i < node.attributes.length; i++) {
+          const attr = node.attributes[i];
+
+          // bỏ SEGMENT và BEGIN
+          if (attr.nodeName === "SEGMENT" || attr.nodeName === "BEGIN") {
+            continue;
+          }
+
+          obj[attr.nodeName] = attr.nodeValue;
+        }
+      }
+
+      let hasElementChild = false;
+
+      for (let i = 0; i < node.childNodes.length; i++) {
+
+        const child = node.childNodes[i];
+
+        // ELEMENT NODE
+        if (child.nodeType === 1) {
+
+          hasElementChild = true;
+
+          const childData = parseNode(child);
+
+          if (childData === null) continue;
+
+          if (obj[child.nodeName]) {
+
+            if (!Array.isArray(obj[child.nodeName])) {
+              obj[child.nodeName] = [obj[child.nodeName]];
+            }
+
+            obj[child.nodeName].push(childData);
+
+          } else {
+            obj[child.nodeName] = childData;
+          }
+
+        }
+
+        // TEXT NODE
+        else if (child.nodeType === 3) {
+
+          const text = child.nodeValue.trim();
+
+          if (text) {
+
+            // nếu node chỉ chứa text thì trả thẳng text
+            if (!hasElementChild) {
+              return text;
+            }
+
+          }
+
+        }
+
+      }
+
+      return Object.keys(obj).length > 0 ? obj : null;
+
+    }
+    // UI Elements
+    const xmlInput = document.getElementById('xmlInput');
+    const outputCode = document.getElementById('outputCode');
+    const convertBtn = document.getElementById('convertBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const successMessage = document.getElementById('successMessage');
+    const errorMessage = document.getElementById('errorMessage');
+
+    let currentJson = null;
+
+    // Convert Function
+    function convert() {
+      const xml = xmlInput.value.trim();
+
+      if (!xml) {
+        showError('Vui lòng nhập XML');
+        return;
+      }
+
+      try {
+        const json = xmlToJson(xml);
+        currentJson = json;
+        displayJson(json);
+        showSuccess('Chuyển đổi thành công!');
+        copyBtn.style.display = 'flex';
+        downloadBtn.style.display = 'flex';
+      } catch (error) {
+        showError(error.message);
+        outputCode.innerHTML = '<div class="empty-state"><div class="empty-icon">❌</div><div>Lỗi: ' + error.message + '</div></div>';
+        copyBtn.style.display = 'none';
+        downloadBtn.style.display = 'none';
+      }
+    }
+
+    function displayJson(json) {
+      const jsonString = JSON.stringify(json, null, 2);
+      outputCode.innerHTML = '<pre><code class="language-json">' + escapeHtml(jsonString) + '</code></pre>';
+      hljs.highlightAll();
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function showSuccess(message) {
+      successMessage.textContent = '✅ ' + message;
+      successMessage.classList.add('show');
+      setTimeout(() => successMessage.classList.remove('show'), 3000);
+    }
+
+    function showError(message) {
+      errorMessage.textContent = '❌ ' + message;
+      errorMessage.classList.add('show');
+      setTimeout(() => errorMessage.classList.remove('show'), 4000);
+    }
+
+    // Event Listeners
+    convertBtn.addEventListener('click', convert);
+    xmlInput.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+        convert();
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      xmlInput.value = '';
+      outputCode.innerHTML = '<div class="empty-state"><div class="empty-icon">📦</div><div>Kết quả sẽ hiển thị ở đây</div></div>';
+      copyBtn.style.display = 'none';
+      downloadBtn.style.display = 'none';
+      xmlInput.focus();
+    });
+
+    copyBtn.addEventListener('click', () => {
+      if (currentJson) {
+        const jsonString = JSON.stringify(currentJson, null, 2);
+        navigator.clipboard.writeText(jsonString).then(() => {
+          showSuccess('Đã sao chép vào clipboard!');
+        }).catch(() => {
+          showError('Không thể sao chép');
+        });
+      }
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      if (currentJson) {
+        const jsonString = JSON.stringify(currentJson, null, 2);
+        const blob = new Blob([jsonString], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'output.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        showSuccess('Đã tải xuống thành công!');
+      }
+    });
+
+    // File Upload
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+
+      const files = e.dataTransfer.files;
+      if (files.length > 0) {
+        handleFileUpload(files[0]);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length > 0) {
+        handleFileUpload(e.target.files[0]);
+      }
+    });
+
+    function handleFileUpload(file) {
+      if (!file.name.endsWith('.xml')) {
+        showError('Vui lòng chọn file XML');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        xmlInput.value = e.target.result;
+        convert();
+      };
+      reader.onerror = () => {
+        showError('Không thể đọc file');
+      };
+      reader.readAsText(file);
+    }
+
+    // Auto-convert on input (debounced)
+    let autoConvertTimeout;
+    xmlInput.addEventListener('input', () => {
+      clearTimeout(autoConvertTimeout);
+      autoConvertTimeout = setTimeout(() => {
+        if (xmlInput.value.trim()) {
+          convert();
+        }
+      }, 500);
+    });
+  </script>
+</body>
+
+</html>
