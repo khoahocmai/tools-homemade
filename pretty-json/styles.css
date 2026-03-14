@@ -777,3 +777,8 @@ mark.mark {
     display: grid;
     place-items: center;
 }
+
+.result-panel #tree {
+    padding-top: calc(var(--resultBarH, 0px) + 8px);
+    margin-top: calc(-1 * (var(--resultBarH, 0px) + 8px));
+}

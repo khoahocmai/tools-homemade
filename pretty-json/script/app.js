@@ -117,7 +117,13 @@
     const topPx = (headerH + 8) / zoom;
 
     document.documentElement.style.setProperty("--stickyTopOffset", `${topPx}px`);
+
+    const barH = document.querySelector("#resultSearchBar")?.offsetHeight || 0;
+    document.documentElement.style.setProperty("--resultBarH", barH + "px");
   }
+
+  PJ.ui = PJ.ui || {};
+  PJ.ui.updateStickyOffset = updateStickyOffset;
 
   function analyze() {
     ctx.tree.innerHTML = "";

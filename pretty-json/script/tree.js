@@ -114,6 +114,7 @@
       if (!line) { setPill(childInfo, ""); return; }
       const n = Array.isArray(line._childKeys) ? line._childKeys.length : 0;
       setPill(childInfo, `Con trực tiếp: ${n}`);
+      if (PJ.ui && PJ.ui.updateStickyOffset) PJ.ui.updateStickyOffset();
     }
 
     tree.addEventListener("mouseover", (e) => {

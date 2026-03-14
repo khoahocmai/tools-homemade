@@ -82,9 +82,12 @@
   }
 
   function updateFloatingNav(ctx, state) {
+    const hasTree = !!(ctx.tree && ctx.tree.childElementCount > 0);
     const barVisible = isElementInViewport(ctx.resultSearchBar);
-    const q = (ctx.search.value || "").trim();
-    const show = !!q && !barVisible;
+    const show = hasTree && !barVisible;
+
+    // bar height có thể thay đổi khi pill/nav hiện/ẩn -> sync lại buffer
+    if (PJ.ui && PJ.ui.updateStickyOffset) PJ.ui.updateStickyOffset();
 
     if (!ctx.searchFloat) return;
     ctx.searchFloat.style.display = show ? "grid" : "none";
