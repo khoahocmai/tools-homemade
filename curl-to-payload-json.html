@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="UTF-8" />
-  <title>cURL → GraphQL Super Viewer</title>
+  <title>cURL → Json Viewer</title>
 
   <!-- Prism -->
   <link id="prismTheme" href="https://cdn.jsdelivr.net/npm/prismjs@1/themes/prism-tomorrow.min.css" rel="stylesheet" />
@@ -181,9 +181,6 @@
   <h3>variables <button onclick="copyText(JSON.stringify(raw.variables, null, 2))">Copy</button></h3>
   <pre><code class="language-json" id="variables"></code></pre>
 
-  <h2>🚀 Export</h2>
-  <button onclick="exportPostman()">Export Postman Collection</button>
-
   <script>
     let raw = { url: '', headers: {}, query: '', variables: {} };
     let timer;
@@ -213,15 +210,15 @@
     });
 
     function parseCurl() {
-      const input = curlInput.value;
+      const input = curlInput.value.replace(/\\\n/g, ' ');
       if (!input.trim()) return;
 
-      raw.url = (input.match(/curl\s+'([^']+)'/) || [])[1] || '';
+      raw.url = (input.match(/curl\s+(?:--\S+\s+)*'([^']+)'/) || [])[1] || '';
       url.textContent = raw.url;
 
       raw.headers = {};
       raw.authToken = '';
-      [...input.matchAll(/-H\s+'([^:]+):\s*([^']+)'/g)].forEach(m => {
+      [...input.matchAll(/(?:-H|--header)\s+'([^:]+):\s*([^']+)'/g)].forEach(m => {
         const key = m[1];
         const val = m[2];
         raw.headers[key] = val;
@@ -239,7 +236,7 @@
         tokenContainer.style.display = 'none';
       }
 
-      [...input.matchAll(/-H\s+'([^:]+):\s*([^']+)'/g)]
+      [...input.matchAll(/(?:-H|--header)\s+'([^:]+):\s*([^']+)'/g)]
         .forEach(m => raw.headers[m[1]] = m[2]);
 
       const masked = {};
@@ -261,12 +258,19 @@
           </tr>`;
         }).join('');
 
-      const bodyMatch = input.match(/--data-raw\s+\$?'([\s\S]+)'$/);
+      const bodyMatch = input.match(/--data(?:-raw)?\s+\$?'([\s\S]*?)'/);
       if (!bodyMatch) return;
 
       const body = JSON.parse(bodyMatch[1]);
 
-      operationName.textContent = body.operationName ?? '';
+      let opName = body.operationName;
+
+      if (!opName && body.query) {
+        const m = body.query.match(/\b(query|mutation|subscription)\s+(\w+)/);
+        if (m) opName = m[2];
+      }
+
+      operationName.textContent = opName ?? '';
       raw.query = body.query?.replace(/\\n/g, '\n') ?? '';
       raw.variables = body.variables ?? {};
 
@@ -284,33 +288,6 @@
         msg.style.display = 'block';
         setTimeout(() => msg.style.display = 'none', 1500);
       });
-    }
-
-    function exportPostman() {
-      const postman = {
-        info: {
-          name: "GraphQL (from cURL)",
-          schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-        },
-        item: [{
-          name: raw.url,
-          request: {
-            method: "POST",
-            header: Object.entries(raw.headers).map(([k, v]) => ({ key: k, value: v })),
-            url: raw.url,
-            body: {
-              mode: "raw",
-              raw: JSON.stringify({ query: raw.query, variables: raw.variables }, null, 2)
-            }
-          }
-        }]
-      };
-
-      const blob = new Blob([JSON.stringify(postman, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = 'postman-graphql.json';
-      a.click();
     }
 
     function copyHeaderValue(key) {
