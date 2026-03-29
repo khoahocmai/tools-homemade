@@ -1,0 +1,1243 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BKAV Order Tax Checker</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --card: #ffffff;
+      --line: #d8dee9;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --blue: #2563eb;
+      --green: #16a34a;
+      --yellow: #f59e0b;
+      --red: #dc2626;
+      --soft: #eef4ff;
+      --readonly: #f8fafc;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Inter, Arial, sans-serif;
+      color: var(--text);
+      background: var(--bg);
+    }
+
+    .container {
+      max-width: 1800px;
+      margin: 20px auto 40px;
+      padding: 0 16px;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0 0 8px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 16px;
+      box-shadow: 0 6px 18px rgba(15, 23, 42, 0.04);
+      margin-bottom: 16px;
+    }
+
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(220px, 1fr));
+    }
+
+    .grid-2 {
+      grid-template-columns: repeat(2, minmax(280px, 1fr));
+    }
+
+    @media (max-width: 1100px) {
+
+      .grid-4,
+      .grid-3,
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      font-weight: 600;
+    }
+
+    input,
+    select,
+    textarea,
+    button {
+      font: inherit;
+    }
+
+    input[type="text"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+    }
+
+    input[readonly] {
+      background: var(--readonly);
+      color: #334155;
+    }
+
+    input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      vertical-align: middle;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    button {
+      border: 1px solid var(--line);
+      background: white;
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 10px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.primary {
+      background: var(--blue);
+      color: white;
+      border-color: var(--blue);
+    }
+
+    button.success {
+      background: var(--green);
+      color: white;
+      border-color: var(--green);
+    }
+
+    button.warn {
+      background: var(--yellow);
+      color: white;
+      border-color: var(--yellow);
+    }
+
+    button.danger {
+      background: var(--red);
+      color: white;
+      border-color: var(--red);
+    }
+
+    .muted {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .pill {
+      display: inline-block;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: var(--soft);
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .inline-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 0;
+    }
+
+    .compact-mode {
+      --table-font-size: 12px;
+      --cell-padding-y: 4px;
+      --cell-padding-x: 6px;
+      --min-col-width: 110px;
+    }
+
+    .data-card table th,
+    .data-card table td,
+    .data-card table input,
+    .data-card table select {
+      font-size: calc(var(--table-font-size, 14px) * var(--ui-scale, 1));
+    }
+
+    .data-card table th,
+    .data-card table td {
+      padding: calc(var(--cell-padding-y, 8px) * var(--ui-scale, 1)) calc(var(--cell-padding-x, 8px) * var(--ui-scale, 1));
+    }
+
+    .data-card table th {
+      min-width: calc(var(--min-col-width, 140px) * var(--ui-scale, 1));
+    }
+
+    .data-card .col-no {
+      transform: scale(var(--ui-scale, 1));
+      transform-origin: left center;
+    }
+
+    .fit-screen {
+      max-height: calc(100vh - 280px);
+      width: 100%;
+    }
+
+    .data-card {
+      width: 100%;
+    }
+
+    .data-card .table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+
+    .data-card table {
+      width: max-content;
+      min-width: 100%;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 1600px;
+      background: white;
+    }
+
+    th,
+    td {
+      border: 1px solid var(--line);
+      padding: var(--cell-padding-y, 8px) var(--cell-padding-x, 8px);
+      vertical-align: top;
+    }
+
+    th {
+      position: sticky;
+      top: 0;
+      z-index: 2;
+      background: #f8fafc;
+      min-width: var(--min-col-width, 140px);
+    }
+
+    th .col-no {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      border-radius: 999px;
+      align-items: center;
+      justify-content: center;
+      background: #e2e8f0;
+      font-size: 12px;
+      margin-right: 6px;
+    }
+
+    th .head-top {
+      display: flex;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    th .formula {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+      white-space: normal;
+      margin-top: 6px;
+    }
+
+    td .row-actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .readonly-cell {
+      background: #f8fafc;
+    }
+
+    .settings-table {
+      width: 100%;
+      min-width: 920px;
+    }
+
+    .summary-box {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(220px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .metric {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .metric .label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .metric .value {
+      font-size: 24px;
+      font-weight: 800;
+      word-break: break-word;
+    }
+
+    .tax-grid {
+      overflow: auto;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+    }
+
+    .tax-grid table {
+      min-width: 760px;
+    }
+
+    .note {
+      padding: 12px;
+      border: 1px dashed var(--line);
+      border-radius: 12px;
+      background: #fcfdff;
+      line-height: 1.6;
+    }
+
+    .footer-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 8px;
+    }
+
+    .data-card table td {
+      padding: 6px;
+    }
+
+    .data-card table td {
+      padding: 6px;
+    }
+
+    .data-card table input,
+    .data-card table select {
+      width: 100%;
+      height: 38px;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      box-sizing: border-box;
+      appearance: none;
+    }
+
+    .readonly-cell input {
+      background: #f8fafc;
+    }
+
+    .col-rowNo {
+      width: 60px;
+      min-width: 60px !important;
+      max-width: 60px;
+    }
+
+    .col-rowNo input {
+      text-align: center;
+    }
+
+    .highlight-green,
+    .highlight-green input,
+    .highlight-green select {
+      background: #e8f5e9 !important;
+    }
+
+    .highlight-green {
+      border-color: #a5d6a7 !important;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="card">
+      <h1>BKAV Order Tax Checker</h1>
+      <div class="toolbar">
+        <button id="addSampleBtn">Nạp dữ liệu mẫu</button>
+        <button class="success" id="saveBtn">Lưu cấu hình + dữ liệu</button>
+        <button id="loadBtn">Tải từ local</button>
+        <button class="warn" id="exportBtn">Export JSON</button>
+        <button id="importBtn">Import JSON</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none" />
+        <button class="danger" id="resetBtn">Reset</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>1. Cung cấp thông tin cần thiết</h2>
+      <div class="grid grid-4">
+        <div>
+          <label>
+            <input type="checkbox" id="pricesIncludeVat" checked /> Giá đầu vào đã bao gồm VAT
+          </label>
+          <div class="small">Áp dụng cho cột đơn giá và khuyến mãi sản phẩm.</div>
+        </div>
+        <div>
+          <label for="orderDiscount">Tiền giảm giá toàn đơn hàng</label>
+          <input type="number" id="orderDiscount" value="0" step="0.01" />
+        </div>
+        <div>
+          <label for="globalDecimals">Số lẻ mặc định cho cột mới</label>
+          <input type="number" id="globalDecimals" value="2" min="0" max="8" step="1" />
+        </div>
+        <div>
+          <label for="currencyLabel">Nhãn tiền tệ</label>
+          <input type="text" id="currencyLabel" value="VND" />
+        </div>
+      </div>
+      <div class="summary-box">
+        <div class="metric">
+          <div class="label">Tổng tiền đã bao gồm VAT</div>
+          <div class="value" id="metricTotalIncludeVat">0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Tổng giảm giá sản phẩm đã gồm VAT</div>
+          <div class="value" id="metricPromoIncludeVat">0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Tổng giảm giá phân bổ toàn đơn</div>
+          <div class="value" id="metricAllocatedDiscount">0</div>
+        </div>
+        <div class="metric">
+          <div class="label">Tổng thanh toán cuối</div>
+          <div class="value" id="metricGrandTotal">0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card data-card compact-mode">
+      <div class="section-head">
+        <div>
+          <h2>2. Bảng dữ liệu</h2>
+        </div>
+        <label class="inline-label">Ngôn ngữ
+          <select id="languageToggle">
+            <option value="vi">VN</option>
+            <option value="en">EN</option>
+          </select>
+        </label>
+      </div>
+      <div class="table-wrap fit-screen">
+        <table id="dataTable"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>3. Tổng hợp theo tax rate</h2>
+      <div class="small" style="margin-bottom: 10px;">Tự động gom nhóm các dòng dữ liệu theo từng mức thuế đang có trong
+        bảng.</div>
+      <div class="tax-grid">
+        <table id="taxSummaryTable"></table>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>4. Ghi chú công thức đang dùng</h2>
+      <div class="note">
+        <div><strong>[6]</strong> Thành tiền gồm VAT = <strong>[4]</strong> Đơn giá × <strong>[5]</strong> Số lượng
+        </div>
+        <div><strong>[9]</strong> Thành tiền gồm VAT sau khuyến mãi sản phẩm = <strong>[6]</strong> Thành tiền gồm VAT −
+          <strong>[8]</strong> Tiền khuyến mãi sản phẩm
+        </div>
+        <div><strong>[10]</strong> Tỷ trọng sản phẩm = <strong>[9]</strong> Thành tiền gồm VAT sau khuyến mãi sản phẩm /
+          tổng B của các dòng tính vào phân bổ giảm giá toàn đơn (không tính loại ghi chú, các loại phí)</div>
+        <div><strong>[11]</strong> Giảm giá phân bổ cho sản phẩm = Tiền giảm giá toàn đơn × <strong>[10]</strong> Tỷ
+          trọng sản phẩm</div>
+        <div><strong>[12]</strong> Tổng giảm giá gồm VAT = <strong>[8]</strong> Khuyến mãi sản phẩm +
+          <strong>[11]</strong> Giảm giá phân bổ
+        </div>
+        <div>Nếu đầu vào đã gồm VAT: <strong>[13]</strong> Đơn giá chưa VAT = <strong>[4]</strong> Đơn giá / (1 +
+          <strong>[7]</strong> Tỷ lệ thuế / 100). Nếu chưa gồm VAT: <strong>[13]</strong> Đơn giá chưa VAT =
+          <strong>[4]</strong> Đơn giá
+        </div>
+        <div><strong>[14]</strong> Thành tiền chưa VAT = <strong>[13]</strong> Đơn giá chưa VAT × <strong>[5]</strong>
+          Số lượng</div>
+        <div><strong>[15]</strong> Giá trị thuế trước giảm giá = <strong>[6]</strong> Thành tiền gồm VAT −
+          <strong>[14]</strong> Thành tiền chưa VAT
+        </div>
+        <div><strong>[16]</strong> Tổng tiền cuối = <strong>[14]</strong> Thành tiền chưa VAT − <strong>[12]</strong>
+          Tổng giảm giá gồm VAT + <strong>[15]</strong> Giá trị thuế trước giảm giá</div>
+      </div>
+    </div>
+  </div>
+
+  </div>
+
+  </div>
+
+  <script>
+    const ITEM_TYPE_OPTIONS = [
+      { value: 0, label: 'Hàng hóa', labelEn: 'Goods' },
+      { value: 2, label: 'Phí khác', labelEn: 'Another fee' },
+      { value: 4, label: 'Ghi chú', labelEn: 'Note' },
+      { value: 5, label: 'Phụ phí', labelEn: 'Surcharge' },
+    ];
+
+    const STORAGE_KEY = 'bkav-order-tax-checker-state-v1';
+
+    const defaultColumnsConfig = [
+      { key: 'rowNo', label: 'STT', labelEn: 'No.', order: 1, decimals: 0, editable: false },
+      { key: 'itemType', label: 'Loại sản phẩm', labelEn: 'Item type', order: 2, decimals: 0, editable: true },
+      { key: 'itemName', label: 'Tên sản phẩm', labelEn: 'Product name', order: 3, decimals: 0, editable: true },
+      { key: 'unitPrice', label: 'Đơn giá', labelEn: 'Unit price', order: 4, decimals: 2, editable: true },
+      { key: 'quantity', label: 'Số lượng', labelEn: 'Quantity', order: 5, decimals: 3, editable: true },
+      { key: 'lineTotalInclVat', label: 'Thành tiền (gồm VAT)', labelEn: 'Amount (incl. VAT)', order: 6, decimals: 2, editable: false },
+      { key: 'taxRate', label: 'Tỷ lệ thuế (%)', labelEn: 'Tax rate (%)', order: 7, decimals: 2, editable: true },
+      { key: 'productPromo', label: 'KM sản phẩm', labelEn: 'Product discount', order: 8, decimals: 2, editable: true },
+      { key: 'lineAfterPromoInclVat', label: 'Thành tiền sau KM SP (gồm VAT)', labelEn: 'Amount after discount (incl. VAT)', order: 9, decimals: 2, editable: false },
+      { key: 'weight', label: 'Tỷ trọng', labelEn: 'Weight ratio', order: 10, decimals: 6, editable: false },
+      { key: 'allocatedOrderDiscount', label: 'Giảm giá phân bổ (gồm VAT)', labelEn: 'Allocated order discount (incl. VAT)', order: 11, decimals: 2, editable: false },
+      { key: 'totalDiscountInclVat', label: 'Tổng giảm giá (gồm VAT)', labelEn: 'Total discount (incl. VAT)', order: 12, decimals: 2, editable: false },
+      { key: 'unitPriceExclVat', label: 'Giá chưa VAT', labelEn: 'Unit price (excl. VAT)', order: 13, decimals: 2, editable: false },
+      { key: 'lineTotalExclVat', label: 'Thành tiền chưa VAT', labelEn: 'Amount (excl. VAT)', order: 14, decimals: 2, editable: false },
+      { key: 'taxAmount', label: 'Giá trị VAT trước giảm', labelEn: 'Tax amount before discount', order: 15, decimals: 2, editable: false },
+      // { key: 'discountExclVat', label: 'Tổng giảm giá chưa VAT', labelEn: 'Total discount (excl. VAT)', order: 16, decimals: 2, editable: false },
+      // { key: 'lineNetExclVat', label: 'Thành tiền cuối chưa VAT', labelEn: 'Net amount (excl. VAT)', order: 17, decimals: 2, editable: false },
+      // { key: 'lineNetVat', label: 'VAT cuối sau giảm giá', labelEn: 'Final VAT', order: 18, decimals: 2, editable: false },
+      { key: 'lineGrandTotal', label: 'Tổng tiền cuối', labelEn: 'Grand total', order: 19, decimals: 2, editable: false },
+      { key: 'actions', label: 'Thao tác', labelEn: 'Actions', order: 20, decimals: 0, editable: false },
+    ];
+
+    function createEmptyRow() {
+      return {
+        itemName: '',
+        unitPrice: 0,
+        quantity: 1,
+        taxRate: 8,
+        productPromo: 0,
+        itemType: 0,
+      };
+    }
+
+    const state = {
+      pricesIncludeVat: true,
+      orderDiscount: 0,
+      globalDecimals: 2,
+      currencyLabel: 'VND',
+      uiScale: 100,
+      tableDensity: 'compact',
+      columnWidthMode: 'tight',
+      language: 'vi',
+      columns: JSON.parse(JSON.stringify(defaultColumnsConfig)),
+      rows: [createEmptyRow()],
+    };
+
+    const dom = {
+      pricesIncludeVat: document.getElementById('pricesIncludeVat'),
+      orderDiscount: document.getElementById('orderDiscount'),
+      globalDecimals: document.getElementById('globalDecimals'),
+      currencyLabel: document.getElementById('currencyLabel'),
+      dataTable: document.getElementById('dataTable'),
+      taxSummaryTable: document.getElementById('taxSummaryTable'),
+      metricTotalIncludeVat: document.getElementById('metricTotalIncludeVat'),
+      metricPromoIncludeVat: document.getElementById('metricPromoIncludeVat'),
+      metricAllocatedDiscount: document.getElementById('metricAllocatedDiscount'),
+      metricGrandTotal: document.getElementById('metricGrandTotal'),
+      zoomOutBtn: document.getElementById('zoomOutBtn'),
+      zoomInBtn: document.getElementById('zoomInBtn'),
+      zoomValue: document.getElementById('zoomValue'),
+      tableDensity: document.getElementById('tableDensity'),
+      columnWidthMode: document.getElementById('columnWidthMode'),
+      languageToggle: document.getElementById('languageToggle'),
+    };
+
+    function toNumber(value) {
+      const n = Number(value);
+      return Number.isFinite(n) ? n : 0;
+    }
+
+    function roundTo(value, decimals) {
+      const factor = Math.pow(10, Math.max(0, decimals || 0));
+      return Math.round((toNumber(value) + Number.EPSILON) * factor) / factor;
+    }
+
+    function formatNumber(value, decimals = 2) {
+      return roundTo(value, decimals).toLocaleString('en-US', {
+        minimumFractionDigits: decimals,
+        maximumFractionDigits: decimals,
+      });
+    }
+
+    function taxFactor(row) {
+      return 1 + toNumber(row.taxRate) / 100;
+    }
+
+    function isEmptyRow(row) {
+      return !String(row.itemName || '').trim();
+    }
+
+    function isAllocatableRow(row) {
+      return !row._isEmpty && ![2, 4, 5].includes(Number(row.itemType));
+    }
+
+    function isSummableRow(row) {
+      return !row._isEmpty && Number(row.itemType) !== 4;
+    }
+
+    function computeRows() {
+      const prepared = state.rows.map((row, idx) => {
+        const unitPrice = toNumber(row.unitPrice);
+        const quantity = toNumber(row.quantity);
+        const promo = toNumber(row.productPromo);
+        const rate = toNumber(row.taxRate);
+        const factor = 1 + rate / 100;
+
+        const lineTotalInclVatRaw = unitPrice * quantity;
+        const lineAfterPromoInclVatRaw = lineTotalInclVatRaw - promo;
+
+        return {
+          ...row,
+          _rowNo: idx + 1,
+          _isEmpty: isEmptyRow(row),
+          _factor: factor,
+          _lineTotalInclVatRaw: lineTotalInclVatRaw,
+          _lineAfterPromoInclVatRaw: lineAfterPromoInclVatRaw,
+        };
+      });
+
+      const totalAllocBase = prepared
+        .filter(isAllocatableRow)
+        .reduce((sum, row) => sum + row._lineAfterPromoInclVatRaw, 0);
+
+      return prepared.map((row) => {
+        const weightRaw = totalAllocBase > 0 && isAllocatableRow(row)
+          ? row._lineAfterPromoInclVatRaw / totalAllocBase
+          : 0;
+
+        const allocatedOrderDiscountRaw = toNumber(state.orderDiscount) * weightRaw;
+        const totalDiscountInclVatRaw = toNumber(row.productPromo) + allocatedOrderDiscountRaw;
+
+        const unitPriceExclVatRaw = state.pricesIncludeVat
+          ? row.unitPrice / row._factor
+          : row.unitPrice;
+
+        const lineTotalExclVatRaw = unitPriceExclVatRaw * row.quantity;
+        const taxAmountRaw = row._lineTotalInclVatRaw - lineTotalExclVatRaw;
+
+        const discountExclVatRaw = state.pricesIncludeVat
+          ? totalDiscountInclVatRaw / row._factor
+          : totalDiscountInclVatRaw;
+
+        const lineNetExclVatRaw = lineTotalExclVatRaw - discountExclVatRaw;
+        const lineNetVatRaw = lineNetExclVatRaw * (toNumber(row.taxRate) / 100);
+        const lineGrandTotalRaw = lineNetExclVatRaw + lineNetVatRaw;
+
+        return {
+          ...row,
+          weightRaw,
+          allocatedOrderDiscountRaw,
+          totalDiscountInclVatRaw,
+          unitPriceExclVatRaw,
+          lineTotalExclVatRaw,
+          taxAmountRaw,
+          discountExclVatRaw,
+          lineNetExclVatRaw,
+          lineNetVatRaw,
+          lineGrandTotalRaw,
+        };
+      });
+    }
+
+    function getDisplayValue(row, key) {
+      switch (key) {
+        case 'rowNo': return row._rowNo;
+        case 'itemType': return row.itemType;
+        case 'itemName': return row.itemName;
+        case 'unitPrice': return row.unitPrice;
+        case 'quantity': return row.quantity;
+        case 'lineTotalInclVat': return row._lineTotalInclVatRaw;
+        case 'taxRate': return row.taxRate;
+        case 'productPromo': return row.productPromo;
+        case 'lineAfterPromoInclVat': return row._lineAfterPromoInclVatRaw;
+        case 'weight': return row.weightRaw;
+        case 'allocatedOrderDiscount': return row.allocatedOrderDiscountRaw;
+        case 'totalDiscountInclVat': return row.totalDiscountInclVatRaw;
+        case 'unitPriceExclVat': return row.unitPriceExclVatRaw;
+        case 'lineTotalExclVat': return row.lineTotalExclVatRaw;
+        case 'taxAmount': return row.taxAmountRaw;
+        case 'discountExclVat': return row.discountExclVatRaw;
+        case 'lineNetExclVat': return row.lineNetExclVatRaw;
+        case 'lineNetVat': return row.lineNetVatRaw;
+        case 'lineGrandTotal': return row.lineGrandTotalRaw;
+        default: return '';
+      }
+    }
+
+    function getSortedColumns() {
+      return [...state.columns].sort((a, b) => a.order - b.order);
+    }
+
+    function isGreenHighlightedColumn(col) {
+      return ['totalDiscountInclVat', 'unitPriceExclVat', 'lineTotalExclVat', 'taxAmount'].includes(col.key);
+    }
+
+    function renderDataTable() {
+      const computedRows = computeRows();
+      const cols = getSortedColumns();
+
+      const thead = `
+        <thead>
+          <tr>
+            ${cols.map((col, idx) => `
+              <th class="col-${col.key} ${isGreenHighlightedColumn(col) ? 'highlight-green' : ''}">
+                <div class="head-top">
+                  <span class="col-no">${idx + 1}</span>
+                  <span>${escapeHtml(getColumnLabel(col))}</span>
+                </div>
+              </th>
+            `).join('')}
+          </tr>
+        </thead>
+      `;
+
+      const tbody = `
+        <tbody>
+          ${computedRows.map((row, rowIndex) => `
+            <tr>
+              ${cols.map((col) => `
+                <td class="col-${col.key} ${col.editable ? '' : 'readonly-cell'} ${isGreenHighlightedColumn(col) ? 'highlight-green' : ''}">
+                  ${renderCell(col, row, rowIndex)}
+                </td>
+              `).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+
+      dom.dataTable.innerHTML = thead + tbody;
+      bindTableEvents();
+      renderTopMetrics(computedRows);
+    }
+
+    function renderCell(col, row, rowIndex) {
+      const value = getDisplayValue(row, col.key);
+
+      if (col.key === 'actions') {
+        return `
+          <div class="row-actions">
+            <button data-action="duplicate" data-row="${rowIndex}">Nhân bản</button>
+            <button class="danger" data-action="delete" data-row="${rowIndex}">Xóa</button>
+          </div>
+        `;
+      }
+
+      if (col.key === 'itemType' && col.editable) {
+        return `
+          <select data-row="${rowIndex}" data-field="itemType">
+            ${ITEM_TYPE_OPTIONS.map((opt) => `
+              <option value="${opt.value}" ${Number(value) === opt.value ? 'selected' : ''}>
+                ${escapeHtml(getItemTypeLabel(opt))}
+              </option>
+            `).join('')}
+          </select>
+        `;
+      }
+
+      if (col.editable) {
+        const inputType = ['itemName'].includes(col.key) ? 'text' : 'number';
+        const step = inputType === 'number' ? '0.01' : undefined;
+        return `<input data-row="${rowIndex}" data-field="${col.key}" type="${inputType}" ${step ? `step="${step}"` : ''} value="${inputType === 'text' ? escapeHtml(String(value ?? '')) : value}" />`;
+      }
+
+      if (col.key === 'itemType') {
+        const opt = ITEM_TYPE_OPTIONS.find((x) => x.value === Number(value));
+        return opt ? escapeHtml(getItemTypeLabel(opt)) : value;
+      }
+
+      const display = typeof value === 'number' ? formatNumber(value, col.decimals) : escapeHtml(String(value ?? ''));
+      return `<input readonly value="${display}" />`;
+    }
+
+    function renderTopMetrics(computedRows) {
+      const totalIncludeVat = computedRows
+        .filter(isSummableRow)
+        .reduce((sum, row) => sum + row._lineTotalInclVatRaw, 0);
+
+      const promoIncludeVat = computedRows
+        .filter(isSummableRow)
+        .reduce((sum, row) => sum + toNumber(row.productPromo), 0);
+
+      const allocatedDiscount = computedRows
+        .filter(isSummableRow)
+        .reduce((sum, row) => sum + row.allocatedOrderDiscountRaw, 0);
+
+      const grandTotal = computedRows
+        .filter(isSummableRow)
+        .reduce((sum, row) => sum + row.lineGrandTotalRaw, 0);
+
+      dom.metricTotalIncludeVat.textContent = `${formatNumber(totalIncludeVat, 2)} ${state.currencyLabel}`;
+      dom.metricPromoIncludeVat.textContent = `${formatNumber(promoIncludeVat, 2)} ${state.currencyLabel}`;
+      dom.metricAllocatedDiscount.textContent = `${formatNumber(allocatedDiscount, 2)} ${state.currencyLabel}`;
+      dom.metricGrandTotal.textContent = `${formatNumber(grandTotal, 2)} ${state.currencyLabel}`;
+    }
+
+    function renderTaxSummary() {
+      if (!dom.taxSummaryTable) return;
+
+      const computedRows = computeRows().filter(isSummableRow);
+      const groups = new Map();
+
+      computedRows.forEach((row) => {
+        const rate = toNumber(row.taxRate);
+        const key = String(rate);
+
+        if (!groups.has(key)) {
+          groups.set(key, {
+            taxRate: rate,
+            lineTotalExclVat: 0,
+            taxAmount: 0,
+            discountExclVat: 0,
+            taxDiscountAmount: 0,
+            totalDiscountInclVat: 0,
+            lineNetExclVat: 0,
+            lineNetVat: 0,
+            lineGrandTotal: 0,
+          });
+        }
+
+        const target = groups.get(key);
+        target.lineTotalExclVat += toNumber(row.lineTotalExclVatRaw);
+        target.taxAmount += toNumber(row.taxAmountRaw);
+        target.discountExclVat += toNumber(row.discountExclVatRaw);
+        target.taxDiscountAmount += toNumber(row.totalDiscountInclVatRaw) - toNumber(row.discountExclVatRaw);
+        target.totalDiscountInclVat += toNumber(row.totalDiscountInclVatRaw);
+        target.lineNetExclVat += toNumber(row.lineNetExclVatRaw);
+        target.lineNetVat += toNumber(row.lineNetVatRaw);
+        target.lineGrandTotal += toNumber(row.lineGrandTotalRaw);
+      });
+
+      const rows = [...groups.values()].sort((a, b) => a.taxRate - b.taxRate);
+      const decimals = Math.max(0, Math.min(8, toNumber(state.globalDecimals)));
+      const fmt = (value) => formatNumber(value, decimals);
+
+      if (!rows.length) {
+        dom.taxSummaryTable.innerHTML = `
+          <thead>
+            <tr>
+              <th>Tax rate</th>
+              <th>Total amount exclude VAT</th>
+              <th>Total tax amount</th>
+              <th>Total discount amount exclude VAT</th>
+              <th>Total tax discount amount</th>
+              <th>Grand total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td colspan="6" style="text-align:center;">Chưa có dữ liệu để tổng hợp</td>
+            </tr>
+          </tbody>
+        `;
+        return;
+      }
+
+      const total = rows.reduce((acc, row) => {
+        acc.lineTotalExclVat += row.lineTotalExclVat;
+        acc.taxAmount += row.taxAmount;
+        acc.discountExclVat += row.discountExclVat;
+        acc.taxDiscountAmount += row.taxDiscountAmount;
+        acc.lineGrandTotal += row.lineGrandTotal;
+        return acc;
+      }, {
+        lineTotalExclVat: 0,
+        taxAmount: 0,
+        discountExclVat: 0,
+        taxDiscountAmount: 0,
+        lineGrandTotal: 0,
+      });
+
+      dom.taxSummaryTable.innerHTML = `
+        <thead>
+          <tr>
+            <th>Tax rate</th>
+            <th>Total amount exclude VAT</th>
+            <th>Total tax amount</th>
+            <th>Total discount amount exclude VAT</th>
+            <th>Total tax discount amount</th>
+            <th>Grand total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows.map((row) => `
+            <tr>
+              <td>${formatNumber(row.taxRate, 2)}%</td>
+              <td>${fmt(row.lineTotalExclVat)}</td>
+              <td>${fmt(row.taxAmount)}</td>
+              <td>${fmt(row.discountExclVat)}</td>
+              <td>${fmt(row.taxDiscountAmount)}</td>
+              <td>${fmt(row.lineGrandTotal)}</td>
+            </tr>
+          `).join('')}
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>${fmt(total.lineTotalExclVat)}</strong></td>
+            <td><strong>${fmt(total.taxAmount)}</strong></td>
+            <td><strong>${fmt(total.discountExclVat)}</strong></td>
+            <td><strong>${fmt(total.taxDiscountAmount)}</strong></td>
+            <td><strong>${fmt(total.lineGrandTotal)}</strong></td>
+          </tr>
+        </tbody>
+      `;
+    }
+
+    function ensureTrailingEmptyRow() {
+      const last = state.rows[state.rows.length - 1];
+      if (!last || String(last.itemName || '').trim()) {
+        state.rows.push(createEmptyRow());
+      }
+    }
+
+    function bindTableEvents() {
+      dom.dataTable.querySelectorAll('input[data-row], select[data-row]').forEach((el) => {
+        const tag = el.tagName.toLowerCase();
+        const type = el.type;
+
+        const handler = (e) => {
+          const rowIndex = Number(e.target.dataset.row);
+          const field = e.target.dataset.field;
+          if (!state.rows[rowIndex]) return;
+
+          if (field === 'itemName') {
+            state.rows[rowIndex][field] = e.target.value;
+            if (String(e.target.value || '').trim()) {
+              ensureTrailingEmptyRow();
+            }
+          } else if (field === 'itemType') {
+            state.rows[rowIndex][field] = Number(e.target.value);
+          } else {
+            state.rows[rowIndex][field] = toNumber(e.target.value);
+          }
+
+          renderAll();
+        };
+
+        if (tag === 'select') {
+          el.addEventListener('change', handler);
+        } else {
+          el.addEventListener('change', handler);
+        }
+      });
+
+      dom.dataTable.querySelectorAll('button[data-action]').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const action = e.target.dataset.action;
+          const rowIndex = Number(e.target.dataset.row);
+
+          if (action === 'delete') {
+            state.rows.splice(rowIndex, 1);
+            if (state.rows.length === 0) state.rows.push(createEmptyRow());
+          }
+
+          if (action === 'duplicate') {
+            state.rows.splice(rowIndex + 1, 0, { ...state.rows[rowIndex] });
+          }
+
+          renderAll();
+        });
+      });
+    }
+
+    function renderAll() {
+      ensureTrailingEmptyRow();
+
+      renderDataTable();
+      renderTaxSummary();
+      syncGeneralInputs();
+    }
+
+    function syncGeneralInputs() {
+      dom.pricesIncludeVat.checked = state.pricesIncludeVat;
+      dom.orderDiscount.value = state.orderDiscount;
+      dom.globalDecimals.value = state.globalDecimals;
+      dom.currencyLabel.value = state.currencyLabel;
+      if (dom.zoomValue) dom.zoomValue.textContent = `${state.uiScale}%`;
+      if (dom.tableDensity) dom.tableDensity.value = state.tableDensity;
+      if (dom.columnWidthMode) dom.columnWidthMode.value = state.columnWidthMode;
+      if (dom.languageToggle) dom.languageToggle.value = state.language;
+    }
+
+    function escapeHtml(text) {
+      return String(text)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function saveStateToLocal() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      alert('Đã lưu vào localStorage.');
+    }
+
+    function loadStateFromLocal() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) {
+        alert('Chưa có dữ liệu đã lưu.');
+        return;
+      }
+      try {
+        const parsed = JSON.parse(raw);
+        hydrateState(parsed);
+        renderAll();
+        alert('Đã tải dữ liệu từ localStorage.');
+      } catch (err) {
+        alert('Không đọc được dữ liệu đã lưu.');
+      }
+    }
+
+    function hydrateState(parsed) {
+      state.pricesIncludeVat = !!parsed.pricesIncludeVat;
+      state.orderDiscount = toNumber(parsed.orderDiscount);
+      state.globalDecimals = toNumber(parsed.globalDecimals || 2);
+      state.currencyLabel = parsed.currencyLabel || 'VND';
+      state.uiScale = toNumber(parsed.uiScale || 100);
+      state.language = parsed.language || 'vi';
+      state.tableDensity = parsed.tableDensity || 'compact';
+      state.columnWidthMode = parsed.columnWidthMode || 'tight';
+      state.rows = Array.isArray(parsed.rows) && parsed.rows.length ? parsed.rows : [createEmptyRow()];
+
+      const incomingCols = Array.isArray(parsed.columns) ? parsed.columns : defaultColumnsConfig;
+      state.columns = defaultColumnsConfig.map((base) => {
+        const found = incomingCols.find((c) => c.key === base.key);
+        return found ? { ...base, ...found } : { ...base };
+      });
+    }
+
+    function exportJson() {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'bkav-order-tax-checker.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function loadSampleData() {
+      state.rows = [
+        { itemName: 'Pizza Tôm Sushi & Bò Bít Tết Phô Mai small_6 - thin', unitPrice: 397000, quantity: 3, taxRate: 8, productPromo: 0, itemType: 0 },
+        { itemName: 'Tiger', unitPrice: 20000, quantity: 3, taxRate: 10, productPromo: 0, itemType: 0 },
+        { itemName: 'Mỳ Ý Xốt Bò Bằm', unitPrice: 139000, quantity: 3, taxRate: 8, productPromo: 0, itemType: 0 },
+        { itemName: 'Salad Da Cá Hồi Giòn Vừa 9\'\'', unitPrice: 89000, quantity: 3, taxRate: 8, productPromo: 0, itemType: 0 },
+        { itemName: 'Fanta 330ml', unitPrice: 25000, quantity: 3, taxRate: 10, productPromo: 0, itemType: 0 },
+        { itemName: 'Spinach & Feta Pizza medium_9 - medium', unitPrice: 366000, quantity: 1.5, taxRate: 8, productPromo: 164700, itemType: 0 },
+        { itemName: 'Philly Cheese Steak Pizza medium_9 - medium', unitPrice: 246000, quantity: 1.5, taxRate: 8, productPromo: 110700, itemType: 0 },
+        { itemName: 'Pizza Pepperoni 6 inch - Mỏng', unitPrice: 270000, quantity: 3, taxRate: 8, productPromo: 243000, itemType: 0 },
+        { itemName: 'Pepsi Không đường', unitPrice: 29000, quantity: 2, taxRate: 10, productPromo: 0, itemType: 0 },
+        { itemName: 'Phí đi đường', unitPrice: 35000, quantity: 1, taxRate: 8, productPromo: 0, itemType: 5 },
+        { itemName: 'Phí vận chuyển', unitPrice: 50000, quantity: 1, taxRate: 8, productPromo: 0, itemType: 2 },
+      ];
+      state.orderDiscount = 655520;
+      renderAll();
+    }
+
+    function resetState() {
+      if (!confirm('Reset toàn bộ dữ liệu?')) return;
+      hydrateState({
+        pricesIncludeVat: true,
+        orderDiscount: 0,
+        globalDecimals: 2,
+        currencyLabel: 'VND',
+        columns: JSON.parse(JSON.stringify(defaultColumnsConfig)),
+        rows: [createEmptyRow()],
+      });
+      renderAll();
+    }
+
+    function getColumnLabel(col) {
+      if (state.language === 'en') {
+        return col.labelEn || col.label || '';
+      }
+      return col.label || col.labelEn || '';
+    }
+
+    function getItemTypeLabel(opt) {
+      if (state.language === 'en') {
+        return opt.labelEn || opt.label || '';
+      }
+      return opt.label || opt.labelEn || '';
+    }
+
+    document.getElementById('addSampleBtn').addEventListener('click', loadSampleData);
+    document.getElementById('saveBtn').addEventListener('click', saveStateToLocal);
+    document.getElementById('loadBtn').addEventListener('click', loadStateFromLocal);
+    document.getElementById('exportBtn').addEventListener('click', exportJson);
+    document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+    document.getElementById('resetBtn').addEventListener('click', resetState);
+
+    document.getElementById('importFile').addEventListener('change', async (e) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        const parsed = JSON.parse(text);
+        hydrateState(parsed);
+        renderAll();
+        alert('Import thành công.');
+      } catch (err) {
+        alert('File JSON không hợp lệ.');
+      }
+      e.target.value = '';
+    });
+
+    if (dom.languageToggle) {
+      dom.languageToggle.addEventListener('change', (e) => {
+        state.language = e.target.value;
+        renderAll();
+      });
+    }
+
+    dom.pricesIncludeVat.addEventListener('change', (e) => {
+      state.pricesIncludeVat = e.target.checked;
+      renderAll();
+    });
+
+    dom.orderDiscount.addEventListener('input', (e) => {
+      state.orderDiscount = toNumber(e.target.value);
+      renderAll();
+    });
+
+    dom.globalDecimals.addEventListener('input', (e) => {
+      const value = Math.max(0, Math.min(8, toNumber(e.target.value)));
+      state.globalDecimals = value;
+
+      const moneyColumns = [
+        'unitPrice',
+        'lineTotalInclVat',
+        'productPromo',
+        'lineAfterPromoInclVat',
+        'allocatedOrderDiscount',
+        'totalDiscountInclVat',
+        'unitPriceExclVat',
+        'lineTotalExclVat',
+        'taxAmount',
+        'discountExclVat',
+        'lineNetExclVat',
+        'lineNetVat',
+        'lineGrandTotal',
+      ];
+
+      state.columns = state.columns.map((col) => {
+        if (moneyColumns.includes(col.key)) {
+          return { ...col, decimals: value };
+        }
+        return col;
+      });
+
+      renderAll();
+    });
+
+    dom.currencyLabel.addEventListener('input', (e) => {
+      state.currencyLabel = e.target.value || 'VND';
+      renderAll();
+    });
+
+    if (dom.zoomOutBtn) {
+      dom.zoomOutBtn.addEventListener('click', () => {
+        state.uiScale = Math.max(80, state.uiScale - 5);
+        renderAll();
+      });
+    }
+
+    if (dom.zoomInBtn) {
+      dom.zoomInBtn.addEventListener('click', () => {
+        state.uiScale = Math.min(120, state.uiScale + 5);
+        renderAll();
+      });
+    }
+
+    if (dom.tableDensity) {
+      dom.tableDensity.addEventListener('change', (e) => {
+        state.tableDensity = e.target.value;
+        renderAll();
+      });
+    }
+
+    if (dom.columnWidthMode) {
+      dom.columnWidthMode.addEventListener('change', (e) => {
+        state.columnWidthMode = e.target.value;
+        renderAll();
+      });
+    }
+
+    (() => {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        try {
+          hydrateState(JSON.parse(saved));
+        } catch (_) { }
+      }
+      renderAll();
+    })();
+  </script>
+</body>
+
+</html>
