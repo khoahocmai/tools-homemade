@@ -854,7 +854,22 @@
 
   <script>
     const INFRA = ['kong', 'mongodb', 'watchtower', 'redis', 'postgres', 'mysql', 'nginx', 'rabbitmq', 'kafka', 'zookeeper'];
-    const LEVEL_MAP = { 10: 'debug', 20: 'info', 30: 'info', 40: 'warn', 50: 'error', 60: 'error' };
+    const LEVEL_MAP = {
+      10: 'debug',
+      20: 'info',
+      30: 'info',
+      40: 'warn',
+      50: 'error',
+      60: 'error',
+      TRACE: 'debug',
+      DEBUG: 'debug',
+      INFO: 'info',
+      WARN: 'warn',
+      WARNING: 'warn',
+      ERROR: 'error',
+      FATAL: 'error'
+    };
+    const SKIP_CTX = new Set(['ElasticAPMService', 'ElasticAPMInterceptor']);
 
     let allEntries = [];
     let serviceChecks = {};
@@ -862,9 +877,201 @@
     let logContextChecks = {};
     let levelFilter = 'all';
 
-    function parseLevel(n) { return LEVEL_MAP[n] || (n >= 50 ? 'error' : n >= 40 ? 'warn' : n >= 30 ? 'info' : 'debug'); }
+    function parseLevel(n) {
+      if (typeof n === 'string') return LEVEL_MAP[n.toUpperCase()] || 'info';
+      return LEVEL_MAP[n] || (n >= 50 ? 'error' : n >= 40 ? 'warn' : n >= 30 ? 'info' : 'debug');
+    }
 
-    function escHtml(s) { return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+    function escHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[c]));
+    }
+
+    function splitRawLogBlocks(raw) {
+      const lines = raw.split(/\r?\n/);
+      const blocks = [];
+      let current = '';
+
+      const isStartLine = (line) => {
+        const t = line.trim();
+        if (!t) return false;
+        return (
+          /^\[\d{2}:\d{2}:\d{2}\.\d{3}\]\s+[A-Z]+\s+\(\d+\):/.test(t) || // [09:46:27.349] INFO (15204):
+          /^\S+\s*\|\s*\{/.test(t) ||                                      // service | {...}
+          /^\{.+\}$/.test(t)                                               // pure json
+        );
+      };
+
+      for (const line of lines) {
+        if (!line.trim()) continue;
+
+        if (isStartLine(line)) {
+          if (current) blocks.push(current);
+          current = line;
+        } else {
+          current += '\n' + line;
+        }
+      }
+
+      if (current) blocks.push(current);
+      return blocks;
+    }
+
+    function safeJsonTailParse(text) {
+      const idx = text.indexOf('{');
+      if (idx < 0) return { msg: text.trim(), obj: null };
+
+      const head = text.slice(0, idx).trim();
+      const tail = text.slice(idx).trim();
+
+      try {
+        return { msg: head, obj: JSON.parse(tail) };
+      } catch {
+        return { msg: text.trim(), obj: null };
+      }
+    }
+
+    function deriveServiceFromPino(obj, fallback = '_unknown') {
+      if (!obj) return fallback;
+
+      if (obj.context === 'TypeORM') return 'database';
+      if (obj.context === 'ConnectionManager') return 'database';
+      if (obj.context === 'MultiTenancyFactory') return 'tenancy';
+      if (obj.context === 'TokenService') return 'auth';
+      if (obj.context === 'AppAuthGuard') return 'auth';
+      if (obj.context === 'PermissionChecker') return 'auth';
+
+      if (obj.req?.url?.includes('/graphql')) return 'graphql';
+      return fallback;
+    }
+
+    function parseEntries(raw) {
+      const entries = [];
+      const seen = new Set();
+      const blocks = splitRawLogBlocks(raw);
+
+      for (const block of blocks) {
+        const t = block.trim();
+        if (!t) continue;
+        if (seen.has(t)) continue;
+        seen.add(t);
+
+        // 1) docker-compose style: service | {json}
+        let m = t.match(/^(\S+)\s*\|\s*(\{[\s\S]*\})$/);
+        if (m) {
+          let service = m[1];
+          let obj = null;
+
+          try {
+            obj = JSON.parse(m[2]);
+          } catch {
+            entries.push({
+              service,
+              level: 'info',
+              msg: m[2].slice(0, 300),
+              time: null,
+              context: '',
+              raw: t,
+              isJson: false
+            });
+            continue;
+          }
+
+          if (SKIP_CTX.has(obj.context)) continue;
+          const level = parseLevel(obj.level);
+          const ts = obj.time ? new Date(obj.time) : null;
+
+          entries.push({
+            service,
+            level,
+            msg: obj.msg || obj.message || '',
+            time: Number.isNaN(ts?.getTime()) ? null : ts,
+            context: obj.context || '',
+            raw: t,
+            isJson: true,
+            obj
+          });
+          continue;
+        }
+
+        // 2) pure json
+        if (t.startsWith('{')) {
+          try {
+            const obj = JSON.parse(t);
+            if (SKIP_CTX.has(obj.context)) continue;
+
+            const service = deriveServiceFromPino(obj, deriveServiceName?.(obj, '_unknown') || '_unknown');
+            const level = parseLevel(obj.level);
+            const ts = obj.time ? new Date(obj.time) : null;
+
+            entries.push({
+              service,
+              level,
+              msg: obj.msg || obj.message || '',
+              time: Number.isNaN(ts?.getTime()) ? null : ts,
+              context: obj.context || '',
+              raw: t,
+              isJson: true,
+              obj
+            });
+            continue;
+          } catch { }
+        }
+
+        // 3) pino text style:
+        // [09:46:27.349] INFO (15204): request completed {...}
+        m = t.match(/^\[(\d{2}:\d{2}:\d{2}\.\d{3})\]\s+([A-Z]+)\s+\((\d+)\):\s*([\s\S]*)$/);
+        if (m) {
+          const [, timeStr, levelStr, pid, rest] = m;
+          const { msg, obj } = safeJsonTailParse(rest);
+
+          if (obj && SKIP_CTX.has(obj.context)) continue;
+
+          let service = '_unknown';
+          if (obj) {
+            service =
+              deriveServiceFromPino(obj, '_unknown') ||
+              deriveServiceName?.(obj, '_unknown') ||
+              '_unknown';
+          }
+
+          entries.push({
+            service,
+            level: parseLevel(levelStr),
+            msg,
+            time: null, // log này chỉ có HH:mm:ss.SSS, chưa có ngày
+            displayTime: timeStr,
+            pid,
+            context: obj?.context || '',
+            raw: t,
+            isJson: !!obj,
+            obj
+          });
+          continue;
+        }
+
+        // 4) fallback plain text
+        entries.push({
+          service: '_unknown',
+          level: 'info',
+          msg: t,
+          time: null,
+          context: '',
+          raw: t,
+          isJson: false
+        });
+      }
+
+      return entries;
+    }
+
+
+
 
     function highlightSQL(sql) {
       let work = sql;
@@ -899,42 +1106,40 @@
       let i = 0; return query.replace(/\?/g, () => { const v = params[i++]; return typeof v === 'string' ? `'${v.replace(/'/g, "''")}'` : String(v ?? 'NULL'); });
     }
 
-    const SKIP_CTX = new Set(['ElasticAPMService', 'ElasticAPMInterceptor']);
-
-    function parseEntries(raw) {
-      const entries = [];
-      const seen = new Set();
-      for (const line of raw.split('\n')) {
-        const t = line.trim();
-        if (!t) continue;
-        if (seen.has(t)) continue;
-        seen.add(t);
-        const m = t.match(/^(\S+)\s*\|\s*(\{.+)/);
-        let service = '', jsonStr = '';
-        if (m) {
-          service = m[1];
-          jsonStr = m[2];
-        } else if (t.startsWith('{')) {
-          service = '_unknown';
-          jsonStr = t;
-        }
-        else {
-          const plain = t.match(/^(\S+)\s*\|\s*(.+)/);
-          if (plain) entries.push({ service: plain[1], level: 'info', msg: plain[2], time: null, context: '', raw: t, isJson: false });
-          continue;
-        }
-        let obj;
-        try { obj = JSON.parse(jsonStr); } catch { entries.push({ service, level: 'info', msg: jsonStr.slice(0, 120), time: null, context: '', raw: t, isJson: false }); continue; }
-        if (service === '_unknown') {
-          service = deriveServiceName(obj, '_unknown');
-        }
-        if (SKIP_CTX.has(obj.context)) continue;
-        const level = parseLevel(obj.level);
-        const ts = obj.time ? new Date(obj.time) : null;
-        entries.push({ service, level, msg: obj.msg || obj.message || '', time: ts, context: obj.context || '', raw: t, isJson: true, obj });
-      }
-      return entries;
-    }
+    // function parseEntries(raw) {
+    //   const entries = [];
+    //   const seen = new Set();
+    //   for (const line of raw.split('\n')) {
+    //     const t = line.trim();
+    //     if (!t) continue;
+    //     if (seen.has(t)) continue;
+    //     seen.add(t);
+    //     const m = t.match(/^(\S+)\s*\|\s*(\{.+)/);
+    //     let service = '', jsonStr = '';
+    //     if (m) {
+    //       service = m[1];
+    //       jsonStr = m[2];
+    //     } else if (t.startsWith('{')) {
+    //       service = '_unknown';
+    //       jsonStr = t;
+    //     }
+    //     else {
+    //       const plain = t.match(/^(\S+)\s*\|\s*(.+)/);
+    //       if (plain) entries.push({ service: plain[1], level: 'info', msg: plain[2], time: null, context: '', raw: t, isJson: false });
+    //       continue;
+    //     }
+    //     let obj;
+    //     try { obj = JSON.parse(jsonStr); } catch { entries.push({ service, level: 'info', msg: jsonStr.slice(0, 120), time: null, context: '', raw: t, isJson: false }); continue; }
+    //     if (service === '_unknown') {
+    //       service = deriveServiceName(obj, '_unknown');
+    //     }
+    //     if (SKIP_CTX.has(obj.context)) continue;
+    //     const level = parseLevel(obj.level);
+    //     const ts = obj.time ? new Date(obj.time) : null;
+    //     entries.push({ service, level, msg: obj.msg || obj.message || '', time: ts, context: obj.context || '', raw: t, isJson: true, obj });
+    //   }
+    //   return entries;
+    // }
 
     function detectServices(entries) {
       const map = {};
@@ -1168,6 +1373,13 @@
 
       const msgHtml = isSQL ? escHtml('SQL query') : escHtml(e.msg);
       div.innerHTML = `<span class="log-time">${rel || fmtTime(e.time)}</span>
+      <span class="log-level ${levelClass(e.level)}">${e.level.toUpperCase()}</span>
+      <span class="log-svc" title="${e.service}">${e.service}</span>
+      <span class="log-ctx" title="${e.context}">${e.context}</span>
+      <span class="log-msg">${msgHtml}</span>`;
+
+      const shownTime = rel || e.displayTime || fmtTime(e.time);
+      div.innerHTML = `<span class="log-time">${shownTime || ''}</span>
       <span class="log-level ${levelClass(e.level)}">${e.level.toUpperCase()}</span>
       <span class="log-svc" title="${e.service}">${e.service}</span>
       <span class="log-ctx" title="${e.context}">${e.context}</span>
