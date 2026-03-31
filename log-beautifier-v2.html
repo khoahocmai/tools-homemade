@@ -1371,7 +1371,16 @@
         /\b(SELECT|INSERT|UPDATE|DELETE)\b/i.test(e.obj.query) &&
         !/^(SELECT 1|START TRANSACTION|COMMIT|ROLLBACK)$/i.test(e.obj.query.trim());
 
-      const msgHtml = isSQL ? escHtml('SQL query') : escHtml(e.msg);
+      const isElastic = e.isJson && e.context === 'ElasticClient' && e.obj?.query;
+
+      const originalMsg = e.msg || '';
+
+      const msgHtml = isSQL
+        ? escHtml(originalMsg || 'query')
+        : isElastic
+          ? escHtml(originalMsg || 'Elasticsearch query')
+          : escHtml(originalMsg);
+
       div.innerHTML = `<span class="log-time">${rel || fmtTime(e.time)}</span>
       <span class="log-level ${levelClass(e.level)}">${e.level.toUpperCase()}</span>
       <span class="log-svc" title="${e.service}">${e.service}</span>
@@ -1427,6 +1436,55 @@
         sqlWrap.appendChild(sqlBlock);
         div.appendChild(sqlWrap);
       }
+
+      if (isElastic) {
+        const elasticPayload = {
+          index: e.obj.index,
+          from: e.obj.from,
+          size: e.obj.size,
+          query: e.obj.query,
+          sort: e.obj.sort
+        };
+
+        const wrap = document.createElement('div');
+        wrap.style.width = '100%';
+        wrap.style.marginTop = '6px';
+
+        const toggleBtn = document.createElement('button');
+        toggleBtn.className = 'filter-btn';
+        toggleBtn.textContent = '▶ Show ES Query';
+        toggleBtn.style.marginBottom = '6px';
+
+        const block = document.createElement('div');
+        block.className = 'sql-block';
+        block.style.width = '100%';
+        block.style.display = 'none';
+
+        const btn = document.createElement('button');
+        btn.className = 'sql-copy';
+        btn.textContent = '📋 Copy';
+        btn.onclick = ev => {
+          ev.stopPropagation();
+          copyText(JSON.stringify(elasticPayload, null, 2));
+        };
+
+        const pre = document.createElement('pre');
+        pre.textContent = JSON.stringify(elasticPayload, null, 2);
+
+        toggleBtn.onclick = ev => {
+          ev.stopPropagation();
+          const isOpen = block.style.display !== 'none';
+          block.style.display = isOpen ? 'none' : 'block';
+          toggleBtn.textContent = isOpen ? '▶ Show ES Query' : '▼ Hide ES Query';
+        };
+
+        block.appendChild(btn);
+        block.appendChild(pre);
+        wrap.appendChild(toggleBtn);
+        wrap.appendChild(block);
+        div.appendChild(wrap);
+      }
+
       return div;
     }
 
