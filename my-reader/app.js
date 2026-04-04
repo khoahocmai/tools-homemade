@@ -37,15 +37,21 @@ const el = {
   readerStoryTitle: document.getElementById('readerStoryTitle'),
   readerChapterTitle: document.getElementById('readerChapterTitle'),
   readerContent: document.getElementById('readerContent'),
+
   prevChapterBtn: document.getElementById('prevChapterBtn'),
   nextChapterBtn: document.getElementById('nextChapterBtn'),
   openChapterListBtn: document.getElementById('openChapterListBtn'),
+  bottomPrevChapterBtn: document.getElementById('bottomPrevChapterBtn'),
+  bottomOpenChapterListBtn: document.getElementById('bottomOpenChapterListBtn'),
+  bottomNextChapterBtn: document.getElementById('bottomNextChapterBtn'),
+
   themeToggleBtn: document.getElementById('themeToggleBtn'),
   increaseFontBtn: document.getElementById('increaseFontBtn'),
   decreaseFontBtn: document.getElementById('decreaseFontBtn'),
   backToLibraryBtn: document.getElementById('backToLibraryBtn'),
   appShell: document.querySelector('.app-shell'),
-  sidebarToggleBtn: document.getElementById('sidebarToggleBtn')
+  sidebarToggleBtn: document.getElementById('sidebarToggleBtn'),
+  pageLoadingOverlay: document.getElementById('pageLoadingOverlay'),
 };
 
 function setTheme(theme) {
@@ -247,7 +253,17 @@ async function openChapter(chapterId, restoreScroll = true) {
   const chapterIndex = chapters.findIndex(item => String(item.id) === String(chapterId));
   if (chapterIndex < 0) return;
 
+  const shouldShowLoading = !restoreScroll;
+
   try {
+    if (shouldShowLoading) {
+      showPageLoading();
+    }
+
+    if (!restoreScroll) {
+      window.scrollTo({ top: 0, behavior: 'auto' });
+    }
+
     const content = await fetchText(getChapterPath(chapterId));
     const chapter = chapters[chapterIndex];
 
@@ -268,22 +284,36 @@ async function openChapter(chapterId, restoreScroll = true) {
     updateChapterButtons();
 
     requestAnimationFrame(() => {
-      if (restoreScroll) {
-        const savedScroll = Number(localStorage.getItem(getScrollKey(state.selectedStory.id, chapterId)) || 0);
-        window.scrollTo({ top: savedScroll, behavior: 'auto' });
-      } else {
-        window.scrollTo({ top: 0, behavior: 'auto' });
-      }
+      requestAnimationFrame(() => {
+        if (restoreScroll) {
+          const savedScroll = Number(localStorage.getItem(getScrollKey(state.selectedStory.id, chapterId)) || 0);
+          window.scrollTo({ top: savedScroll, behavior: 'auto' });
+          hidePageLoading();
+        } else {
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+
+          setTimeout(() => {
+            hidePageLoading();
+          }, 300);
+        }
+      });
     });
   } catch (error) {
+    hidePageLoading();
     alert(error.message);
   }
 }
 
 function updateChapterButtons() {
   const chapters = state.selectedMeta?.chapters || [];
-  el.prevChapterBtn.disabled = state.currentChapterIndex <= 0;
-  el.nextChapterBtn.disabled = state.currentChapterIndex >= chapters.length - 1;
+  const isPrevDisabled = state.currentChapterIndex <= 0;
+  const isNextDisabled = state.currentChapterIndex >= chapters.length - 1;
+
+  el.prevChapterBtn.disabled = isPrevDisabled;
+  el.nextChapterBtn.disabled = isNextDisabled;
+
+  el.bottomPrevChapterBtn.disabled = isPrevDisabled;
+  el.bottomNextChapterBtn.disabled = isNextDisabled;
 }
 
 function saveCurrentScroll() {
@@ -341,6 +371,33 @@ function toggleSidebar() {
   applySidebarState();
 }
 
+function goPrevChapter() {
+  const prev = state.selectedMeta?.chapters?.[state.currentChapterIndex - 1];
+  if (prev) openChapter(prev.id, false);
+}
+
+function goNextChapter() {
+  const next = state.selectedMeta?.chapters?.[state.currentChapterIndex + 1];
+  if (next) openChapter(next.id, false);
+}
+
+function openChapterList() {
+  if (state.selectedStory) {
+    showView('detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function showPageLoading() {
+  el.pageLoadingOverlay.classList.remove('hidden');
+  el.pageLoadingOverlay.setAttribute('aria-hidden', 'false');
+}
+
+function hidePageLoading() {
+  el.pageLoadingOverlay.classList.add('hidden');
+  el.pageLoadingOverlay.setAttribute('aria-hidden', 'true');
+}
+
 el.storySearch.addEventListener('input', (event) => {
   filterStories(event.target.value || '');
 });
@@ -360,28 +417,38 @@ el.decreaseFontBtn.addEventListener('click', () => {
   applyFontSize();
 });
 
-el.continueReadingBtn.addEventListener('click', continueReading);
-el.backToLibraryBtn.addEventListener('click', goToLibrary);
-el.openChapterListBtn.addEventListener('click', () => {
-  if (state.selectedStory) {
-    showView('detail');
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-  }
-});
-
-el.prevChapterBtn.addEventListener('click', () => {
-  const prev = state.selectedMeta?.chapters?.[state.currentChapterIndex - 1];
-  if (prev) openChapter(prev.id, false);
-});
-
-el.nextChapterBtn.addEventListener('click', () => {
-  const next = state.selectedMeta?.chapters?.[state.currentChapterIndex + 1];
-  if (next) openChapter(next.id, false);
-});
+el.openChapterListBtn.addEventListener('click', openChapterList);
+el.prevChapterBtn.addEventListener('click', goPrevChapter);
+el.nextChapterBtn.addEventListener('click', goNextChapter);
+el.bottomOpenChapterListBtn.addEventListener('click', openChapterList);
+el.bottomPrevChapterBtn.addEventListener('click', goPrevChapter);
+el.bottomNextChapterBtn.addEventListener('click', goNextChapter);
 
 el.sidebarToggleBtn.addEventListener('click', toggleSidebar);
 
 window.addEventListener('scroll', saveCurrentScroll);
 window.addEventListener('beforeunload', saveCurrentScroll);
+
+window.addEventListener('keydown', (event) => {
+  const activeTag = document.activeElement?.tagName?.toLowerCase();
+
+  // Nếu đang gõ trong input/textarea thì bỏ qua
+  if (activeTag === 'input' || activeTag === 'textarea') return;
+
+  // Chỉ cho phép phím tắt khi đang ở màn hình đọc
+  if (!el.readerView.classList.contains('active')) return;
+
+  const key = event.key.toLowerCase();
+
+  if (key === 'a' || event.key === 'ArrowLeft') {
+    event.preventDefault();
+    goPrevChapter();
+  }
+
+  if (key === 'd' || event.key === 'ArrowRight') {
+    event.preventDefault();
+    goNextChapter();
+  }
+});
 
 boot();

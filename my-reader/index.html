@@ -41,6 +41,12 @@
           </div>
         </div>
 
+        <div id="topReaderNav" class="reader-toolbar top-reader-toolbar hidden">
+          <button id="topPrevChapterBtn" class="ghost-btn">← Chương trước</button>
+          <button id="topOpenChapterListBtn" class="ghost-btn">Mục lục</button>
+          <button id="topNextChapterBtn" class="ghost-btn">Chương sau →</button>
+        </div>
+
         <div class="topbar-right">
           <button id="decreaseFontBtn" class="ghost-btn">A-</button>
           <button id="increaseFontBtn" class="ghost-btn">A+</button>
@@ -76,9 +82,9 @@
 
       <section id="readerView" class="view">
         <div class="reader-toolbar">
-          <button id="prevChapterBtn" class="ghost-btn">← Chương trước</button>
+          <button id="prevChapterBtn" class="ghost-btn" title="Chương trước (A / ←)">← Chương trước</button>
           <button id="openChapterListBtn" class="ghost-btn">Mục lục</button>
-          <button id="nextChapterBtn" class="ghost-btn">Chương sau →</button>
+          <button id="nextChapterBtn" class="ghost-btn" title="Chương sau (D / →)">Chương sau →</button>
         </div>
 
         <article class="reader-card">
@@ -88,8 +94,18 @@
           </div>
           <div id="readerContent" class="reader-content"></div>
         </article>
+
+        <div class="reader-toolbar bottom-reader-toolbar">
+          <button id="bottomPrevChapterBtn" class="ghost-btn" title="Chương trước (A / ←)">← Chương trước</button>
+          <button id="bottomOpenChapterListBtn" class="ghost-btn">Mục lục</button>
+          <button id="bottomNextChapterBtn" class="ghost-btn" title="Chương sau (D / →)">Chương sau →</button>
+        </div>
       </section>
     </main>
+  </div>
+
+  <div id="pageLoadingOverlay" class="page-loading-overlay hidden" aria-hidden="true">
+    <div class="page-loading-spinner"></div>
   </div>
 
   <script src="app.js"></script>
