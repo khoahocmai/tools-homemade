@@ -308,9 +308,42 @@ input {
 }
 
 .detail-description {
-  margin: 16px 0 0;
+  margin: 20px 0 0;
   color: var(--text);
-  line-height: 1.8;
+  line-height: 1.9;
+  white-space: pre-line;
+  font-size: 18px;
+}
+
+.detail-description-wrap {
+  margin-top: 8px;
+}
+
+.detail-description.clamp {
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.detail-description.expanded {
+  display: block;
+}
+
+.description-toggle-btn {
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+}
+
+.description-toggle-btn {
+  margin: 14px auto 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 140px;
 }
 
 .section-row {
@@ -328,7 +361,18 @@ input {
 }
 
 .chapter-item.reading {
-  border-color: var(--accent);
+  border: 2px solid var(--accent);
+  background: rgba(122, 92, 55, 0.12);
+  box-shadow: 0 0 0 2px rgba(122, 92, 55, 0.15);
+  transform: scale(1.01);
+}
+
+.chapter-item.reading strong {
+  color: var(--accent-strong);
+}
+
+.chapter-item.reading span {
+  font-weight: 600;
 }
 
 .reader-toolbar {
@@ -453,4 +497,29 @@ body.dark .page-loading-overlay {
   to {
     transform: rotate(360deg);
   }
+}
+
+.chapter-read-latest {
+  background-color: #e0e0e0;
+  /* Màu nền nhạt hơn để phân biệt */
+  font-weight: bold;
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin: 5px 0;
+}
+
+.chapter-read-latest:hover {
+  background-color: #c0c0c0;
+  /* Thêm hiệu ứng hover */
+}
+
+.reader-chapter-title {
+  color: var(--text);
+  /* Đảm bảo màu chữ dễ đọc */
+  font-weight: bold;
+}
+
+.reader-author {
+  color: var(--secondary-text);
+  /* Dùng màu phụ cho tác giả */
 }

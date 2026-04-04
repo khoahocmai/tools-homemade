@@ -15,7 +15,8 @@ const state = {
   currentChapterId: null,
   currentChapterIndex: -1,
   fontSize: Number(localStorage.getItem(STORAGE_KEYS.fontSize) || 20),
-  sidebarCollapsed: localStorage.getItem(STORAGE_KEYS.sidebarCollapsed) === 'true'
+  sidebarCollapsed: localStorage.getItem(STORAGE_KEYS.sidebarCollapsed) === 'true',
+  descriptionExpanded: false,
 };
 
 const el = {
@@ -52,6 +53,7 @@ const el = {
   appShell: document.querySelector('.app-shell'),
   sidebarToggleBtn: document.getElementById('sidebarToggleBtn'),
   pageLoadingOverlay: document.getElementById('pageLoadingOverlay'),
+  toggleDescriptionBtn: document.getElementById('toggleDescriptionBtn'),
 };
 
 function setTheme(theme) {
@@ -182,6 +184,14 @@ function renderStoryDetail() {
   el.detailTitle.textContent = meta.title || story.title;
   el.detailMeta.textContent = `${meta.author || 'Không rõ tác giả'} • ${meta.chapters?.length || 0} chương`;
   el.detailDescription.textContent = meta.description || 'Chưa có mô tả.';
+  state.descriptionExpanded = false;
+  el.detailDescription.classList.remove('expanded');
+  el.detailDescription.classList.add('clamp');
+
+  requestAnimationFrame(() => {
+    updateDescriptionToggle();
+  });
+
   el.chapterCount.textContent = `${meta.chapters?.length || 0} chương`;
 
   const lastChapterId = getLastChapterIdForStory(story.id);
@@ -276,7 +286,18 @@ async function openChapter(chapterId, restoreScroll = true) {
     el.readerChapterTitle.textContent = chapter.title || `Chương ${chapterIndex + 1}`;
     el.readerContent.innerHTML = formatText(content);
 
-    setLastChapterIdForStory(state.selectedStory.id, chapterId);
+    // 1. Lấy chapterId đã lưu trước đó
+    const savedChapterId = getLastChapterIdForStory(state.selectedStory.id);
+
+    // 2. Tìm index của chương đã lưu đó trong danh sách chapters
+    const savedChapterIndex = chapters.findIndex(item => String(item.id) === String(savedChapterId));
+
+    // 3. Chỉ cập nhật nếu chương hiện tại có index lớn hơn chương đã lưu
+    // (Hoặc nếu chưa có chương nào được lưu - savedChapterIndex === -1)
+    if (chapterIndex > savedChapterIndex) {
+      setLastChapterIdForStory(state.selectedStory.id, chapterId);
+    }
+
     localStorage.setItem(STORAGE_KEYS.lastStoryId, state.selectedStory.id);
 
     renderStoryDetail();
@@ -326,11 +347,15 @@ function saveCurrentScroll() {
 
 async function continueReading() {
   if (!state.selectedStory || !state.selectedMeta) return;
+
   const chapters = state.selectedMeta.chapters || [];
   if (!chapters.length) return;
 
+  // Lấy ID chương cuối hoặc chương đầu tiên nếu chưa đọc
   const lastChapterId = getLastChapterIdForStory(state.selectedStory.id) || chapters[0].id;
-  await openChapter(lastChapterId, true);
+
+  // Gọi hàm mở chương để vào thẳng Reader UI
+  openChapter(lastChapterId);
 }
 
 function goToLibrary() {
@@ -385,6 +410,27 @@ function openChapterList() {
   if (state.selectedStory) {
     showView('detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Đợi UI hiển thị xong mới tính toán lại logic "Xem thêm"
+    requestAnimationFrame(() => {
+      updateDescriptionToggle();
+    });
+  }
+}
+
+function updateDescriptionToggle() {
+  const descriptionEl = el.detailDescription;
+  const toggleBtn = el.toggleDescriptionBtn;
+
+  if (!descriptionEl || !toggleBtn) return;
+
+  const isOverflowing = descriptionEl.scrollHeight > descriptionEl.clientHeight + 4;
+
+  if (isOverflowing || state.descriptionExpanded) {
+    toggleBtn.classList.remove('hidden');
+    toggleBtn.textContent = state.descriptionExpanded ? 'Thu gọn ▲' : 'Xem thêm ▼';
+  } else {
+    toggleBtn.classList.add('hidden');
   }
 }
 
@@ -425,6 +471,22 @@ el.bottomPrevChapterBtn.addEventListener('click', goPrevChapter);
 el.bottomNextChapterBtn.addEventListener('click', goNextChapter);
 
 el.sidebarToggleBtn.addEventListener('click', toggleSidebar);
+el.backToLibraryBtn.addEventListener('click', goToLibrary);
+el.continueReadingBtn.addEventListener('click', continueReading);
+
+el.toggleDescriptionBtn.addEventListener('click', () => {
+  state.descriptionExpanded = !state.descriptionExpanded;
+
+  if (state.descriptionExpanded) {
+    el.detailDescription.classList.remove('clamp');
+    el.detailDescription.classList.add('expanded');
+  } else {
+    el.detailDescription.classList.remove('expanded');
+    el.detailDescription.classList.add('clamp');
+  }
+
+  updateDescriptionToggle();
+});
 
 window.addEventListener('scroll', saveCurrentScroll);
 window.addEventListener('beforeunload', saveCurrentScroll);
