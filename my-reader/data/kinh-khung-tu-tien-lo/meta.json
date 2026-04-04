@@ -1,0 +1,47 @@
+{
+  "title": "Kinh Khủng Tu Tiên Lộ",
+  "author": "Không rõ",
+  "description": "Bản demo đọc truyện offline từ file TXT. Bạn chỉ cần thêm chương mới vào folder này và cập nhật meta.json là đọc tiếp được.",
+  "chapters": [
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-001",
+      "title": "Chương 1: Khắc hệ tu tiên, hắn phá giới?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-002",
+      "title": "Chương 2: Tu luyện công pháp, Huyết Chú luyện thể"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-003",
+      "title": "Chương 03: Điên cuồng một đao, chạy hùng hục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-004",
+      "title": "Chương 4: Suy đoán nguy hiểm, lập tức liền chạy"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-005",
+      "title": "Chương 5: Chạy trốn bằng đường thuỷ thoát thân, trong mưa tiếng chuông"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-006",
+      "title": "Chương 6: Vạn loại mù sương cạnh tự do"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-007",
+      "title": "Chương 7: Đói bụng, đạo hữu cứu mạng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-008",
+      "title": "Chương 8: Ai là con mồi, Giao Long nhiếp phách"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-009",
+      "title": "Chương 9: Tự mang dung hợp, Thiên Địa Nhân Huyết Chú?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-010",
+      "title": "Chương 10: Giang hồ lão thủ, \"Thử trượt\" quái thanh"
+    }
+  ]
+}

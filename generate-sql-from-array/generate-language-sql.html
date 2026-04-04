@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>Language SQL Generator (UUIDv7)</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f4f6f8;
+      line-height: 1.6;
+    }
+
+    h2 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 220px;
+      font-family: 'Cascadia Code', 'Courier New', monospace;
+      font-size: 13px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      box-sizing: border-box;
+    }
+
+    .actions {
+      margin-bottom: 10px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-right: 10px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #0056b3;
+    }
+
+    #output {
+      height: 300px;
+      background: #272822;
+      color: #f8f8f2;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h2>🚀 Language SQL Generator (UUIDv7)</h2>
+
+  <div class="grid">
+    <div>
+      <h4>1. Keys (Enum)</h4>
+      <textarea id="keys" placeholder="export enum MessageErrorCode {...}"></textarea>
+    </div>
+
+    <div>
+      <h4>2. Value VI (Object)</h4>
+      <textarea id="vi" placeholder="export const MessageErrorVi: ErrorDict = {...}"></textarea>
+    </div>
+
+    <div>
+      <h4>3. Value EN (Object)</h4>
+      <textarea id="en" placeholder="export const MessageErrorEn: ErrorDict = {...}"></textarea>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button onclick="generateSQL()">Generate SQL</button>
+    <button onclick="copySQL()">Copy to Clipboard</button>
+  </div>
+
+  <h4>Output SQL</h4>
+  <textarea id="output" readonly></textarea>
+
+  <script>
+    function uuidv7() {
+      const value = new Uint8Array(16);
+      crypto.getRandomValues(value);
+      const timestamp = Date.now();
+      value[0] = (timestamp / 0x10000000000) & 0xff;
+      value[1] = (timestamp / 0x100000000) & 0xff;
+      value[2] = (timestamp / 0x1000000) & 0xff;
+      value[3] = (timestamp / 0x10000) & 0xff;
+      value[4] = (timestamp / 0x100) & 0xff;
+      value[5] = timestamp & 0xff;
+      value[6] = (value[6] & 0x0f) | 0x70;
+      value[8] = (value[8] & 0x3f) | 0x80;
+      return Array.from(value)
+        .map((b, i) => b.toString(16).padStart(2, '0') + ([3, 5, 7, 9].includes(i) ? '-' : ''))
+        .join('');
+    }
+
+    function normalizeText(value) {
+      if (!value) return null;
+      return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'd').toLowerCase().trim().replace(/\s+/g, ' ');
+    }
+
+    function escapeSql(value) {
+      if (!value) return 'NULL';
+      return `'${value.replace(/'/g, "''")}'`;
+    }
+
+    function parseKeys(text) {
+      const regex = /([A-Z0-9_]+)\s*=\s*['"`]([^'"`]+)['"`]/g;
+      const result = [];
+      let match;
+      while ((match = regex.exec(text))) { result.push(match[1]); } // Lấy tên Key (Variable)
+      return result;
+    }
+
+    function parseValues(text) {
+      const regex = /\[\s*.*?\.(.*?)\s*\]\s*:\s*['"`](.*?)['"`]/g;
+      const map = {};
+      let match;
+      while ((match = regex.exec(text))) { map[match[1]] = match[2]; }
+      return map;
+    }
+
+    function generateSQL() {
+      const tenantId = '0192fda4-ba1b-76ef-bb1a-64c043a8e4a4';
+      const systemUser = '00000000-0000-0000-0000-222222222222';
+
+      const keysText = document.getElementById('keys').value;
+      const viText = document.getElementById('vi').value;
+      const enText = document.getElementById('en').value;
+
+      const keys = parseKeys(keysText);
+      const viMap = parseValues(viText);
+      const enMap = parseValues(enText);
+
+      // --- BẮT ĐẦU CHỨC NĂNG VALIDATION ---
+      const viKeys = Object.keys(viMap);
+      const enKeys = Object.keys(enMap);
+
+      // Tập hợp tất cả các key xuất hiện ở bất cứ đâu
+      const allUniqueKeys = new Set([...keys, ...viKeys, ...enKeys]);
+      let errorMessages = [];
+
+      allUniqueKeys.forEach(k => {
+        let missingIn = [];
+        if (!keys.includes(k)) missingIn.push("Keys (Enum)");
+        if (!viMap.hasOwnProperty(k)) missingIn.push("Value VI");
+        if (!enMap.hasOwnProperty(k)) missingIn.push("Value EN");
+
+        if (missingIn.length > 0) {
+          errorMessages.push(`• Key [${k}] bị thiếu ở: ${missingIn.join(', ')}`);
+        }
+      });
+
+      if (errorMessages.length > 0) {
+        alert("⚠️ PHÁT HIỆN DỮ LIỆU KHÔNG ĐỒNG NHẤT:\n\n" + errorMessages.join('\n') + "\n\nVui lòng kiểm tra lại trước khi export!");
+        // Bạn có thể chọn return ở đây nếu muốn chặn luôn không cho generate
+        // return; 
+      }
+      // --- KẾT THÚC VALIDATION ---
+
+      const lowerKeys = keys.map(k => k.toLowerCase());
+      const deleteKeys = lowerKeys.map(k => `'${k}'`).join(',\n    ');
+
+      const insertValues = keys.map(originalKey => {
+        const key = originalKey.toLowerCase();
+        const vi = viMap[originalKey] || null;
+        const en = enMap[originalKey] || null;
+        const id = uuidv7();
+
+        return `('${id}', '${tenantId}', '${key}', ${escapeSql(vi)}, ${escapeSql(en)}, ${escapeSql(normalizeText(vi))}, ${escapeSql(normalizeText(en))}, 'NOTIFICATION', NOW(), '${systemUser}', NOW(), '${systemUser}')`;
+      });
+
+      if (insertValues.length === 0) {
+        document.getElementById('output').value = "-- Không tìm thấy dữ liệu hợp lệ để generate.";
+        return;
+      }
+
+      const sql = `-- 1. DELETE OLD
+        DELETE FROM "public"."qsr_settings_settings_language" 
+        WHERE "tenant_id" = '${tenantId}'
+        AND "key" IN (
+            ${deleteKeys}
+        );
+
+        -- 2. INSERT NEW
+        INSERT INTO "public"."qsr_settings_settings_language" 
+        (
+            "id", 
+            "tenant_id", 
+            "key", 
+            "value_vi", 
+            "value_en", 
+            "value_vi_norm", 
+            "value_en_norm", 
+            "language_setting_type",
+            "created_at", 
+            "created_by", 
+            "last_updated_at", 
+            "last_updated_by"
+        )
+        VALUES
+        ${insertValues.join(',\n')};`;
+
+      document.getElementById('output').value = sql.trim();
+    }
+
+    function copySQL() {
+      const textarea = document.getElementById('output');
+      textarea.select();
+      document.execCommand('copy');
+      alert('Đã copy vào bộ nhớ tạm!');
+    }
+  </script>
+
+</body>
+
+</html>
