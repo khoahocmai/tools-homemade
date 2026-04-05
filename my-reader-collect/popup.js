@@ -1,4 +1,4 @@
-// --- TRỢ GIÚP: Lấy domain hiện tại ---
+// --- TRỢ GIÚP: Lấy thông tin Tab ---
 async function getCurrentTab() {
   let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   return tab;
@@ -12,35 +12,32 @@ function getHostname(url) {
   }
 }
 
-// --- PHẦN 1: QUẢN LÝ DỮ LIỆU THEO DOMAIN ---
+// --- PHẦN 1: TỰ ĐỘNG LƯU & TẢI CẤU HÌNH ---
 
 document.addEventListener('DOMContentLoaded', async () => {
   const tab = await getCurrentTab();
   const domain = getHostname(tab.url);
 
-  // Lấy dữ liệu của domain cụ thể này
   chrome.storage.local.get(['configs'], (data) => {
     const configs = data.configs || {};
     const siteConfig = configs[domain] || {};
 
+    // Điền dữ liệu cũ vào các ô input
     if (siteConfig.titleSel) document.getElementById('titleSelector').value = siteConfig.titleSel;
     if (siteConfig.contentSel) document.getElementById('contentSelector').value = siteConfig.contentSel;
+    if (siteConfig.fname) document.getElementById('filename').value = siteConfig.fname;
 
-    // Tự động gợi ý tên file theo tiêu đề nếu chưa nhập
-    if (siteConfig.fname) {
-      document.getElementById('filename').value = siteConfig.fname;
-    } else {
-      document.getElementById('filename').placeholder = "Tự động lấy tiêu đề làm tên file";
+    // TỰ ĐỘNG QUÉT: Nếu đã có đủ Selector, tự kích hoạt nút Quét ngay lập tức
+    if (siteConfig.titleSel && siteConfig.contentSel) {
+      // Đợi một chút (300ms) để UI ổn định rồi tự bấm nút
+      setTimeout(() => {
+        document.getElementById('scrapeBtn').click();
+      }, 300);
     }
-
-    // Nếu đã có đủ cấu hình, bạn có thể gọi hàm click() để nó tự quét luôn (tùy chọn)
-    // if (siteConfig.titleSel && siteConfig.contentSel) {
-    //   document.getElementById('scrapeBtn').click();
-    // }
   });
 });
 
-// Lưu dữ liệu mỗi khi nhập
+// Lưu cấu hình ngay khi người dùng gõ phím (để lần sau mở lại là có luôn)
 const inputs = ['titleSelector', 'contentSelector', 'filename'];
 inputs.forEach(id => {
   document.getElementById(id).addEventListener('input', async () => {
@@ -60,15 +57,15 @@ inputs.forEach(id => {
 });
 
 
-// --- PHẦN 2: QUÉT VÀ TẢI FILE ---
+// --- PHẦN 2: QUÉT NỘI DUNG VÀ TẢI FILE ---
 
 document.getElementById('scrapeBtn').addEventListener('click', async () => {
   const titleSelector = document.getElementById('titleSelector').value;
   const contentSelector = document.getElementById('contentSelector').value;
-  let filenameInput = document.getElementById('filename').value;
+  const prefix = document.getElementById('filename').value;
 
   if (!contentSelector) {
-    alert("Bạn chưa nhập thẻ nội dung!");
+    // Nếu chưa có selector thì không làm gì (để người dùng tự nhập)
     return;
   }
 
@@ -78,7 +75,7 @@ document.getElementById('scrapeBtn').addEventListener('click', async () => {
     target: { tabId: tab.id },
     func: (tSel, cSel) => {
       const titleEl = document.querySelector(tSel);
-      const titleText = titleEl ? titleEl.innerText.trim() : "Chương-Khong-Ten";
+      const titleText = titleEl ? titleEl.innerText.trim() : "Chuong-Khong-Ten";
 
       const contentEl = document.querySelector(cSel);
       if (!contentEl) return null;
@@ -102,27 +99,37 @@ document.getElementById('scrapeBtn').addEventListener('click', async () => {
     },
     args: [titleSelector, contentSelector]
   }, (results) => {
-    if (results && results[0].result) {
+    if (results && results[0] && results[0].result) {
       const data = results[0].result;
+      const chapterNum = getPaddedChapterNumber(data.detectedTitle);
+      let finalFileName = "";
 
-      // Nếu không nhập tên file, dùng tiêu đề đã quét được, bỏ dấu tiếng Việt/khoảng cách
-      let finalFileName = filenameInput || data.detectedTitle;
-      finalFileName = slugify(finalFileName);
+      if (prefix) {
+        finalFileName = `${slugify(prefix)}_chuong-${chapterNum}`;
+      } else {
+        finalFileName = slugify(data.detectedTitle);
+      }
 
       downloadTxt(data.fullText, finalFileName);
-    } else {
-      alert("Không tìm thấy nội dung! Hãy kiểm tra lại Selector.");
     }
   });
 });
 
-// Hàm dọn dẹp tên file (bỏ dấu tiếng Việt, ký tự đặc biệt)
+// --- PHẦN 3: CÁC HÀM BỔ TRỢ ---
+
+function getPaddedChapterNumber(text) {
+  const match = text.match(/\d+/);
+  if (!match) return "000";
+  let num = match[0];
+  return num.padStart(3, '0');
+}
+
 function slugify(text) {
   return text.toString().toLowerCase()
-    .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // Bỏ dấu
-    .replace(/[^\w\s-]/g, '') // Bỏ ký tự đặc biệt
-    .replace(/[\s_-]+/g, '-') // Thay khoảng trắng bằng -
-    .replace(/^-+|-+$/g, ''); // Cắt gạch ngang thừa
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 }
 
 function downloadTxt(content, filename) {
@@ -132,4 +139,5 @@ function downloadTxt(content, filename) {
   a.href = url;
   a.download = `${filename}.txt`;
   a.click();
+  URL.revokeObjectURL(url);
 }
