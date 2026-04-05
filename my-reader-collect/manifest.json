@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Story Scraper Pro",
+  "version": "1.1",
+  "permissions": [
+    "activeTab",
+    "scripting",
+    "storage"
+  ],
+  "action": {
+    "default_popup": "popup.html"
+  }
+}

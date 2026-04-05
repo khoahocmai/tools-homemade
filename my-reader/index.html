@@ -79,7 +79,14 @@
         <div class="chapter-panel">
           <div class="section-row">
             <h4>Danh sách chương</h4>
-            <span id="chapterCount" class="muted"></span>
+            <div class="chapter-panel-meta">
+              <span id="chapterCount" class="muted"></span>
+              <div id="chapterPagination" class="chapter-pagination hidden">
+                <button id="chapterPagePrevBtn" class="ghost-btn" type="button">← Trang trước</button>
+                <span id="chapterPageLabel" class="muted"></span>
+                <button id="chapterPageNextBtn" class="ghost-btn" type="button">Trang sau →</button>
+              </div>
+            </div>
           </div>
           <div id="chapterList" class="chapter-list"></div>
         </div>
