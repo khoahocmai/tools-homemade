@@ -58,7 +58,13 @@ const el = {
   appShell: document.querySelector('.app-shell'),
   sidebarToggleBtn: document.getElementById('sidebarToggleBtn'),
   pageLoadingOverlay: document.getElementById('pageLoadingOverlay'),
-  toggleDescriptionBtn: document.getElementById('toggleDescriptionBtn')
+  toggleDescriptionBtn: document.getElementById('toggleDescriptionBtn'),
+  topReaderNav: document.getElementById('topReaderNav'),
+  subNovelTitle: document.getElementById('subNovelTitle'),
+  subChapterTitle: document.getElementById('subChapterTitle'),
+  topPrevChapterBtn: document.getElementById('topPrevChapterBtn'),
+  topOpenChapterListBtn: document.getElementById('topOpenChapterListBtn'),
+  topNextChapterBtn: document.getElementById('topNextChapterBtn'),
 };
 
 function setTheme(theme) {
@@ -168,6 +174,10 @@ async function fetchText(path) {
 function showView(viewName) {
   [el.libraryView, el.detailView, el.readerView].forEach(view => view.classList.remove('active'));
 
+  if (viewName !== 'reader') {
+    el.topReaderNav.classList.add('hidden');
+  }
+
   if (viewName === 'library') {
     el.libraryView.classList.add('active');
     el.backToLibraryBtn.classList.add('hidden');
@@ -271,7 +281,6 @@ function renderStoryDetail() {
   const lastChapterId = getLastChapterIdForStory(story.id);
 
   el.pageTitle.textContent = story.title;
-  el.pageSubtitle.textContent = 'Chọn chương để đọc';
   el.detailTitle.textContent = meta.title || story.title;
   el.detailMeta.textContent = `${meta.author || 'Không rõ tác giả'} • ${chapters.length} chương`;
   el.detailDescription.textContent = meta.description || 'Chưa có mô tả.';
@@ -426,6 +435,11 @@ async function openChapter(chapterId, restoreScroll = true) {
     el.readerStoryTitle.textContent = state.selectedStory.title;
     el.readerChapterTitle.textContent = chapter.title || `Chương ${chapterIndex + 1}`;
     el.readerContent.innerHTML = formatText(content);
+    el.subNovelTitle.textContent = state.selectedStory.title;
+    el.subChapterTitle.textContent = chapter.title || `Chương ${chapterIndex + 1}`;
+
+    // Hiện sub-header khi ở chế độ đọc
+    el.topReaderNav.classList.remove('hidden');
 
     const savedChapterId = getLastChapterIdForStory(state.selectedStory.id);
     const savedChapterIndex = chapters.findIndex(item => String(item.id) === String(savedChapterId));
@@ -469,6 +483,14 @@ function updateChapterButtons() {
   el.nextChapterBtn.disabled = isNextDisabled;
   el.bottomPrevChapterBtn.disabled = isPrevDisabled;
   el.bottomNextChapterBtn.disabled = isNextDisabled;
+
+  [el.prevChapterBtn, el.topPrevChapterBtn, el.bottomPrevChapterBtn].forEach(btn => {
+    if (btn) btn.disabled = isPrevDisabled;
+  });
+
+  [el.nextChapterBtn, el.topNextChapterBtn, el.bottomNextChapterBtn].forEach(btn => {
+    if (btn) btn.disabled = isNextDisabled;
+  });
 }
 
 function saveCurrentScroll() {
@@ -492,7 +514,6 @@ async function continueReading() {
 
 function goToLibrary() {
   el.pageTitle.textContent = 'Thư viện truyện';
-  el.pageSubtitle.textContent = 'Chọn một truyện để bắt đầu đọc';
   showView('library');
 }
 
@@ -639,6 +660,10 @@ el.toggleDescriptionBtn.addEventListener('click', () => {
 
   updateDescriptionToggle();
 });
+
+el.topPrevChapterBtn.addEventListener('click', goPrevChapter);
+el.topNextChapterBtn.addEventListener('click', goNextChapter);
+el.topOpenChapterListBtn.addEventListener('click', openChapterList);
 
 window.addEventListener('scroll', saveCurrentScroll);
 window.addEventListener('beforeunload', saveCurrentScroll);

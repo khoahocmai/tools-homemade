@@ -33,18 +33,12 @@
     <main class="main-content">
       <header class="topbar">
         <div class="topbar-left">
-          <button id="sidebarToggleBtn" class="ghost-btn sidebar-toggle-btn" title="Đóng/mở thanh bên">☰</button>
+          <button id="sidebarToggleBtn" class="ghost-btn sidebar-toggle-btn">☰</button>
           <button id="backToLibraryBtn" class="ghost-btn hidden">← Thư viện</button>
           <div>
             <h2 id="pageTitle">Thư viện truyện</h2>
-            <p id="pageSubtitle">Chọn một truyện để bắt đầu đọc</p>
+            <p id="pageSubtitle"></p>
           </div>
-        </div>
-
-        <div id="topReaderNav" class="reader-toolbar top-reader-toolbar hidden">
-          <button id="topPrevChapterBtn" class="ghost-btn">← Chương trước</button>
-          <button id="topOpenChapterListBtn" class="ghost-btn">Mục lục</button>
-          <button id="topNextChapterBtn" class="ghost-btn">Chương sau →</button>
         </div>
 
         <div class="topbar-right">
@@ -53,6 +47,20 @@
           <button id="themeToggleBtn" class="ghost-btn">🌙</button>
         </div>
       </header>
+
+      <div id="topReaderNav" class="sub-header-nav hidden">
+        <div class="sub-header-left">
+          <span id="subNovelTitle">Tên truyện</span> / <span id="subChapterTitle">Chương...</span>
+        </div>
+
+        <div class="sub-header-center">
+          <button id="topPrevChapterBtn" class="ghost-btn">← Trước</button>
+          <button id="topOpenChapterListBtn" class="ghost-btn">Mục lục</button>
+          <button id="topNextChapterBtn" class="ghost-btn">Sau →</button>
+        </div>
+
+        <div class="sub-header-right"></div>
+      </div>
 
       <section id="libraryView" class="view active">
         <div id="libraryGrid" class="library-grid"></div>
@@ -93,7 +101,7 @@
       </section>
 
       <section id="readerView" class="view">
-        <div class="reader-toolbar">
+        <div class="reader-toolbar hidden">
           <button id="prevChapterBtn" class="ghost-btn" title="Chương trước (A / ←)">← Chương trước</button>
           <button id="openChapterListBtn" class="ghost-btn">Mục lục</button>
           <button id="nextChapterBtn" class="ghost-btn" title="Chương sau (D / →)">Chương sau →</button>
