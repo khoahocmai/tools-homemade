@@ -97,6 +97,62 @@ function formatText(content) {
     .join('');
 }
 
+function withInstantScrollBehavior(action) {
+  const previousHtmlBehavior = document.documentElement.style.scrollBehavior;
+  const previousBodyBehavior = document.body.style.scrollBehavior;
+
+  document.documentElement.style.scrollBehavior = 'auto';
+  document.body.style.scrollBehavior = 'auto';
+
+  try {
+    return action();
+  } finally {
+    document.documentElement.style.scrollBehavior = previousHtmlBehavior;
+    document.body.style.scrollBehavior = previousBodyBehavior;
+  }
+}
+
+function scrollToPositionInstant(top) {
+  withInstantScrollBehavior(() => {
+    window.scrollTo({ top, behavior: 'auto' });
+  });
+}
+
+function fastScrollToTop(duration = 180) {
+  const startY = window.scrollY;
+
+  if (startY <= 0) {
+    return Promise.resolve();
+  }
+
+  return new Promise(resolve => {
+    const startTime = performance.now();
+
+    function finish() {
+      scrollToPositionInstant(0);
+      resolve();
+    }
+
+    function step(now) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 4);
+      const nextY = Math.round(startY * (1 - eased));
+
+      scrollToPositionInstant(nextY);
+
+      if (progress < 1 && nextY > 0) {
+        requestAnimationFrame(step);
+        return;
+      }
+
+      finish();
+    }
+
+    requestAnimationFrame(step);
+  });
+}
+
 async function fetchJson(path) {
   const response = await fetch(path);
   if (!response.ok) throw new Error(`Không thể tải ${path}`);
@@ -358,10 +414,6 @@ async function openChapter(chapterId, restoreScroll = true) {
       showPageLoading();
     }
 
-    if (!restoreScroll) {
-      window.scrollTo({ top: 0, behavior: 'auto' });
-    }
-
     const content = await fetchChapterContent(chapterId);
     const chapter = chapters[chapterIndex];
 
@@ -388,20 +440,20 @@ async function openChapter(chapterId, restoreScroll = true) {
     showView('reader');
     updateChapterButtons();
 
-    requestAnimationFrame(() => {
+    await new Promise(resolve => {
       requestAnimationFrame(() => {
-        if (restoreScroll) {
-          const savedScroll = Number(localStorage.getItem(getScrollKey(state.selectedStory.id, chapterId)) || 0);
-          window.scrollTo({ top: savedScroll, behavior: 'auto' });
-          hidePageLoading();
-        } else {
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          setTimeout(() => {
-            hidePageLoading();
-          }, 300);
-        }
+        requestAnimationFrame(resolve);
       });
     });
+
+    if (restoreScroll) {
+      const savedScroll = Number(localStorage.getItem(getScrollKey(state.selectedStory.id, chapterId)) || 0);
+      scrollToPositionInstant(savedScroll);
+      hidePageLoading();
+    } else {
+      await fastScrollToTop();
+      hidePageLoading();
+    }
   } catch (error) {
     hidePageLoading();
     alert(error.message);
@@ -500,7 +552,7 @@ function openChapterList() {
 
   showView('detail');
   renderStoryDetail();
-  window.scrollTo({ top: 0, behavior: 'smooth' });
+  fastScrollToTop(100);
 
   requestAnimationFrame(() => {
     updateDescriptionToggle();
