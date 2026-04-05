@@ -610,3 +610,9 @@ body.dark .page-loading-overlay {
   color: var(--secondary-text);
   /* Dùng màu phụ cho tác giả */
 }
+
+body {
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}

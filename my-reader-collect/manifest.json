@@ -1,13 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "Story Scraper Pro",
+  "name": "My Story Scraper",
   "version": "1.1",
   "permissions": [
     "activeTab",
     "scripting",
     "storage"
   ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "64": "icons/icon64.png"
+  },
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon32.png"
   }
 }
