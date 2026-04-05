@@ -5,28 +5,45 @@
   <meta charset="UTF-8">
   <style>
     body {
-      width: 280px;
+      width: 300px;
       padding: 15px;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: 'Segoe UI', sans-serif;
     }
 
     .field {
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
 
     label {
       display: block;
-      font-size: 12px;
+      font-size: 11px;
       color: #666;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
     }
 
     input {
       width: 100%;
-      padding: 8px;
+      padding: 6px;
       box-sizing: border-box;
       border: 1px solid #ddd;
       border-radius: 4px;
+    }
+
+    .auto-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 15px 0;
+      background: #f0f7ff;
+      padding: 10px;
+      border-radius: 6px;
+    }
+
+    .auto-group label {
+      color: #007bff;
+      font-weight: bold;
+      margin: 0;
+      font-size: 13px;
     }
 
     button {
@@ -43,28 +60,42 @@
     button:hover {
       background: #0056b3;
     }
+
+    input[type="checkbox"] {
+      width: auto;
+    }
   </style>
 </head>
 
 <body>
-  <h3 style="margin-top: 0;">Quét Truyện</h3>
+  <h3 style="margin-top: 0; color: #333;">Story Scraper Pro 🚀</h3>
 
   <div class="field">
-    <label>Thẻ Tiêu đề (vd: h1 a)</label>
-    <input type="text" id="titleSelector" placeholder="Thẻ chứa tên chương">
+    <label>Thẻ Tiêu đề (vd: h1.chapter-title)</label>
+    <input type="text" id="titleSelector">
   </div>
 
   <div class="field">
-    <label>Thẻ Nội dung (vd: #content-chapter p)</label>
-    <input type="text" id="contentSelector" placeholder="Thẻ chứa nội dung truyện">
+    <label>Thẻ Nội dung (vd: .cha-content)</label>
+    <input type="text" id="contentSelector">
   </div>
 
   <div class="field">
-    <label>Tiền tố tên file (Prefix)</label>
-    <input type="text" id="filename" placeholder="Vd: kinh-khung-tu-tien-lo">
+    <label>Nút "Chương Sau" (vd: #next_chap hoặc .btn-next)</label>
+    <input type="text" id="nextSelector" placeholder="Dùng để tự động chuyển chương">
   </div>
 
-  <button id="scrapeBtn">Quét & Tải .txt</button>
+  <div class="field">
+    <label>Tên Truyện (Prefix)</label>
+    <input type="text" id="filename">
+  </div>
+
+  <div class="auto-group">
+    <input type="checkbox" id="autoMode">
+    <label for="autoMode">Bật Chế Độ Tự Động Toàn Tập</label>
+  </div>
+
+  <button id="scrapeBtn">Quét & Tải Ngay</button>
 
   <script src="popup.js"></script>
 </body>

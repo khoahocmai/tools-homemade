@@ -14,6 +14,20 @@ function getHostname(url) {
 
 // --- PHẦN 1: TỰ ĐỘNG LƯU & TẢI CẤU HÌNH ---
 
+// 1. Thêm đầy đủ 4 ID vào danh sách theo dõi
+const inputs = ['titleSelector', 'contentSelector', 'nextSelector', 'filename'];
+
+// Hàm ánh xạ ID HTML sang Key lưu trữ trong Storage để đảm bảo đồng nhất
+function getStorageKey(id) {
+  const mapping = {
+    'titleSelector': 'titleSel',
+    'contentSelector': 'contentSel',
+    'nextSelector': 'nextSel',
+    'filename': 'fname'
+  };
+  return mapping[id];
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
   const tab = await getCurrentTab();
   const domain = getHostname(tab.url);
@@ -22,40 +36,44 @@ document.addEventListener('DOMContentLoaded', async () => {
     const configs = data.configs || {};
     const siteConfig = configs[domain] || {};
 
-    // Điền dữ liệu cũ vào các ô input
-    if (siteConfig.titleSel) document.getElementById('titleSelector').value = siteConfig.titleSel;
-    if (siteConfig.contentSel) document.getElementById('contentSelector').value = siteConfig.contentSel;
-    if (siteConfig.fname) document.getElementById('filename').value = siteConfig.fname;
+    // Điền dữ liệu từ Storage vào các ô Input
+    inputs.forEach(id => {
+      const key = getStorageKey(id);
+      if (siteConfig[key]) {
+        document.getElementById(id).value = siteConfig[key];
+      }
+    });
 
-    // TỰ ĐỘNG QUÉT: Nếu đã có đủ Selector, tự kích hoạt nút Quét ngay lập tức
-    if (siteConfig.titleSel && siteConfig.contentSel) {
-      // Đợi một chút (300ms) để UI ổn định rồi tự bấm nút
-      setTimeout(() => {
-        document.getElementById('scrapeBtn').click();
-      }, 300);
-    }
+    // Điền trạng thái nút Tự động
+    document.getElementById('autoMode').checked = siteConfig.autoMode || false;
   });
 });
 
-// Lưu cấu hình ngay khi người dùng gõ phím (để lần sau mở lại là có luôn)
-const inputs = ['titleSelector', 'contentSelector', 'filename'];
-inputs.forEach(id => {
-  document.getElementById(id).addEventListener('input', async () => {
+// 2. Lưu cấu hình ngay khi có bất kỳ thay đổi nào (Change hoặc Input)
+[...inputs, 'autoMode'].forEach(id => {
+  const element = document.getElementById(id);
+
+  // Lắng nghe sự kiện 'input' để lưu ngay khi đang gõ
+  element.addEventListener('input', async () => {
     const tab = await getCurrentTab();
     const domain = getHostname(tab.url);
 
     chrome.storage.local.get(['configs'], (data) => {
       const configs = data.configs || {};
+
+      // Cập nhật giá trị mới
       configs[domain] = {
         titleSel: document.getElementById('titleSelector').value,
         contentSel: document.getElementById('contentSelector').value,
-        fname: document.getElementById('filename').value
+        nextSel: document.getElementById('nextSelector').value,
+        fname: document.getElementById('filename').value,
+        autoMode: document.getElementById('autoMode').checked
       };
+
       chrome.storage.local.set({ configs });
     });
   });
 });
-
 
 // --- PHẦN 2: QUÉT NỘI DUNG VÀ TẢI FILE ---
 
@@ -64,10 +82,7 @@ document.getElementById('scrapeBtn').addEventListener('click', async () => {
   const contentSelector = document.getElementById('contentSelector').value;
   const prefix = document.getElementById('filename').value;
 
-  if (!contentSelector) {
-    // Nếu chưa có selector thì không làm gì (để người dùng tự nhập)
-    return;
-  }
+  if (!contentSelector) return;
 
   let tab = await getCurrentTab();
 
@@ -102,13 +117,9 @@ document.getElementById('scrapeBtn').addEventListener('click', async () => {
     if (results && results[0] && results[0].result) {
       const data = results[0].result;
       const chapterNum = getPaddedChapterNumber(data.detectedTitle);
-      let finalFileName = "";
-
-      if (prefix) {
-        finalFileName = `${slugify(prefix)}_chuong-${chapterNum}`;
-      } else {
-        finalFileName = slugify(data.detectedTitle);
-      }
+      let finalFileName = prefix
+        ? `${slugify(prefix)}_chuong-${chapterNum}`
+        : slugify(data.detectedTitle);
 
       downloadTxt(data.fullText, finalFileName);
     }
@@ -120,8 +131,7 @@ document.getElementById('scrapeBtn').addEventListener('click', async () => {
 function getPaddedChapterNumber(text) {
   const match = text.match(/\d+/);
   if (!match) return "000";
-  let num = match[0];
-  return num.padStart(3, '0');
+  return match[0].padStart(3, '0');
 }
 
 function slugify(text) {

@@ -15,5 +15,15 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icons/icon32.png"
-  }
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "<all_urls>"
+      ],
+      "js": [
+        "content.js"
+      ]
+    }
+  ]
 }
