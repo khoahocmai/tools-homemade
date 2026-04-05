@@ -1,0 +1,409 @@
+{
+  "batch": 6,
+  "folder": "batch-006",
+  "from": 501,
+  "to": 600,
+  "count": 100,
+  "chapters": [
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-501",
+      "title": "Chương 501: Vẫn lạc đạo binh, thiên hạ hải bộ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-502",
+      "title": "Chương 502: Chiếu ảnh tra người, cõng nồi dẫn họa"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-503",
+      "title": "Chương 503: Kinh thành mua bán, ngưng tụ thi chó"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-504",
+      "title": "Chương 504: Thi chó hung hiểm, rút ra tin tức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-505",
+      "title": "Chương 505: Rất nhiều trường sinh, bao nhiêu thần bí"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-506",
+      "title": "Chương 506: Tuyệt địa cầu sinh, ngoan độc kế hoạch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-507",
+      "title": "Chương 507: Kế trúng bẫy rập, khống chế toàn cục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-508",
+      "title": "Chương 508: Quái dị bên trong trí tuệ người phản kích"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-509",
+      "title": "Chương 509: Bốn Đại Bồ Tát, bắt sống dị số"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-510",
+      "title": "Chương 510: Logic phản kích, bốn đạo hợp binh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-511",
+      "title": "Chương 511: Sóng lớn ngập trời, kiếp khí phóng đại"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-512",
+      "title": "Chương 512: Ký ức sơ hở, Long Vương tế tự"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-513",
+      "title": "Chương 513: Độ hóa ngư yêu, chư thiên nguyên lý"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-514",
+      "title": "Chương 514: Bàn Long hồ long mạch, ba ngàn năm bố trí"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-515",
+      "title": "Chương 515: Địa lợi nhân hòa, Càn Khôn trí tuệ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-516",
+      "title": "Chương 516: Chân tướng chỉ có một cái!"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-517",
+      "title": "Chương 517: 100 ngàn năm chiến tranh, ngươi dám ứng sao?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-518",
+      "title": "Chương 518: Hai bước kế hoạch, giai tầng cách ly"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-519",
+      "title": "Chương 519: Ngành nghề chia cắt, tin tức trao đổi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-520",
+      "title": "Chương 520: Một tia hi vọng, màu son hoa thuyền"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-521",
+      "title": "Chương 521: Ăn tận tạng phủ, phồn hoa mê mắt"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-522",
+      "title": "Chương 522: Bình chướng suy yếu, đến kinh thành"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-523",
+      "title": "Chương 523: Kinh thành tình huống, tuyển định mục tiêu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-524",
+      "title": "Chương 524: « thế giới chân tướng bách khoa toàn thư »"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-525",
+      "title": "Chương 525: Điệp gia sử dụng, tuyệt không hi vọng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-526",
+      "title": "Chương 526: Điệu hổ ly sơn, tập hợp tin tức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-527",
+      "title": "Chương 527: Tài nguyên cứ điểm, hoàng tử truyền tin"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-528",
+      "title": "Chương 528: Chú ý cẩn thận, Nam Sơn đi săn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-529",
+      "title": "Chương 529: Lời đồn đại nổi lên bốn phía, gặp mặt hoàng đế"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-530",
+      "title": "Chương 530: Ba tấc không nát, đế tâm lạnh lẽo cứng rắn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-531",
+      "title": "Chương 531: Bí mật thành tiên, muốn ngươi đi chết!"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-532",
+      "title": "Chương 532: Tiến vào hoàng cung, Văn Thư cung điện"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-533",
+      "title": "Chương 533: Dưới mặt đất thư khố, Võ Đức công chúa"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-534",
+      "title": "Chương 534: Công pháp biến hóa, thứ năm mươi đồ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-535",
+      "title": "Chương 535: Mới nội dung, đại kiếp nhân quả?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-536",
+      "title": "Chương 536: Suy tính Phong Thần, hàng duy công kích"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-537",
+      "title": "Chương 537: Phong Thần hai bước, phật tự dị động"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-538",
+      "title": "Chương 538: Ngô Đức đề nghị, Linh Đài Phật Quang"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-539",
+      "title": "Chương 539: Phát giác bẫy rập, vạn ảnh người giấy"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-540",
+      "title": "Chương 540: Dục Thần pháp thân, quang minh cầu thang"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-541",
+      "title": "Chương 541: Tử thương thảm trọng, bước vào phật tự"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-542",
+      "title": "Chương 542: Quái dị cung điện, trong hồ vòng xoáy"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-543",
+      "title": "Chương 543: Khổ Hải vô biên, cả điện xương khô"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-544",
+      "title": "Chương 544: Âm Ma Minh Không, tăng nhân bóng lưng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-545",
+      "title": "Chương 545: Tâm âm mưu, khảo thí chiến lực"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-546",
+      "title": "Chương 546: Viễn siêu linh thức, Động Thiên quái dị"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-547",
+      "title": "Chương 547: Ao hoa sen đường, bạch cốt thiện xướng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-548",
+      "title": "Chương 548: Vô hình sợ hãi, Pháp Tướng giám sát"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-549",
+      "title": "Chương 549: Miệng pháo mê hoặc, đắc thủ chạy trốn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-550",
+      "title": "Chương 550: Thoát ra Linh Đài, vạn linh mẫu nhãn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-551",
+      "title": "Chương 551: Tà ác pháp khí, bạch cốt suy đoán"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-552",
+      "title": "Chương 552: Có thể sát tiên vũ khí!"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-553",
+      "title": "Chương 553: Bát tiên phía trên, thần bí bia đá"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-554",
+      "title": "Chương 554: Không biết thời không, dị vực trận pháp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-555",
+      "title": "Chương 555: Thiên cùng địch cùng khởi nguyên chân tướng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-556",
+      "title": "Chương 556: Thiên chi cánh tay, Logic cấu thành"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-557",
+      "title": "Chương 557: Thành lập cửa sau, không hiểu đối thoại"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-558",
+      "title": "Chương 558: Hoàn mỹ khép kín, thu thập tài nguyên"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-559",
+      "title": "Chương 559: Nguyện vọng kiếp khí, định hướng kế hoạch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-560",
+      "title": "Chương 560: Kế hoạch bộc phát, Quy Nguyên quan diệt"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-561",
+      "title": "Chương 561: Thu hoạch to lớn, không ngừng đột phá"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-562",
+      "title": "Chương 562: Kinh thành biến hóa, đảo ngược lũng đoạn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-563",
+      "title": "Chương 563: Tinh khí đường tắt, vương triều những năm cuối"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-564",
+      "title": "Chương 564: Phổ Giang Danh kỹ, lấy mạng tuyết hận"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-565",
+      "title": "Chương 565: Ngưng tụ Địa Hồn, dưới mặt đất thời không"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-566",
+      "title": "Chương 566: Địa Hồn huyễn cảnh, nguy cơ chợt đến"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-567",
+      "title": "Chương 567: Xuất thủ dẫn dắt, một kiếm khảo thí"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-568",
+      "title": "Chương 568: Giấu không được, bạch cốt thôi diễn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-569",
+      "title": "Chương 569: Khóa chặt chờ đợi, bi phẫn Ngô Đức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-570",
+      "title": "Chương 570: Lý thu tiên động, suy tính tử kiếp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-571",
+      "title": "Chương 571: Khóa kín đường tắt, tận thế thần chú"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-572",
+      "title": "Chương 572: Đại lượng bẫy rập, Kim Thân bạch cốt"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-573",
+      "title": "Chương 573: Bạch cốt quái dị, anh hùng vô danh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-574",
+      "title": "Chương 574: Mộ thất ngọc chỗ ở, Logic chợt lộ ra"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-575",
+      "title": "Chương 575: Thế lực ngang nhau, lòng người hiểm ác"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-576",
+      "title": "Chương 576: Vực sâu lơ lửng, bạch cốt cung điện"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-577",
+      "title": "Chương 577: Bồi táng thi thể, vạn năm tàng thư"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-578",
+      "title": "Chương 578: Vực sâu quái dị, trong cung có bảo"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-579",
+      "title": "Chương 579"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-580",
+      "title": "Chương 580: Bảo vật bảo tài, Thiên Cung rơi xuống"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-581",
+      "title": "Chương 581: Thật bảo trường sinh, liên thủ trấn áp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-582",
+      "title": "Chương 582: Trấn áp thô bạo, chân huyết tin tức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-583",
+      "title": "Chương 583: Gặp lại Long Vương, một bút giao dịch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-584",
+      "title": "Chương 584: Nghiệm chứng đáng tin, không thể gọi tên"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-585",
+      "title": "Chương 585: Giao thừa ngày hội, thần bí cảnh cáo"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-586",
+      "title": "Chương 586: Mạng lưới bố trí, tam vương tranh phong"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-587",
+      "title": "Chương 587: Linh thú trong thành, tu sĩ gia tộc"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-588",
+      "title": "Chương 588: Hơi tiểu sự kiện, kế hoạch bắt đầu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-589",
+      "title": "Chương 589"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-590",
+      "title": "Chương 590: Vây điểm đánh viện binh, bại lộ hành quân"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-591",
+      "title": "Chương 591: Tương kế tựu kế, tiến đánh quặng mỏ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-592",
+      "title": "Chương 592: Ngươi tới ta đi, đều tại trong cục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-593",
+      "title": "Chương 593: Điệu hổ ly sơn, ngọn đèn chặn đường"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-594",
+      "title": "Chương 594"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-595",
+      "title": "Chương 595: Linh thú thiên tài, cho mượn xương bố cục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-596",
+      "title": "Chương 596: Thanh Loan vào cuộc, vở kịch khai mạc"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-597",
+      "title": "Chương 597: Ngang nhiên xuất thủ, đều trúng kế vậy"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-598",
+      "title": "Chương 598"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-599",
+      "title": "Chương 599: Vạn linh phong thiên, yêu thần xuất thủ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-600",
+      "title": "Chương 600: Nam Cương địa quật, quỷ dị mặt người"
+    }
+  ]
+}

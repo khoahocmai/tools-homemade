@@ -2,8 +2,8 @@
   "batch": 1,
   "folder": "batch-001",
   "from": 1,
-  "to": 50,
-  "count": 50,
+  "to": 100,
+  "count": 100,
   "chapters": [
     {
       "id": "kinh-khung-tu-tien-lo_chuong-001",
@@ -204,6 +204,206 @@
     {
       "id": "kinh-khung-tu-tien-lo_chuong-050",
       "title": "Chương 50: Tiễn như mưa xuống, binh gia thủ đoạn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-051",
+      "title": "Chương 51: Chân pháp đối kháng, chém giết phản đồ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-052",
+      "title": "Chương 52: Phá cục mấu chốt, thăm dò phục kích"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-053",
+      "title": "Chương 53: Binh gia lợi hại, phích lịch kiến công"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-054",
+      "title": "Chương 54: Linh dược tới tay, pháp thuật kết cấu?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-055",
+      "title": "Chương 55: Nguy hiểm chưa tiêu, cấp tốc hành động"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-056",
+      "title": "Chương 56: Bước thứ hai thành, hạn mức cao nhất lại tăng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-057",
+      "title": "Chương 57: Huyền Thiết kiếm hoàn, bờ sông ngủ ngoài trời"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-058",
+      "title": "Chương 58: Quỷ đón dâu, ngốc thư sinh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-059",
+      "title": "Chương 59: Tú tài Chu Thanh Minh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-060",
+      "title": "Chương 60: Khói sóng lượn lờ, đơn sơ thuyền đánh cá"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-061",
+      "title": "Chương 61: Trong lúc ngủ mơ, Long cung mời"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-062",
+      "title": "Chương 62: Người yến cùng trả lời"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-063",
+      "title": "Chương 63: Một trận giao dịch, cẩu đạo bên trong người"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-064",
+      "title": "Chương 64: Tàng Khí châu, lão Long mưu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-065",
+      "title": "Chương 65: Vẫn là chậm, một kiếm hết nợ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-066",
+      "title": "Chương 66: Trên thành không tinh khí, ngoài thành tinh khí tụ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-067",
+      "title": "Chương 67: Quỷ Thị kỳ diệu, hầu tử chớ đi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-068",
+      "title": "Chương 68: Nhật Nguyệt Thần Mục, Quỷ Thị bản tướng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-069",
+      "title": "Chương 69: Kinh khủng mỹ nhân, Quỷ Thị phong tỏa"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-070",
+      "title": "Chương 70: Cấm chế trận pháp, thúc thủ vô sách"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-071",
+      "title": "Chương 71: Thiên nữ xây chùa, thi trùng nhập thể"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-072",
+      "title": "Chương 72: Thành nội môn đệ tử, Ngưu Thập Tam mở tiệc chiêu đãi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-073",
+      "title": "Chương 73: Giải vây chuột hoang, âm thầm chờ đợi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-074",
+      "title": "Chương 74: Thiên nữ cao tầng, sốt ruột nghiệm chứng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-075",
+      "title": "Chương 75: Truyền tin Tam Xuyên, bình minh tập kích"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-076",
+      "title": "Chương 76: Quần tu đấu pháp, ngư ông đắc lợi?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-077",
+      "title": "Chương 77: Thi trùng bạo động, Tam Xuyên thành nguy"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-078",
+      "title": "Chương 78: Phóng xạ biến dị, bước vào bẫy rập"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-079",
+      "title": "Chương 79: Thu hoạch phong phú, chân pháp Tráng Thể"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-080",
+      "title": "Chương 80: Bổ túc trang bị, bán pháp khí"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-081",
+      "title": "Chương 81: Biến thân mua bán, trong dự liệu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-082",
+      "title": "Chương 82: Thiên Minh tức giận, xe ngựa xuất hành"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-083",
+      "title": "Chương 83: Sơn Thần khảo thí, mưa gió người đến"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-084",
+      "title": "Chương 84: Quỷ dị tiếng cười, điên cuồng biến dị"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-085",
+      "title": "Chương 85: Tượng thần quái dị, quân mã cửa thành"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-086",
+      "title": "Chương 86: Giấu giếm đề phòng, học cung tình huống"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-087",
+      "title": "Chương 87: Tứ phương bất ổn, Nho môn chính đạo"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-088",
+      "title": "Chương 88: Quang minh chính đại, trước cửa tìm phun"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-089",
+      "title": "Chương 89: Phu tử \"Chính đạo\", thiên hạ Tuần Hành"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-090",
+      "title": "Chương 90: Du tẩu học cung, tương lai đều có thể"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-091",
+      "title": "Chương 91: Sa vào biển sách, Chu gia phẫn uất"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-092",
+      "title": "Chương 92: Chín đại thiên phú, thiên hạ bách khoa toàn thư"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-093",
+      "title": "Chương 93: Việc cấp bách, văn hội bẫy rập"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-094",
+      "title": "Chương 94: Thiên Mệnh người, phương hướng lựa chọn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-095",
+      "title": "Chương 95: Quái dị lão đầu, truy tung mà đến"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-096",
+      "title": "Chương 96: Da người máu, dòm thi biến"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-097",
+      "title": "Chương 97: Phương pháp giải quyết, học cung quy củ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-098",
+      "title": "Chương 98: Im ắng kinh khủng, tu hành dị nhiễm"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-099",
+      "title": "Chương 99: Nhân quả truy hồn, sự tình vẫn chưa xong"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo-chuong-100",
+      "title": "Chương 100: Càng nhiều tin tức, Chu gia phụ tử"
     }
   ]
 }

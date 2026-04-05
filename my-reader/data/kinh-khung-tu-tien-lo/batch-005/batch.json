@@ -1,0 +1,409 @@
+{
+  "batch": 5,
+  "folder": "batch-005",
+  "from": 401,
+  "to": 500,
+  "count": 100,
+  "chapters": [
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-401",
+      "title": "Chương 401: Khám phá hết thảy Nguyên Trí Tuệ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-402",
+      "title": "Chương 402: Tương lai hung hiểm, trong thành phồn hoa"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-403",
+      "title": "Chương 403: Tao ngộ Logic quái dị đường đi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-404",
+      "title": "Chương 404: Logic nguy hiểm, quá ưu tú"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-405",
+      "title": "Chương 405: Phía sau mục đích, tới cửa muốn người"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-406",
+      "title": "Chương 406: Đạo môn tam giáo, phong vân quỷ quyệt"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-407",
+      "title": "Chương 407: Tên truyền thiên hạ, ba khu địa điểm"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-408",
+      "title": "Chương 408: Huyễn tượng hấp dẫn, Lam Nguyệt trên cầu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-409",
+      "title": "Chương 409: Nghi thức suy đoán, bia đá huyễn cảnh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-410",
+      "title": "Chương 410: Tam địa huyền bí, trường sinh nghi thức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-411",
+      "title": "Chương 411: Không con có thể dùng, địa đồ tạo dựng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-412",
+      "title": "Chương 412: Áp dụng kế hoạch, riêng phần mình vào bẫy"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-413",
+      "title": "Chương 413: Lòng có tính toán, trung tâm không hai"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-414",
+      "title": "Chương 414: Đấu giá hội bên trên quân cờ nhóm"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-415",
+      "title": "Chương 415: Ngửi thấy âm mưu hương vị"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-416",
+      "title": "Chương 416: Nhao nhao nhập ta cục!"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-417",
+      "title": "Chương 417: Phong truyền thiên hạ, kiếp số tiết lộ?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-418",
+      "title": "Chương 418: Đều có sầu lo, đế vương địa cung"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-419",
+      "title": "Chương 419: Huyết tinh tế tự, bổ túc trăm vật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-420",
+      "title": "Chương 420: Ngọc giới phiền phức, tại chỗ báo thù"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-421",
+      "title": "Chương 421: Mới truyền thuyết, cấp tốc khuếch trương"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-422",
+      "title": "Chương 422: Thế lực sơ thành, phá cục chi pháp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-423",
+      "title": "Chương 423: « cho mượn thọ thuật », thí nghiệm ý nghĩ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-424",
+      "title": "Chương 424: Chờ đợi hoàn thành, trà lâu bi thương"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-425",
+      "title": "Chương 425: Khẳng khái hào phóng, bánh nướng chi mê"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-426",
+      "title": "Chương 426: Bánh nướng thí nghiệm, quái dị nơi phát ra"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-427",
+      "title": "Chương 427: Thứ ba kiện còn sót lại vật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-428",
+      "title": "Chương 428: Cảm thấy bí mật, trở lại như cũ kiếp số"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-429",
+      "title": "Chương 429: Như tâm ta ý, đàm phán phu tử"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-430",
+      "title": "Chương 430: Cùng phu tử trần thuật sự thật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-431",
+      "title": "Chương 431: Vấn Tâm thước uy lực"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-432",
+      "title": "Chương 432: Đạt thành hiệp nghị, phu tử phục bút"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-433",
+      "title": "Chương 433: Lòng nghi ngờ lấp lóe, suy tính thứ ba"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-434",
+      "title": "Chương 434: Mạng lưới quan hệ lạc, khóa giếng đá hạ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-435",
+      "title": "Chương 435: Đáy hồ bùn đen, Minh Thổ mặt tối"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-436",
+      "title": "Chương 436: Lần nữa thí nghiệm, an toàn địa điểm"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-437",
+      "title": "Chương 437: Tài nguyên địa điểm, điều tra long kỳ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-438",
+      "title": "Chương 438: Logic quái dị, chân nhân thí nghiệm"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-439",
+      "title": "Chương 439: Niêm phong cửa qua lại, ma huyết xuất động"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-440",
+      "title": "Chương 440: Ma huyết vào bẫy, trụ sở dưới đất"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-441",
+      "title": "Chương 441: Vô số vật tư, huyết nhục bia đá"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-442",
+      "title": "Chương 442: Nguyện vọng bia đá, dẫn hắn vào cuộc"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-443",
+      "title": "Chương 443: Phu tử xuất thủ, đột phá trước đó"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-444",
+      "title": "Chương 444: Phàm nhân ngăn cách, bắt đầu trùng kích"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-445",
+      "title": "Chương 445: Quái dị đột kích, liên tiếp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-446",
+      "title": "Chương 446: Chân pháp đỉnh phong, Dương Châu diệt vong"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-447",
+      "title": "Chương 447: Kiếp số tin tức, dẫn đạo mà đến"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-448",
+      "title": "Chương 448: Gặp lại phu tử, kế hoạch khởi động"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-449",
+      "title": "Chương 449: Gậy ông đập lưng ông, xong tâm nguyện ta"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-450",
+      "title": "Chương 450: Thiên hạ chấn động, trí tuệ phân tích"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-451",
+      "title": "Chương 451: Cẩn thận thăm dò, mục đích thật sự"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-452",
+      "title": "Chương 452: Bốn đại tu sĩ, kiếp số trước đó"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-453",
+      "title": "Chương 453: Khám phá kế hoạch, khởi động kế hoạch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-454",
+      "title": "Chương 454: Khó nói hết toàn công, thứ hai đường lui"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-455",
+      "title": "Chương 455: Tị kiếp Động Thiên, trí tuệ động tĩnh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-456",
+      "title": "Chương 456: Trí tuệ suy tính, Lý Thanh thiết kế"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-457",
+      "title": "Chương 457: Trí tuệ bắt, không thể xem thường"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-458",
+      "title": "Chương 458: Trường sinh chính chủ, thi đà định lực"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-459",
+      "title": "Chương 459: Nắm giữ sơ hở, ai là con mồi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-460",
+      "title": "Chương 460: Quán rượu đàm phán, kiếp số lóe sáng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-461",
+      "title": "Chương 461: Liên hợp vơ vét, hỗn loạn khuếch tán"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-462",
+      "title": "Chương 462: Dương Châu đại chiến, biên quan phong vân"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-463",
+      "title": "Chương 463: Quyết thắng chi địa, sát kiếp mở ra"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-464",
+      "title": "Chương 464: Đều đang diễn trò, giẫm nhập bẫy rập"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-465",
+      "title": "Chương 465: Ô nhiễm nguyên thạch, khôi lỗi xuất động"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-466",
+      "title": "Chương 466: Dễ như trở bàn tay phá Pháp Tướng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-467",
+      "title": "Chương 467: Một bước Dương Châu, trấn áp nguyên thạch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-468",
+      "title": "Chương 468: Quần tinh hàng thế, thiên địa biến đổi lớn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-469",
+      "title": "Chương 469: Vô thượng mệnh hỏa, danh chấn thế gian"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-470",
+      "title": "Chương 470: Trường sinh đại yến, tương lai cách cục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-471",
+      "title": "Chương 471: Linh thức luyện pháp, ba ngàn phẩm tướng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-472",
+      "title": "Chương 472: Pháp Tướng phỏng đoán, luyện linh bắt đầu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-473",
+      "title": "Chương 473: Quỷ khóc thần hào, linh thức góc độ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-474",
+      "title": "Chương 474: Linh thức hung hiểm, bảy phá ảo diệu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-475",
+      "title": "Chương 475: Tu hành nuốt tặc, vô số ngoại tà"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-476",
+      "title": "Chương 476: Trên bầu trời, tận thế sắp tới?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-477",
+      "title": "Chương 477: Hoàn Vũ tâm linh, hình ảnh đáng sợ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-478",
+      "title": "Chương 478: Tái tạo thời không, giai cấp vĩnh cố"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-479",
+      "title": "Chương 479: Phá cục phương hướng, áo cưới thần thuật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-480",
+      "title": "Chương 480: Nhân quả bao trùm, Huyết Nguyệt giữa trời"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-481",
+      "title": "Chương 481: Chết bởi tham lam, dễ như trở bàn tay"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-482",
+      "title": "Chương 482: Uy năng phóng đại, hoàng thất tàng thư"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-483",
+      "title": "Chương 483: Câu lên Ngô Đức, cơ duyên tai hoạ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-484",
+      "title": "Chương 484: Thần vụ trong núi, đồ long bảo thuật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-485",
+      "title": "Chương 485: Sương mù tràn ngập, thần linh phân thân"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-486",
+      "title": "Chương 486: Nương tử, vi phu đến đây tiếp ngươi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-487",
+      "title": "Chương 487: Năm ngàn năm trước, tốt không hảo báo"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-488",
+      "title": "Chương 488: Hỗ lợi song doanh, Ngô Đức mục tiêu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-489",
+      "title": "Chương 489: Ngũ giác ảnh hưởng, bước vào lan đình"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-490",
+      "title": "Chương 490: Đại Hùng bảo điện, tà dị hình tượng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-491",
+      "title": "Chương 491: Cá nhân huyễn tượng, kiếp khí làm hao mòn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-492",
+      "title": "Chương 492: Trong tàng kinh các, vặn vẹo kinh văn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-493",
+      "title": "Chương 493: Bỗng nhiên tập kích, Pháp Tướng huyễn tượng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-494",
+      "title": "Chương 494: Phật Môn đầu nguồn, trong các quỷ âm thanh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-495",
+      "title": "Chương 495: Cực lạc mê tâm, thây khô như nước thủy triều"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-496",
+      "title": "Chương 496: Khô héo rừng cây, bạch cốt đại quân"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-497",
+      "title": "Chương 497: Ngô Đức chấn kinh, Xá Lợi nghĩa trang"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-498",
+      "title": "Chương 498: Lan đình biến đổi lớn, màu đen thạch tháp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-499",
+      "title": "Chương 499: Khôi phục bẫy rập, lần nữa Logic"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-500",
+      "title": "Chương 500: Trảm Tiên Phi Đao, không biết liên hệ"
+    }
+  ]
+}
