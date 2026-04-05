@@ -1,0 +1,209 @@
+{
+  "batch": 1,
+  "folder": "batch-001",
+  "from": 1,
+  "to": 50,
+  "count": 50,
+  "chapters": [
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-001",
+      "title": "Chương 1: Khắc hệ tu tiên, hắn phá giới?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-002",
+      "title": "Chương 2: Tu luyện công pháp, Huyết Chú luyện thể"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-003",
+      "title": "Chương 03: Điên cuồng một đao, chạy hùng hục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-004",
+      "title": "Chương 4: Suy đoán nguy hiểm, lập tức liền chạy"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-005",
+      "title": "Chương 5: Chạy trốn bằng đường thuỷ thoát thân, trong mưa tiếng chuông"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-006",
+      "title": "Chương 6: Vạn loại mù sương cạnh tự do"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-007",
+      "title": "Chương 7: Đói bụng, đạo hữu cứu mạng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-008",
+      "title": "Chương 8: Ai là con mồi, Giao Long nhiếp phách"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-009",
+      "title": "Chương 9: Tự mang dung hợp, Thiên Địa Nhân Huyết Chú?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-010",
+      "title": "Chương 10: Giang hồ lão thủ, \"Thử trượt\" quái thanh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-011",
+      "title": "Chương 11: Ăn não viên hầu, gọi linh kiến công"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-012",
+      "title": "Chương 12: Một đường đồng hành, cản đường thổ phỉ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-013",
+      "title": "Chương 13: « Thất Tinh Đao » phổ, nghỉ đêm hoang dã"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-014",
+      "title": "Chương 14: Lấy võ nhập đạo? Gọi linh mất đi hiệu lực"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-015",
+      "title": "Chương 15: Đao pháp cứu mạng, cuối cùng chống đỡ ngọc thành"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-016",
+      "title": "Chương 16: Tu luyện « Tinh Huyết Quyết »"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-017",
+      "title": "Chương 17: Mời cung phụng, trong thành quang vụ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-018",
+      "title": "Chương 18: Âm thầm ánh mắt, « Võ Quyết » Luyện Tinh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-019",
+      "title": "Chương 19: Đạo thống truyền thuyết, tối trúng mai phục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-020",
+      "title": "Chương 20: Ba quyết hợp nhất, phòng bên trên bóng đen"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-021",
+      "title": "Chương 21: Tu luyện « Linh Huyết Quyết » cùng « Âm Ảnh Thuật »"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-022",
+      "title": "Chương 22: Tri phủ sầu lo, ngồi chờ hẻm nhỏ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-023",
+      "title": "Chương 23: Hẻm nhỏ biến hóa, dị hoá tu sĩ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-024",
+      "title": "Chương 24: Đen thủy băng hàn, thu hoạch tương đối khá"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-025",
+      "title": "Chương 25: Tu luyện phỏng đoán, thế giới tin tức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-026",
+      "title": "Chương 26: Trúc Cơ chân pháp, điên cuồng nói mớ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-027",
+      "title": "Chương 27: Dung hợp phỏng đoán, mua sắm công pháp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-028",
+      "title": "Chương 28: Cảnh cáo mua sắm, thần bí thư tịch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-029",
+      "title": "Chương 29: Tìm tới cửa, ẩn tàng chân thực"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-030",
+      "title": "Chương 30: Nắm Toàn Bộ Người Trong Thiên Hạ Đạo Quyết"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-031",
+      "title": "Chương 31: Giao dịch thành lập, phương hướng suy nghĩ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-032",
+      "title": "Chương 32: Công môn tu hành, khảo hạch nhiệm vụ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-033",
+      "title": "Chương 33: Tồn tại phong hiểm, diệt môn vụ án"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-034",
+      "title": "Chương 34: Khảo sát địa hình, vụ án huyễn ảnh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-035",
+      "title": "Chương 35: Chân chính mục tiêu, khen thưởng thêm"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-036",
+      "title": "Chương 36: Hoạ sĩ tu sĩ, quái dị tin tức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-037",
+      "title": "Chương 37: Ký ức ảnh hưởng, công huân trao đổi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-038",
+      "title": "Chương 38: Dần dần bù đắp, lưu dân tử vong"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-039",
+      "title": "Chương 39: Giáp đẳng nhiệm vụ, huyết dịch vấn đề"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-040",
+      "title": "Chương 40: Âm phong quỷ gào, truy tung mà đến"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-041",
+      "title": "Chương 41: Giao dịch biến đổi lớn, cửa thành đại chiến"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-042",
+      "title": "Chương 42: Bước đầu tiên hoàn thành, Hoàng lão trợ giúp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-043",
+      "title": "Chương 43: Miếng ngọc huyền bí, Huyết Ma mưu đồ bí mật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-044",
+      "title": "Chương 44: Bại lộ thân phận, thống lĩnh bố cục"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-045",
+      "title": "Chương 45: Hỏi thăm cùng mật tín"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-046",
+      "title": "Chương 46: Phích lịch Lôi Hỏa, thần nhãn tối tra"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-047",
+      "title": "Chương 47: Chế định kế hoạch, kiểm nghiệm thật giả"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-048",
+      "title": "Chương 48: Công pháp nan đề, quyết định khởi binh"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-049",
+      "title": "Chương 49: Phẫn nộ tuyệt vọng, binh mã chấn địa"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-050",
+      "title": "Chương 50: Tiễn như mưa xuống, binh gia thủ đoạn"
+    }
+  ]
+}

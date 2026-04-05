@@ -1,0 +1,209 @@
+{
+  "batch": 3,
+  "folder": "batch-003",
+  "from": 101,
+  "to": 150,
+  "count": 50,
+  "chapters": [
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-101",
+      "title": "Chương 101: Huyết giáp ma chủng, chu kỳ luân hồi"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-102",
+      "title": "Chương 102: Ẩn tàng lịch sử, thế mà lên giá?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-103",
+      "title": "Chương 103: Pháp tài ý nghĩ, thật đúng là giáo chỉ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-104",
+      "title": "Chương 104: Trăm ảnh hóa thân, thuốc cao da chó"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-105",
+      "title": "Chương 105: Bóng ma tiến về, \"Ta đạo thành vậy!\""
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-106",
+      "title": "Chương 106: Dị hoá tu sĩ, phía sau câu cá lão"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-107",
+      "title": "Chương 107: Phía sau âm mưu? Giấu giếm Huyền Cơ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-108",
+      "title": "Chương 108: Thanh đồng máu dây leo, khác biệt phu tử"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-109",
+      "title": "Chương 109: Đạt thành hiệp nghị, tuân theo hiện thực"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-110",
+      "title": "Chương 110: Thành lập quy tắc, tăng lên điên cuồng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-111",
+      "title": "Chương 111: Trống rỗng mà đến, một trượng Nhân Kiếp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-112",
+      "title": "Chương 112: Kiếp số ba pháp, dừng lại hiện tại"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-113",
+      "title": "Chương 113: Ai cũng không biết, tìm kiếm tin tức"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-114",
+      "title": "Chương 114: Lịch sử án liệt, kiếp số bản chất"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-115",
+      "title": "Chương 115: Xóa đi hết thảy, đấu thiên phá kiếp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-116",
+      "title": "Chương 116: Lấy được tóc, Chu gia thu hoạch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-117",
+      "title": "Chương 117: Thiếu thiếu mấu chốt, thất bảo sách sẽ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-118",
+      "title": "Chương 118: Trấn ma tồn tại, chủ tuyến âm mưu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-119",
+      "title": "Chương 119: Mặt cười như hổ, cường khống Huyết Ma"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-120",
+      "title": "Chương 120: Tiếp tục ghi chép, cho ăn quái vật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-121",
+      "title": "Chương 121: Âm mưu hiển lộ, nhật ký điên cuồng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-122",
+      "title": "Chương 122: Nghiên cứu phù lục, để ngươi thành công"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-123",
+      "title": "Chương 123: Lấy được tóc, hàng phục Kim Xuyên"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-124",
+      "title": "Chương 124: Vu Chú đạo nhân, cướp giết diệt khẩu"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-125",
+      "title": "Chương 125: Thất Sát chú pháp, điên cuồng trong mộng"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-126",
+      "title": "Chương 126: Là chính nghĩa mà chết, chật vật quyết định"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-127",
+      "title": "Chương 127: Hận ý khuynh thiên, Huyết Ma dị động"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-128",
+      "title": "Chương 128: Tiêu diệt vết tích, ký ức nghi vấn"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-129",
+      "title": "Chương 129: Hoàn chỉnh kế hoạch, nhập mộng chi thuật"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-130",
+      "title": "Chương 130: Mơ tới tương lai? Thiên Tứ cơ duyên"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-131",
+      "title": "Chương 131: Mộng trong mộng? Thật cũng giả?"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-132",
+      "title": "Chương 132: Mắt sáng như đuốc, tàng thư khảo thí"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-133",
+      "title": "Chương 133: Lần nữa ghi vào, phản kích kế hoạch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-134",
+      "title": "Chương 134: Chui vào chỗ sâu, phong bạo trước đó"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-135",
+      "title": "Chương 135: Trong tháp lặng chờ, chính ma giao phong"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-136",
+      "title": "Chương 136: Đều có thủ đoạn, điên cuồng ghi vào"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-137",
+      "title": "Chương 137: Ngũ Hành tuyệt mệnh, hạ tràng huyết hải"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-138",
+      "title": "Chương 138: Rơi vào trấn ma, \"Ngươi trúng kế \""
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-139",
+      "title": "Chương 139: Tiễn ngươi lên đường, đúc thành đạo cơ"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-140",
+      "title": "Chương 140: Thiên hạ rung mạnh, tra khắp tất cả chư thiên"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-141",
+      "title": "Chương 141: Cấp tốc hồi phục, \"Xác nhận\" kết quả"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-142",
+      "title": "Chương 142: Cẩn thận đề phòng, phu tử suy đoán"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-143",
+      "title": "Chương 143: Dị nhiễm dây dưa, thiên hạ đều là địch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-144",
+      "title": "Chương 144: Yên lặng chuẩn bị, Từ lão tâm động"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-145",
+      "title": "Chương 145: Già những vẫn cường mãnh, nhân đạo chân pháp"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-146",
+      "title": "Chương 146: Ghi chú nhị lưu, pháp lực bện"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-147",
+      "title": "Chương 147: Cảnh giới phỏng đoán, « Gọi Ma Chú »"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-148",
+      "title": "Chương 148: Bảo vật tin tức, « diệt tà phù »"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-149",
+      "title": "Chương 149: Ảm đạm rút lui, bắt đầu thu hoạch"
+    },
+    {
+      "id": "kinh-khung-tu-tien-lo_chuong-150",
+      "title": "Chương 150: Nửa tháng thu hoạch, thỉnh giáo Trịnh lão"
+    }
+  ]
+}

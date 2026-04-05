@@ -250,12 +250,55 @@ function filterStories(keyword) {
   renderLibraryGrid();
 }
 
-function getChapterPage(index) {
-  return Math.floor(index / CHAPTERS_PER_PAGE) + 1;
+function getChapterPageSize(meta = state.selectedMeta) {
+  return Number(meta?.chapterBatchSize) || CHAPTERS_PER_PAGE;
 }
 
-function getChapterPageCount(chapters = []) {
-  return Math.max(1, Math.ceil(chapters.length / CHAPTERS_PER_PAGE));
+function getBatchFolderName(batchNumber) {
+  return `batch-${String(batchNumber).padStart(3, '0')}`;
+}
+
+function getChapterPage(index, pageSize = getChapterPageSize()) {
+  return Math.floor(index / pageSize) + 1;
+}
+
+function getChapterPageCount(chapters = [], pageSize = getChapterPageSize()) {
+  return Math.max(1, Math.ceil(chapters.length / pageSize));
+}
+
+function normalizeBatchChapters(batchData, batchFolder) {
+  return (batchData?.chapters || []).map(chapter => ({
+    ...chapter,
+    batch: chapter.batch || batchFolder
+  }));
+}
+
+async function loadChaptersFromBatches(storyFolder, meta) {
+  if (Array.isArray(meta?.chapters)) {
+    return meta.chapters;
+  }
+
+  const batchCount = Number(meta?.chapterBatchCount) || 0;
+  if (batchCount <= 0) {
+    return [];
+  }
+
+  const batchRequests = Array.from({ length: batchCount }, (_, index) => {
+    const batchNumber = index + 1;
+    const batchFolder = getBatchFolderName(batchNumber);
+
+    return fetchJson(`data/${storyFolder}/${batchFolder}/batch.json`).then(batchData => ({
+      batchNumber,
+      batchFolder,
+      batchData
+    }));
+  });
+
+  const batches = await Promise.all(batchRequests);
+
+  return batches
+    .sort((left, right) => left.batchNumber - right.batchNumber)
+    .flatMap(({ batchData, batchFolder }) => normalizeBatchChapters(batchData, batchFolder));
 }
 
 function getChapterIndex(chapterId) {
@@ -273,11 +316,12 @@ function renderStoryDetail() {
   if (!meta || !story) return;
 
   const chapters = meta.chapters || [];
-  const totalPages = getChapterPageCount(chapters);
+  const pageSize = getChapterPageSize(meta);
+  const totalPages = getChapterPageCount(chapters, pageSize);
   state.chapterPage = Math.min(totalPages, Math.max(1, state.chapterPage));
 
-  const startIndex = (state.chapterPage - 1) * CHAPTERS_PER_PAGE;
-  const visibleChapters = chapters.slice(startIndex, startIndex + CHAPTERS_PER_PAGE);
+  const startIndex = (state.chapterPage - 1) * pageSize;
+  const visibleChapters = chapters.slice(startIndex, startIndex + pageSize);
   const lastChapterId = getLastChapterIdForStory(story.id);
 
   el.pageTitle.textContent = story.title;
@@ -336,7 +380,7 @@ function getChapterPaths(chapterId) {
   }
 
   if (chapterIndex >= 0) {
-    const inferredBatch = `batch-${String(getChapterPage(chapterIndex)).padStart(3, '0')}`;
+    const inferredBatch = getBatchFolderName(getChapterPage(chapterIndex, getChapterPageSize()));
     paths.push(`data/${state.selectedStory.folder}/${inferredBatch}/${chapterId}.txt`);
   }
 
@@ -392,9 +436,13 @@ async function openStory(storyId) {
 
   try {
     const meta = await fetchJson(`data/${story.folder}/meta.json`);
+    const chapters = await loadChaptersFromBatches(story.folder, meta);
 
     state.selectedStory = story;
-    state.selectedMeta = meta;
+    state.selectedMeta = {
+      ...meta,
+      chapters
+    };
     state.currentChapterId = null;
     state.currentChapterIndex = -1;
 
@@ -428,7 +476,7 @@ async function openChapter(chapterId, restoreScroll = true) {
 
     state.currentChapterId = chapterId;
     state.currentChapterIndex = chapterIndex;
-    state.chapterPage = getChapterPage(chapterIndex);
+    state.chapterPage = getChapterPage(chapterIndex, getChapterPageSize());
 
     el.pageTitle.textContent = state.selectedStory.title;
     el.pageSubtitle.textContent = chapter.title || `Chương ${chapterIndex + 1}`;
@@ -642,7 +690,10 @@ el.chapterPagePrevBtn.addEventListener('click', () => {
 });
 
 el.chapterPageNextBtn.addEventListener('click', () => {
-  const totalPages = getChapterPageCount(state.selectedMeta?.chapters || []);
+  const totalPages = getChapterPageCount(
+    state.selectedMeta?.chapters || [],
+    getChapterPageSize(state.selectedMeta)
+  );
   state.chapterPage = Math.min(totalPages, state.chapterPage + 1);
   renderStoryDetail();
 });
